@@ -1,0 +1,14 @@
+id_tipo_actividad,nombre,siglas,descripcion
+1,Actividad de Fijación,AF,"Son Actividades que sirven de fijacion, no tiene puntos acumulables"
+2,Actividad de Aprendizaje,AA,Son actividades que tiene puntos
+3,Actividad Interactiva,AI,Son actividades que tiene puntaje
+4,Inicio de Unidad,IU,son las actividade que marcan el Inicio de una Unidad
+5,Examen Parcial,EP,Son las actividades de examenes parciales
+6,Examen Final,EF,Son las Actividades de Examenes finales
+7,Retroalimentacion,RE,Son las actividades de Retroalimentacion que se realizan sobre las unidades
+8,Prueba Formatica,PF,"Son las Pruebas Formaticas, que se realizan para ver las capacidades del alumno"
+9,Clase Sincrona,CS,"Son las Clases Sincronas, que se tiene con cada materia"
+10,Fecha Conmemorativa,FC,Fechas Conmemorativas Nacionales e Institucionales
+11,Guia Academica,GA,Guia Academica
+12,Pago en Cuotas,PC,Pagos en Cuotas de Asignaturas
+13,Congreso Paraguayo de Estadística,CE,Congreso Paraguayo de Estadística

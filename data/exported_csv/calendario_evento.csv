@@ -1,0 +1,107 @@
+id_evento,titulo,tipo,fecha_inicio,fecha_fin,afecta_actividades
+172,Año Nuevo,Feriado,2025-01-01,2025-01-01,0
+173,Día del Logístico,Conmemorativo,2025-02-16,2025-02-16,0
+174,Días de los Héroes,Feriado,2025-03-03,2025-03-03,0
+175,Miércoles Santo,Asueto,2025-04-16,2025-04-16,0
+176,Jueves Santo,Feriado,2025-04-17,2025-04-17,0
+177,Viernes Santo,Feriado,2025-04-18,2025-04-18,0
+178,Sábado Santo,Asueto,2025-04-19,2025-04-19,0
+179,Día del Maestro,Conmemorativo,2025-04-30,2025-04-30,0
+180,Día del Trabajador,Conmemorativo,2025-05-01,2025-05-01,0
+181,Día del Químico,Conmemorativo,2025-05-08,2025-05-08,0
+182,Día de la Independencia,Feriado,2025-05-14,2025-05-14,0
+183,Día de la Independencia,Feriado,2025-05-15,2025-05-15,0
+184,Día del Físico,Conmemorativo,2025-05-16,2025-05-16,0
+185,Día del Geólogo,Conmemorativo,2025-05-23,2025-05-23,0
+186,Paz del Chaco,Feriado,2025-06-16,2025-06-16,0
+187,Acto de Graduación,Conmemorativo,2025-06-20,2025-06-20,0
+188,Aniversario de la FACEN,Conmemorativo,2025-06-21,2025-06-21,0
+189,Día del Biotecnólogo,Conmemorativo,2025-07-18,2025-07-18,0
+190,Semana de la Ciencia,Conmemorativo,2025-07-28,2025-07-28,0
+191,Día del Matemático,Conmemorativo,2025-08-08,2025-08-08,0
+192,Día de la Fundación de San Lorenzo,Feriado,2025-08-10,2025-08-10,0
+193,Día de la Fundación de Asunción,Feriado,2025-08-15,2025-08-15,0
+194,Día de la Juventud,Asueto,2025-08-21,2025-08-21,0
+195,Día del Biólogo,Conmemorativo,2025-09-22,2025-09-22,0
+196,Día de la Fundación de la UNA,Asueto,2025-09-24,2025-09-24,0
+197,Victoria de Boquerón,Feriado,2025-09-29,2025-09-29,0
+198,Día del Estadístico,Conmemorativo,2025-10-20,2025-10-20,0
+199,Día del Tecnólogo de Producción,Conmemorativo,2025-10-22,2025-10-22,0
+200,Día del Físico Médico,Conmemorativo,2025-11-07,2025-11-07,0
+201,Día del Radiólogo,Conmemorativo,2025-11-08,2025-11-08,0
+202,Víspera del Día de la Virgen de Caacupé,Asueto,2025-12-07,2025-12-07,0
+203,Día de la Virgen de Caacupé,Feriado,2025-12-08,2025-12-08,0
+204,Noche Buena,Asueto,2025-12-24,2025-12-24,0
+205,Día de la Navidad de Niño Jesús,Feriado,2025-12-25,2025-12-25,0
+206,Noche Vieja,Asueto,2025-12-31,2025-12-31,0
+207,Fecha límite para Cambio de Plan,Administrativo,2025-02-14,2025-02-14,0
+208,Fecha Límite de solicitud para Traslado de Carrera para el Primer Período del año 2025,Administrativo,2025-02-14,2025-02-14,0
+209,Fecha límite para solicitar Prórroga Extensión de Prórroga Readmisión del Primer Período del año 2025,Administrativo,2025-02-14,2025-02-14,0
+210,Inscripción para Examen de Ingreso al Primer Período del año 2025,Evaluación,2025-01-13,2025-02-12,0
+211,Examen de Ingreso al Primer Período del año 2025,Evaluación,2025-02-15,2025-02-15,0
+212,Taller de Inducción a la Plataforma Moodle,Administrativo,2025-02-22,2025-02-22,0
+213,Período para solicitar Traslado entre Modalidades,Administrativo,2025-02-03,2025-02-14,0
+214,Reunión Informativa de Ingresantes con Autoridades de la FACEN,Administrativo,2025-02-22,2025-02-22,0
+215,Inscripción y matriculación de ingresantes Sin multa,Administrativo,2025-02-24,2025-03-03,0
+216,Inscripción y matriculación de ingresantes Con multa,Administrativo,2025-03-04,2025-03-10,0
+217,Inscripción y matriculación de ingresantes Con multa adicional,Administrativo,2025-03-11,2025-03-17,0
+218,Inscripción Sin multa,Administrativo,2025-02-25,2025-03-03,0
+219,Inscripción Con multa,Administrativo,2025-03-04,2025-03-10,0
+220,Inscripción Con multa adicional,Administrativo,2025-03-11,2025-03-17,0
+221,Inscripción Sin multa,Administrativo,2025-02-25,2025-03-03,0
+222,Modificación de Inscripción Con multa,Administrativo,2025-03-04,2025-03-10,0
+223,Modificación de Inscripción Con multa adicional,Administrativo,2025-03-11,2025-03-17,0
+224,Modificación de Inscripción Sin multa,Administrativo,2025-02-25,2025-03-03,0
+225,Modificación de Inscripción Con multa,Administrativo,2025-03-04,2025-03-10,0
+226,Modificación de Inscripción Con multa adicional,Administrativo,2025-03-11,2025-03-17,0
+227,Período para solicitar renuncia al Derecho de Evaluaciones Finales (firmas) – Sin Multa,Evaluación,2025-02-25,2025-03-03,0
+228,Período para solicitar renuncia al Derecho de Evaluaciones Finales (firmas) – Con multa,Evaluación,2025-03-04,2025-03-10,0
+229,Período para solicitar renuncia al Derecho de Evaluaciones Finales (firmas) – Con multa adicional,Evaluación,2025-03-11,2025-03-17,0
+230,Matriculación Sin multa,Administrativo,2025-02-25,2025-03-06,0
+231,Matriculación Con multa,Administrativo,2025-03-07,2025-03-13,0
+232,Matriculación Con multa adicional,Administrativo,2025-03-14,2025-03-21,0
+233,Matriculación Con multa extraordinaria,Administrativo,2025-03-24,2025-03-28,0
+234,Reunión General de Profesores con el Consejo Directivo,Administrativo,2025-02-24,2025-02-24,0
+235,Fecha límite para solicitar Auxiliares de Asignaturas Ad Honórem,Administrativo,2025-03-10,2025-03-10,0
+236,Fecha límite para presentar solicitud de Becas de la FACEN,Administrativo,2025-03-07,2025-03-07,0
+237,Fecha límite para solicitar Admisión Directa para el Segundo Período del año 2025,Administrativo,2025-07-01,2025-07-01,0
+238,Clases Período de Clases,Académico,2025-03-03,2025-04-03,0
+239,Clases,Académico,2025-04-25,2025-05-31,0
+240,Primera Evaluación Parcial Período de Evaluaciones Parciales,Evaluación,2025-04-04,2025-04-24,0
+241,Segunda Evaluación Parcial,Evaluación,2025-06-02,2025-06-18,0
+242,Primera Evaluación Final Evaluación Parcial Recuperatoria Período de Evaluaciones Finales,Evaluación,2025-06-19,2025-07-05,0
+243,Segunda Evaluación Final,Evaluación,2025-07-07,2025-07-23,0
+244,Fecha límite para Cambio de Plan,Administrativo,2025-07-16,2025-07-16,0
+245,Fecha Límite de solicitud para Traslado de Carrera para el Segundo Período del año 2025,Administrativo,2025-07-16,2025-07-16,0
+246,Fecha límite para solicitar Prórroga Extensión de Prórroga y Readmisión para el Segundo Período del año 2025,Administrativo,2025-07-16,2025-07-16,0
+247,Inscripción para Examen de Ingreso al Segundo Período del año 2025,Evaluación,2025-06-09,2025-07-09,0
+248,Examen de Ingreso al Segundo Período del año 2025,Evaluación,2025-07-12,2025-07-12,0
+249,Taller de Inducción a la Plataforma Moodle,Administrativo,2025-07-19,2025-07-19,0
+250,Período para solicitar Traslado entre Modalidades,Administrativo,2025-06-24,2025-07-11,0
+251,Reunión Informativa de Ingresantes con Autoridades de la FACEN,Administrativo,2025-07-19,2025-07-19,0
+252,Inscripción y matriculación de ingresantes Sin multa,Administrativo,2025-07-28,2025-08-04,0
+253,Inscripción y matriculación de ingresantes Con multa,Administrativo,2025-08-05,2025-08-11,0
+254,Inscripción y matriculación de ingresantes Con multa adicional,Administrativo,2025-08-12,2025-08-18,0
+255,Inscripción Sin multa,Administrativo,2025-07-29,2025-08-04,0
+256,Inscripción Con multa,Administrativo,2025-08-05,2025-08-11,0
+257,Inscripción Con multa adicional,Administrativo,2025-08-12,2025-08-18,0
+258,Modificación de Inscripción Sin multa,Administrativo,2025-07-29,2025-08-04,0
+259,Modificación de Inscripción Con multa,Administrativo,2025-08-05,2025-08-11,0
+260,Modificación de Inscripción Con multa adicional,Administrativo,2025-08-12,2025-08-18,0
+261,Período para solicitar renuncia a Derecho de Evaluaciones Finales (firma) Sin multa,Evaluación,2025-07-29,2025-08-04,0
+262,Período para solicitar renuncia a Derecho de Evaluaciones Finales (firma) Con multa,Evaluación,2025-08-05,2025-08-11,0
+263,Período para solicitar renuncia a Derecho de Evaluaciones Finales (firma) Con multa adicional,Evaluación,2025-08-12,2025-08-18,0
+264,Matriculación Sin multa,Administrativo,2025-07-29,2025-08-07,0
+265,Matriculación Con multa,Administrativo,2025-08-08,2025-08-14,0
+266,Matriculación Con multa adicional,Administrativo,2025-08-18,2025-08-25,0
+267,Matriculación Con multa extraordinaria,Administrativo,2025-08-26,2025-09-02,0
+268,Reunión General de Profesores con el Consejo Directivo,Administrativo,2025-07-28,2025-07-28,0
+269,Fecha límite para solicitar Auxiliares de Asignaturas Ad Honórem,Administrativo,2025-08-11,2025-08-11,0
+270,Fecha límite para presentar solicitud de Becas de la FACEN,Administrativo,2025-08-08,2025-08-08,0
+271,Fecha límite para solicitar Admisión Directa para el Primer Período del año 2026,Administrativo,2026-02-02,2026-02-02,0
+272,Primer Período de Clases,Académico,2025-08-04,2025-09-09,0
+273,Segundo Periodo de Clases,Académico,2025-09-27,2025-11-03,0
+274,Primera Período de Evaluaciones Parciales,Evaluación,2025-09-10,2025-09-26,0
+275,Segundo Periodo de Evaluacióne Parciales,Evaluación,2025-11-04,2025-11-19,0
+276,Primer Periodo Evaluación Final Evaluación - Parcial Recuperatoria,Evaluación,2025-11-20,2025-12-06,0
+277,Segunda Evaluación Final,Evaluación,2025-12-09,2025-12-27,0

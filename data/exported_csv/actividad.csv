@@ -1,0 +1,198 @@
+id_actividad,titulo,descripcion,fecha_inicio,fecha_fin,id_eje,id_tipo_actividad
+1,Inicio del curso de nivelacion,Participación en el foro de presentación,2024-03-04,2024-03-10,2,4
+2,Unidad I: La Comunicación,Lectura del material: La Coumincacón,2024-03-08,2024-03-15,2,4
+3,Clase sincrónica 1,Via Google meet,2024-03-15,2024-03-18,2,3
+4,Actividad 1.1,Completar el cuestionario sobre la comunicación.,2024-03-13,2024-03-19,2,2
+5,Actividad 1.2,Completar el cuestionario sobre la comunicación.,2024-03-17,2024-03-23,2,2
+6,Clase sincrónica 2,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-03-22,2024-03-25,2,3
+7,Unidad II: Gramática,Lectura del material: Gramática,2024-03-21,2024-03-27,7,4
+8,Actividad 2.1,Completar el cuestionario sobre gramática,2024-03-25,2024-04-01,7,2
+9,Clase sincrónica 3,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-04-05,2024-04-08,7,3
+10,Actividad 2.2,Completar el cuestionario sobre gramática.,2024-03-30,2024-04-06,7,2
+11,Actividad 2.3,Completar el cuestionario sobre gramática.,2024-04-04,2024-04-10,7,2
+12,Periodo de Examen Parcial (1er),Periodo de Primera Evaluación Parcial,2024-04-22,2024-04-25,2,5
+13,Clase sincrónica 4,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-04-26,2024-04-29,2,3
+14,Unidad III: Morfología,Inicio y lectura de la unidad III: Morfología,2024-04-26,2024-05-01,14,4
+15,Actividad 3.1,Completar el cuestionario sobre Morfología,2024-04-29,2024-05-05,14,2
+16,Clase sincrónica 5,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-05-03,2024-05-06,14,3
+17,Actividad 3.2,Completar el cuestionario sobre Morfología,2024-05-03,2024-05-09,14,2
+18,Actividad 3.3,Completar el cuestionario sobre Morfología,2024-05-07,2024-05-13,14,2
+19,Clase sincrónica 6,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-05-10,2024-05-13,14,3
+20,Actividad 3.4,Completar el cuestionario sobre Morfología,2024-05-11,2024-05-17,14,2
+21,Segunda Prueba formativa Unidad III,Segunda Prueba formativa Unidad III,2024-05-15,2024-05-18,14,4
+22,Unidad IV: Sintaxis,Inicio de la Unidad IV: Sintaxis,2024-05-16,2024-05-22,22,4
+23,Clase sincrónica 7,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-05-17,2024-05-20,22,3
+24,Actividad 4.1,Completar el cuestionario sobre Sintaxis,2024-05-20,2024-05-26,22,2
+25,Actividad 4.2,Completar el cuestionario sobre Sintaxis,2024-05-24,2024-05-30,22,2
+26,Clase sincrónica 8,Desde las 18:30 hasta las 20:00 h. Vía Google meet.,2024-05-24,2024-05-27,22,3
+27,Actividad 4.3,Completar el cuestionario sobre Sintaxis,2024-05-28,2024-06-03,22,2
+28,Periodo de Examen Parcial (2do),Periodo de Segunda Evaluación Parcial,2024-06-24,2024-06-27,2,5
+29,Unidad I: Magnitudes y vectores,Inicio de Unidad I: Magnitudes y vectores,2024-03-04,2024-03-10,29,4
+30,Clase sincrónica 1,Clase sincrónica 1,2024-03-05,2024-03-08,29,3
+31,Actividad 1.1,Desarrollo de la Actividad 1.1: Magnitudes y vectores,2024-03-08,2024-03-15,29,2
+32,Clase sincrónica 2,Clase sincrónica 2,2024-03-12,2024-03-15,29,3
+33,Actividad 1.2,Subir un solo archivo,2024-03-13,2024-03-19,29,2
+34,Unidad II: Movimiento en una dimensión,Inicio de la Unidad II,2024-03-17,2024-03-23,34,4
+35,Clase sincrónica 3,Clase sincrónica 3,2024-03-19,2024-03-22,34,3
+36,Actividad 2.1,Movimiento en una dimensión – Cuestionario,2024-03-21,2024-03-28,34,2
+37,Clase sincrónica 4,Clase sincronica,2024-03-26,2024-03-29,34,3
+38,Actividad 2.2,Subir un solo archivo,2024-03-26,2024-04-04,34,2
+39,Actividad 2.3,MRU MRUV y tiro vertical,2024-04-02,2024-04-11,34,2
+40,Clase sincrónica 4,Clase sincrónica 4,2024-04-02,2024-04-05,34,3
+41,Período de Examen Parcial (1er),Período de Examen Parcial,2024-05-07,2024-05-10,29,5
+42,Unidad III: Leyes de Newton del movimiento,Lectura del material,2024-05-11,2024-05-18,42,4
+43,Actividad 3.1,Glosario: Inicio de la Actividad Colaborativa.,2024-05-16,2024-06-16,42,2
+44,Actividad 3.2,Leyes de Newton del movimiento,2024-05-16,2024-05-25,42,2
+45,Actividad 3.3,Subir un solo archivo,2024-05-20,2024-05-28,42,2
+46,Clase sincrónica,Clase sincrónica 6,2024-05-21,2024-05-24,42,3
+47,Unidad IV: Trabajo Potencia y Energía,Lectura del material,2024-05-31,2024-06-07,47,4
+48,Actividad 4.1,Trabajo Potencia y Energía,2024-05-31,2024-06-10,47,2
+49,Clase sincrónica,Clase sincrónica,2024-06-04,2024-06-07,47,3
+50,Actividad 4.2,Trabajo Potencia y Energía Segunda parte,2024-06-05,2024-06-16,47,2
+51,Clase sincrónica,Clase sincrónica,2024-06-11,2024-06-14,47,3
+52,Periodo de Examen Parcial (2do),Periodo de Examen Parcial,2024-07-07,2024-07-10,29,5
+53,Unidad I: Materia,Lectura de material,2024-03-05,2024-03-11,53,4
+54,Actividad 1.1,Desarrollo del cuestionario: Materia,2024-03-05,2024-03-11,53,2
+55,Actividad 1.2,Desarrollo del cuestionario: Ejercitario sobre materia,2024-03-09,2024-03-15,53,2
+56,Unidad II: Estructura atómica,Lectura del material,2024-03-14,2024-03-22,56,4
+57,Actividad 2.1,Participación en un foro,2024-03-14,2024-03-22,56,2
+58,Actividad 2.2,Resolver el cuestionario,2024-03-20,2024-03-26,56,2
+59,Unidad III: Enlace Químico,Lectura de materiales,2024-03-28,2024-04-06,59,4
+60,Actividad 3.1,Resolución de ejercitario,2024-03-28,2024-04-06,59,2
+61,Actividad 3.2,Construcción del Glosario,2024-04-04,2024-04-11,59,2
+62,Periodo de Examen Parcial (1er),Periodo de Examen Parcial,2024-04-22,2024-04-25,53,5
+63,Unidad IV: Combinaciones Químicas,Lectura del material,2024-04-26,2024-05-03,63,4
+64,Actividad 4.1,Responder un cuestionario,2024-05-12,2024-05-20,63,2
+65,Actividad 4.2,Responder un cuestionario,2024-05-17,2024-05-24,63,2
+66,Unidad V: Introducción a la química orgánica,Lectura del material,2024-05-22,2024-05-27,66,4
+67,Actividad 5.1,Participación en un foro,2024-05-23,2024-05-28,66,2
+68,Unidad VI: Hidrocarburos,Lectura del material,2024-05-26,2024-06-01,68,4
+69,Actividad 6.1,Responder un cuestionario,2024-05-27,2024-06-08,68,2
+70,Unidad VII: Compuestos orgánicos,Lectura del material,2024-05-31,2024-06-07,70,4
+71,Actividad 7.1,Construcción de un Glosario,2024-06-01,2024-05-09,70,2
+72,Actividad 7.2,Responder el Cuestionario,2024-06-07,2024-06-20,70,2
+73,Periodo de Examen Parcial (2do),Periodo de Examen Parcial,2024-07-07,2024-07-10,53,5
+81,Inicio de Unidad I: Algebra Numerica,Lectura de materiales,2024-08-14,2024-08-21,81,4
+82,AA-Actividad 1.1,Cuestionario- Álgebra Numérica,2024-08-19,2024-08-27,81,2
+83,Inicio de Unidad II,Expresiones algebraicas,2024-08-25,2024-09-01,83,4
+84,AF-Actividad 2.1,Cuestionario: Expresiones algebraicas,2024-08-28,2024-09-03,83,1
+85,AI-Actividad 2.2,Participación de foro,2024-09-01,2024-09-09,83,3
+86,AA-Actividad 2.3,Cuestionario– Expresiones algebraicas,2024-09-07,2024-09-18,83,2
+87,Primera Prueba formativa,Primera Prueba formativa,2024-09-10,2024-09-13,83,4
+88,Retroalimentación unidad II,Retroalimentación unidad II,2024-09-13,2024-09-16,83,4
+89,Primer Examen parcial,Primer Examen parcial,2024-09-25,2024-09-28,81,5
+90,Inicio de unidad III,Matrices y determinantes,2024-10-02,2024-10-08,90,4
+91,AA-Actividad 3.1,Cuestionario Matrices y determinantes,2024-10-06,2024-10-13,90,2
+92,Inicio de unidad IV,Análisis combinatorio,2024-10-11,2024-10-16,92,4
+93,AA-Actividad 4.1,Cuestionario Análisis combinatorio,2024-10-14,2024-10-21,92,2
+94,Inicio de unidad V,Números complejos,2024-10-19,2024-10-24,94,4
+95,AI-Actividad 5.1,Participación de foro,2024-10-20,2024-10-28,94,2
+96,AA-Actividad 5.2,Cuestionario – Números Complejos,2024-10-26,2024-11-03,94,2
+97,Segunda Prueba formativa,Segunda Prueba formativa,2024-10-28,2024-10-31,94,4
+98,Segundo Examen parcial,Segundo Examen parcial,2024-11-11,2024-11-14,81,5
+99,Primer Examen Final,Primer Examen Final,2024-11-24,2024-11-27,81,5
+100,Segundo Examen Final,Segundo Examen Final,2024-12-21,2024-12-24,81,5
+101,Inicio de Unidad I,Generalidades y ángulos,2024-08-14,2024-08-17,101,4
+102,AA-Actividad 1.1,Desarrollo del ejercitario,2024-08-14,2024-08-21,101,2
+103,Inicio de Unidad II,Figuras Geométricas,2024-08-19,2024-08-22,103,4
+104,AA-Actividad 2.1,Desarrollo del ejercitario,2024-08-19,2024-08-28,103,2
+105,Inicio de unidad III,Circunferencia y Círculo,2024-08-26,2024-08-29,105,4
+106,AA-Actividad 3.1,Desarrollo del ejercitario,2024-08-26,2024-09-01,105,2
+107,Inicio de unidad IV,La Geometría en el Espacio,2024-08-30,2024-09-02,107,4
+108,AF-Actividad 4.1,Cuestionario,2024-08-30,2024-09-06,107,1
+109,AI-Actividad 4.2,Habilitación AI,2024-08-30,2024-10-09,107,2
+110,AA-Actividad 4.3,Desarrollo del ejercitario,2024-09-01,2024-09-07,107,2
+111,Inicio de unidad V,Los Cuerpos Geométricos,2024-09-04,2024-09-07,111,4
+112,AA-Actividad 5.1,Desarrollo del ejercitario,2024-09-04,2024-09-11,111,2
+113,Inicio de unidad VI,La esfera y la superficie esférica,2024-09-09,2024-09-12,113,4
+114,AA-Actividad 6.1,Desarrollo del ejercitario,2024-09-09,2024-09-16,113,2
+115,AI-Actividad 6.2,Habilitación AI,2024-09-09,2024-11-03,113,2
+116,Primer Examen parcial,Online,2024-09-26,2024-09-29,101,5
+117,Inicio de unidad VII,La Trigonometría,2024-10-02,2024-10-05,117,4
+118,AA-Actividad 7.1,Desarrollo del ejercitario,2024-10-02,2024-10-09,117,2
+119,Inicio de unidad VIII,Relaciones trigonométricas,2024-10-07,2024-10-10,119,4
+120,AF-Actividad 8.1,Cuestionario,2024-10-07,2024-10-12,119,1
+121,AA-Actividad 8.2,Desarrollo del ejercitario,2024-10-10,2024-10-16,119,2
+122,Inicio de unidad IX,Funciones trigonométricas,2024-10-14,2024-10-17,122,4
+123,AA-Actividad 9.1,Desarrollo del ejercitario,2024-10-14,2024-10-23,122,2
+124,Inicio de unidad X,Resolución de triángulos planos,2024-10-21,2024-10-24,124,4
+125,AA-Actividad 10.1,Desarrollo del ejercitario,2024-10-21,2024-10-30,124,2
+126,Inicio de unidad XI,La Trigonometría Esférica,2024-10-28,2024-10-31,126,4
+127,AA-Actividad 11.1,Desarrollo del ejercitario,2024-10-28,2024-11-03,126,2
+128,Segundo Examen parcial,Segundo Examen parcial,2024-11-01,2024-11-04,101,5
+129,Primer Examen final,Primer Examen final,2024-11-23,2024-11-26,101,5
+130,Primer Examen final EM,Primer Examen final EM,2024-11-24,2024-11-27,101,5
+131,Segundo Examen final ME,Segundo Examen final ME,2024-12-22,2024-12-25,101,5
+132,Segundo Examen final EM,Segundo Examen final EM,2024-12-21,2024-12-24,101,5
+133,Inicio de Unidad I,Conjuntos,2024-08-14,2024-09-02,133,4
+134,AF-Actividad 1.1,Resolución de ejercicios,2024-08-14,2024-08-23,133,1
+135,AA-Actividad 1.2,Cuestionario Conjuntos,2024-08-21,2024-09-02,133,2
+136,Inicio de Unidad II,Relaciones,2024-09-01,2024-09-16,136,4
+137,AF-Actividad 2.1,Resolución de ejercicios,2024-09-01,2024-09-08,136,1
+138,AI-Actividad 2.2,Resolución grupal de ejercicios,2024-09-05,2024-09-15,136,3
+139,Primera prueba formativa,Primera prueba formativa,2024-09-12,2024-09-15,136,4
+140,Primer examen parcial,Primer examen parcial,2024-09-20,2024-09-23,133,5
+141,Inicio de unidad III,Funciones,2024-10-02,2024-10-22,141,4
+142,AF-Actividad 3.1,Resolución de ejercicios,2024-10-02,2024-10-10,141,1
+143,AA-Actividad 3.2,Cuestionario Funciones,2024-10-08,2024-10-22,141,2
+144,Inicio de unidad IV,Leyes de Composición,2024-10-20,2024-11-03,144,4
+145,AF-Actividad 4.1,Resolución de ejercicios,2024-10-20,2024-10-27,144,1
+146,AI-Actividad 4.2,Resolución grupal de ejercicios,2024-10-20,2024-11-01,144,3
+147,Segunda prueba formativa,Segunda prueba formativa,2024-10-28,2024-10-31,144,4
+148,Segundo examen parcial,Segundo examen parcial,2024-11-07,2024-11-10,133,5
+149,Primer examen final,Primer examen final,2024-11-17,2024-11-20,133,5
+150,Segundo examen final,Segundo examen final,2024-12-14,2024-12-17,133,5
+151,Prueba Formativa Online,Prueba Formativa Online,2024-09-15,2024-09-18,107,2
+160,Inicio de Unidad I: Lógica proposicional,Lectura de la Unidad I,2025-03-03,2025-03-06,160,4
+161,AI-Actividad 1.1,Participar del foro,2025-03-10,2025-03-19,160,3
+162,AF-Actividad 1.2,Resolver un ejercitario,2025-03-17,2025-03-26,160,1
+163,Inicio de Unidad II: Lógica predicativa,Lógica predicativa,2025-03-24,2025-03-30,163,4
+164,AF-Actividad 2.1,Completar un cuestionario,2025-03-31,2025-04-06,163,1
+165,1ra. Prueba formativa,Para la evalucion del estudiante,2025-04-03,2025-04-06,163,8
+166,Unidad II: Lógica predicativa,Lectura del material,2025-04-25,2025-05-07,163,4
+167,AA-Actividad 2.2,Resolver un ejercitario,2025-05-05,2025-05-14,163,2
+168,Inicio de Unidad III,Sistema matemático simple,2025-05-12,2025-05-18,168,4
+169,AA-Actividad 3.1,Resolver un ejercitario,2025-05-19,2025-05-28,168,2
+170,AI-Actividad 3.2,Participar del foro,2025-05-26,2025-06-03,168,3
+171,2da. Prueba formativa,Prueba formativa,2025-05-31,2025-05-31,168,8
+290,Unidad I,Números Reales,2025-08-04,2025-08-10,290,4
+291,AA - Actividad 1.1,Completar cuestionario,2025-08-04,2025-08-13,290,2
+292,Inicio de Unidad II,Funciones y Límites,2025-08-11,2025-08-17,292,4
+293,AA - Actividad 2.1,Desarrollo de ejercicios,2025-08-11,2025-08-17,292,2
+294,Inicio de unidad III,Límites Indeterminados,2025-08-18,2025-08-24,294,4
+295,AA - Actividad 3.1,Completar cuestionario,2025-08-18,2025-08-24,294,2
+296,Inicio de unidad IV,Continuidad y Derivada,2025-08-25,2025-08-31,296,4
+297,AF - Actividad 4.1,Cuestionario,2025-08-25,2025-08-31,296,1
+298,AI - Actividad 4.2,Habilitación,2025-08-25,2025-10-04,296,3
+299,AA - Actividad 4.3,Desarrollo de ejercicios,2025-08-25,2025-08-31,296,2
+300,Inicio de unidad V,Derivada de Funciones Elementales,2025-09-01,2025-09-26,300,4
+301,AA - Actividad 5.1,Completar cuestionario,2025-09-01,2025-09-12,300,2
+302,Inicio de unidad VI,Ecuación de la recta tangente,2025-09-27,2025-10-04,302,4
+303,AA - Actividad 6.1,Desarrollo de ejercicios,2025-09-27,2025-10-05,302,2
+304,AI – Actividad 4.2,Habilitación,2025-10-04,2025-11-03,296,3
+305,Inicio de unidad VII,Análisis de curvas planas,2025-10-06,2025-10-12,305,4
+306,AA - Actividad 7.1,Completar cuestionario,2025-10-06,2025-10-12,305,2
+307,Inicio de unidad VIII,Diferencial e Integral indefinida,2025-10-13,2025-10-19,307,4
+308,AF - Actividad 8.1,Cuestionario,2025-10-13,2025-10-19,307,1
+309,Inicio de unidad IX,Métodos de Integración,2025-10-20,2025-10-26,309,4
+310,AA - Actividad 8.2,Desarrollo de ejercicios,2025-10-13,2025-10-19,307,2
+311,AA - Actividad 9.1,Completar cuestionario,2025-10-20,2025-10-26,309,2
+312,Inicio de unidad X,Integral Definida y Aplicaciones,2025-10-27,2025-11-03,312,4
+313,AA - Actividad 10.1,Desarrollo de ejercicios,2025-10-27,2025-11-03,312,2
+314,Unidad I,Conjuntos numéricos,2025-08-04,2025-08-21,314,4
+315,AI - Actividad 1.1,Participar en el foro,2025-08-04,2025-08-10,314,3
+316,AA - Actividad 1.2,Desarrollar un ejercitario,2025-08-11,2025-08-15,314,2
+317,Unidad II,Polinomios,2025-08-16,2025-08-21,317,4
+318,AA-Actividad 1.3,Desarrollar un ejercitario,2025-08-16,2025-08-21,317,2
+319,Unidad II,Matrices y determinantes,2025-08-22,2025-09-09,319,4
+320,AF-Actividad 2.1,Completar un cuestionario,2025-08-22,2025-09-14,319,1
+321,AA-Actividad 2.2,Desarrollar un ejercitario,2025-08-31,2025-09-08,319,2
+322,Unidad III,Sucesiones y el Teorema del Binomio,2025-09-27,2025-10-10,322,4
+323,AI - Actividad 3.1,Participar en el foro,2025-09-27,2025-10-10,322,3
+324,AA-Actividad 3.2,Desarrollar un ejercitario,2025-10-04,2025-10-10,322,2
+325,Unidad IV,Trigonometría,2025-10-11,2025-11-03,325,4
+326,AF-Actividad 4.1,AF-Actividad 4.1,2025-10-11,2025-10-15,325,1
+327,AA-Actividad 4.2,Desarrollar un ejercitario,2025-10-16,2025-10-22,325,2
+328,AA-Actividad 4.3,Desarrollar un ejercitario,2025-10-23,2025-11-01,325,2
+329,Primera Prueba Formativa,Prueba Formativa,2025-09-07,2025-09-07,314,8
+330,2do. Congreso Paraguayo de Estadística,2do. Congreso Paraguayo de Estadística,2025-10-23,2025-10-25,312,13

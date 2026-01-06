@@ -1,0 +1,57 @@
+id_eje,nombre,orden,id_asignatura
+2,La Comunicación,1,1
+7,Gramática,2,1
+14,Morfología,3,1
+22,Sintaxis,4,1
+29,Magnitudes y vectores,1,2
+34,Movimiento en una dimensión,2,2
+42,Leyes de Newton del movimiento,3,2
+47,Trabajo Potencia y Energía,4,2
+53,Materia,1,3
+56,Estructura atómica,2,3
+59,Enlace Químico,3,3
+63,Combinaciones Químicas,4,3
+66,Introducción a la química orgánica,5,3
+68,Hidrocarburos,6,3
+70,Compuestos orgánicos con grupos funcionales,7,3
+81,Algebra Numerica,1,11
+83,Expresiones algebraicas,2,11
+90,Matrices y determinantes,3,11
+92,Análisis combinatorio,4,11
+94,Números complejos,5,11
+101,Generalidades y ángulos,1,7
+103,Figuras Geométricas,2,7
+105,Circunferencia y Círculo,3,7
+107,La Geometría en el Espacio,4,7
+111,Los Cuerpos Geométricos,5,7
+113,La esfera y la superficie esférica,6,7
+117,La Trigonometría,7,7
+119,Relaciones entre las seis funciones trigonométricas,8,7
+122,Funciones trigonométricas de la suma diferencia producto o cociente de arcos,9,7
+124,Resolución de triángulos planos,10,7
+126,La Trigonometría Esférica,11,7
+133,Conjuntos,1,8
+136,Relaciones,2,8
+141,Funciones,3,8
+144,Leyes de Composición,4,8
+160,Lógica proposicional,1,21
+163,Lógica predicativa,2,21
+166,Lógica predicativa,2,21
+168,Sistema matemático simple,3,21
+290,Números Reales,1,55
+292,Funciones y Límites de una variable real,2,55
+294,Límites Indeterminados,3,55
+296,Continuidad y Derivada,4,55
+300,Derivada de Funciones Elementales,5,55
+302,Ecuación de la recta tangente y normal a una curva. Análisis de curvas planas,6,55
+305,Análisis de curvas planas criterio de la segunda derivada,7,55
+307,Diferencial e Integral indefinida,8,55
+309,Métodos de Integración,9,55
+312,Integral Definida y Aplicaciones,10,55
+314,Conjuntos numéricos y expresiones algebraicas,1,47
+317,Polinomios,2,55
+319,Matrices y determinantes,2,47
+322,Sucesiones y el Teorema del Binomio,3,47
+325,Trigonometría,4,47
+326,Calendario Académico,1,86
+327,Congresos,1,87

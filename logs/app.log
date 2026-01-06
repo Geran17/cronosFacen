@@ -1,0 +1,88 @@
+2025-12-29 16:00:19 - eventos - INFO - [logging_config.py:161] - Usuario autenticado
+2025-12-29 16:00:19 - eventos - INFO - [logging_config.py:161] - Operación completada - Detalles: {'usuario': 'admin', 'accion': 'crear', 'tabla': 'estudiantes'}
+2025-12-29 16:00:19 - errores_criticos - ERROR - [logging_config.py:182] - Error crítico: Error de prueba
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 101, in test_registrar_error_sin_contexto
+    raise ValueError("Error de prueba")
+ValueError: Error de prueba
+2025-12-29 16:00:19 - errores_criticos - ERROR - [logging_config.py:180] - Error crítico en Conectando a base de datos: Fallo en BD
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 111, in test_registrar_error_con_contexto
+    raise RuntimeError("Fallo en BD")
+RuntimeError: Fallo en BD
+2025-12-29 16:00:19 - test_archivo - INFO - [test_logging_config.py:178] - Mensaje de prueba
+2025-12-29 16:00:19 - test_error_archivo - ERROR - [test_logging_config.py:185] - Error de prueba
+2025-12-29 16:00:19 - test_exception - ERROR - [test_logging_config.py:196] - Excepción capturada
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 194, in test_logging_con_excepciones
+    raise KeyError("Clave no encontrada")
+KeyError: 'Clave no encontrada'
+2025-12-29 16:00:19 - debug_test - DEBUG - [test_logging_config.py:208] - Mensaje debug
+2025-12-29 16:00:19 - info_test - INFO - [test_logging_config.py:215] - Mensaje info
+2025-12-29 16:00:19 - warning_test - WARNING - [test_logging_config.py:222] - Mensaje warning
+2025-12-29 16:00:19 - error_test - ERROR - [test_logging_config.py:229] - Mensaje error
+2025-12-29 16:00:19 - critical_test - CRITICAL - [test_logging_config.py:236] - Mensaje crítico
+2025-12-29 16:00:31 - eventos - INFO - [logging_config.py:161] - Usuario autenticado
+2025-12-29 16:00:31 - eventos - INFO - [logging_config.py:161] - Operación completada - Detalles: {'usuario': 'admin', 'accion': 'crear', 'tabla': 'estudiantes'}
+2025-12-29 16:00:31 - errores_criticos - ERROR - [logging_config.py:182] - Error crítico: Error de prueba
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 101, in test_registrar_error_sin_contexto
+    raise ValueError("Error de prueba")
+ValueError: Error de prueba
+2025-12-29 16:00:31 - errores_criticos - ERROR - [logging_config.py:180] - Error crítico en Conectando a base de datos: Fallo en BD
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 111, in test_registrar_error_con_contexto
+    raise RuntimeError("Fallo en BD")
+RuntimeError: Fallo en BD
+2025-12-29 16:00:31 - test_archivo - INFO - [test_logging_config.py:180] - Mensaje de prueba
+2025-12-29 16:00:31 - test_error_archivo - ERROR - [test_logging_config.py:187] - Error de prueba
+2025-12-29 16:00:31 - test_exception - ERROR - [test_logging_config.py:198] - Excepción capturada
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 196, in test_logging_con_excepciones
+    raise KeyError("Clave no encontrada")
+KeyError: 'Clave no encontrada'
+2025-12-29 16:00:31 - debug_test - DEBUG - [test_logging_config.py:210] - Mensaje debug
+2025-12-29 16:00:31 - info_test - INFO - [test_logging_config.py:217] - Mensaje info
+2025-12-29 16:00:31 - warning_test - WARNING - [test_logging_config.py:224] - Mensaje warning
+2025-12-29 16:00:31 - error_test - ERROR - [test_logging_config.py:231] - Mensaje error
+2025-12-29 16:00:31 - critical_test - CRITICAL - [test_logging_config.py:238] - Mensaje crítico
+2025-12-29 16:01:03 - __main__ - INFO - [logging_ejemplos.py:23] - Información general de la aplicación
+2025-12-29 16:01:03 - __main__ - WARNING - [logging_ejemplos.py:24] - Advertencia importante
+2025-12-29 16:01:03 - __main__ - ERROR - [logging_ejemplos.py:25] - Se produjo un error
+2025-12-29 16:01:03 - eventos - INFO - [logging_config.py:161] - Usuario iniciado sesión - Detalles: {'usuario_id': 42, 'nombre_usuario': 'juan.perez', 'ip': '192.168.1.100', 'hora': '2025-12-29 14:30:00'}
+2025-12-29 16:01:03 - eventos - INFO - [logging_config.py:161] - Operación de base de datos completada - Detalles: {'tabla': 'estudiantes', 'operacion': 'INSERT', 'registros_afectados': 5, 'duracion_ms': 123}
+2025-12-29 16:01:03 - errores_criticos - ERROR - [logging_config.py:180] - Error crítico en Calculando promedio de calificaciones: division by zero
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/src/scripts/logging_ejemplos.py", line 61, in ejemplo_error_critico
+    resultado = 10 / 0
+                ~~~^~~
+ZeroDivisionError: division by zero
+2025-12-29 16:01:03 - __main__ - INFO - [logging_ejemplos.py:74] - Información del módulo
+2025-12-29 16:01:03 - __main__ - WARNING - [logging_ejemplos.py:75] - Advertencia del módulo
+2025-12-29 16:01:03 - __main__ - ERROR - [logging_ejemplos.py:76] - Error del módulo
+2025-12-29 16:01:03 - __main__ - INFO - [logging_ejemplos.py:87] - Iniciando procesamiento del estudiante 42
+2025-12-29 16:01:03 - __main__ - INFO - [logging_ejemplos.py:93] - Estudiante 42 procesado exitosamente
+2025-12-29 16:01:54 - eventos - INFO - [logging_config.py:161] - Usuario autenticado
+2025-12-29 16:01:54 - eventos - INFO - [logging_config.py:161] - Operación completada - Detalles: {'usuario': 'admin', 'accion': 'crear', 'tabla': 'estudiantes'}
+2025-12-29 16:01:54 - errores_criticos - ERROR - [logging_config.py:182] - Error crítico: Error de prueba
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 101, in test_registrar_error_sin_contexto
+    raise ValueError("Error de prueba")
+ValueError: Error de prueba
+2025-12-29 16:01:54 - errores_criticos - ERROR - [logging_config.py:180] - Error crítico en Conectando a base de datos: Fallo en BD
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 111, in test_registrar_error_con_contexto
+    raise RuntimeError("Fallo en BD")
+RuntimeError: Fallo en BD
+2025-12-29 16:01:54 - test_archivo - INFO - [test_logging_config.py:180] - Mensaje de prueba
+2025-12-29 16:01:54 - test_error_archivo - ERROR - [test_logging_config.py:187] - Error de prueba
+2025-12-29 16:01:54 - test_exception - ERROR - [test_logging_config.py:198] - Excepción capturada
+Traceback (most recent call last):
+  File "/home/geran/MEGA/Workspaces/proyectos/cronosFacen/tests/scripts/test_logging_config.py", line 196, in test_logging_con_excepciones
+    raise KeyError("Clave no encontrada")
+KeyError: 'Clave no encontrada'
+2025-12-29 16:01:54 - debug_test - DEBUG - [test_logging_config.py:210] - Mensaje debug
+2025-12-29 16:01:54 - info_test - INFO - [test_logging_config.py:217] - Mensaje info
+2025-12-29 16:01:54 - warning_test - WARNING - [test_logging_config.py:224] - Mensaje warning
+2025-12-29 16:01:54 - error_test - ERROR - [test_logging_config.py:231] - Mensaje error
+2025-12-29 16:01:54 - critical_test - CRITICAL - [test_logging_config.py:238] - Mensaje crítico
