@@ -30,6 +30,7 @@ from ui.ttk.styles.icons import (
     ICON_ESTADISTICAS,
 )
 from ui.ttk.frames.frame_bienvenidad import FrameBienvenidad
+from ui.ttk.frames.frame_calendario import FrameCalendario
 from scripts.logging_config import obtener_logger_modulo
 from controladores.controlar_frame_principal import ControlarFramePrincipal
 
@@ -86,6 +87,7 @@ class FramePrincipal(Frame):
             'btn_tema': self.btn_tema,
             # Frames del Notebook central
             'frame_bienvenidad': self.frame_bienvenidad,
+            'frame_calendario': self.frame_calendario,
         }
 
         # Controlador del Frame Principal
@@ -403,3 +405,7 @@ class FramePrincipal(Frame):
         # Tab Bienvenida
         self.frame_bienvenidad = FrameBienvenidad(master=self.notebook_central)
         self.notebook_central.add(self.frame_bienvenidad, text=f"{ICON_CASA} Bienvenida")
+
+        # Tab Calendario
+        self.frame_calendario = FrameCalendario(master=self.notebook_central)
+        self.notebook_central.add(self.frame_calendario, text=f"{ICON_CALENDARIO} Calendario")

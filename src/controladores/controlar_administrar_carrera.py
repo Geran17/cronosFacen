@@ -212,7 +212,7 @@ class ControlarAdministrarCarrera:
                     # recargamos la tabla
                     self._actualizar_tabla_carrera()
             else:
-                if carrera.id_carreras != 0:
+                if carrera.id_carrera != 0:
                     # actualizamos la carrera
                     if carrera.actualizar():
                         showinfo(

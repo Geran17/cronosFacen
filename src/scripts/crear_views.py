@@ -21,269 +21,68 @@ from sqlite3 import Error
 
 logger = obtener_logger_modulo(__name__)
 
-# VIEWS recomendadas según documento: views_sql_mvp_organizacion_academica_sqlite.md
-VIEWS = [
-    # 1. Vista: Progreso general del estudiante
-    (
-        "vw_progreso_estudiante",
-        """
-        CREATE VIEW IF NOT EXISTS vw_progreso_estudiante AS
-        SELECT
-            e.id_estudiante,
-            e.id_carrera,
-            COUNT(DISTINCT a.id_asignatura) AS total_asignaturas,
-            SUM(CASE WHEN ea.estado = 'aprobada' THEN 1 ELSE 0 END) AS asignaturas_aprobadas,
-            ROUND(
-                100.0 * SUM(CASE WHEN ea.estado = 'aprobada' THEN 1 ELSE 0 END)
-                / COUNT(DISTINCT a.id_asignatura),
-                2
-            ) AS porcentaje_avance
-        FROM estudiante e
-        JOIN carrera c ON e.id_carrera = c.id_carrera
-        JOIN asignatura a ON c.id_carrera = a.id_carrera
-        LEFT JOIN estudiante_asignatura ea
-            ON a.id_asignatura = ea.id_asignatura
-           AND ea.id_estudiante = e.id_estudiante
-        GROUP BY e.id_estudiante, e.id_carrera;
-        """,
-    ),
-    # 2. Vista: Estudiante con carrera (base para otras vistas)
-    (
-        "vw_estudiante_carrera",
-        """
-        CREATE VIEW IF NOT EXISTS vw_estudiante_carrera AS
-        SELECT
-            e.id_estudiante,
-            e.nombre,
-            e.id_carrera,
-            c.nombre AS carrera,
-            c.plan,
-            c.modalidad,
-            c.creditos_totales
-        FROM estudiante e
-        JOIN carrera c ON e.id_carrera = c.id_carrera;
-        """,
-    ),
-    # 3. Vista: Asignaturas habilitadas para cursar (corregida)
-    (
-        "vw_asignaturas_habilitadas",
-        """
-        CREATE VIEW IF NOT EXISTS vw_asignaturas_habilitadas AS
-        SELECT DISTINCT
-            a.id_asignatura,
-            a.nombre,
-            a.codigo,
-            a.id_carrera
-        FROM asignatura a
-        WHERE NOT EXISTS (
-            SELECT 1 FROM prerrequisito p
-            WHERE p.id_asignatura = a.id_asignatura
-        )
-        UNION
-        SELECT DISTINCT
-            a.id_asignatura,
-            a.nombre,
-            a.codigo,
-            a.id_carrera
-        FROM asignatura a
-        JOIN prerrequisito p ON a.id_asignatura = p.id_asignatura
-        WHERE EXISTS (
-            SELECT 1 FROM estudiante_asignatura ea
-            WHERE ea.id_asignatura = p.id_asignatura_prerrequisito
-            AND ea.estado = 'aprobada'
-        );
-        """,
-    ),
-    # 4. Vista: Asignaturas bloqueadas (corregida)
-    (
-        "vw_asignaturas_bloqueadas",
-        """
-        CREATE VIEW IF NOT EXISTS vw_asignaturas_bloqueadas AS
-        SELECT DISTINCT
-            a.id_asignatura,
-            a.nombre,
-            a.codigo,
-            p.id_asignatura_prerrequisito AS prerrequisito_id
-        FROM asignatura a
-        JOIN prerrequisito p ON a.id_asignatura = p.id_asignatura
-        WHERE NOT EXISTS (
-            SELECT 1 FROM estudiante_asignatura ea
-            WHERE ea.id_asignatura = p.id_asignatura_prerrequisito
-            AND ea.estado = 'aprobada'
-        );
-        """,
-    ),
-    # 5. Vista: Actividades pendientes del estudiante
-    (
-        "vw_actividades_pendientes",
-        """
-        CREATE VIEW IF NOT EXISTS vw_actividades_pendientes AS
-        SELECT
-            act.id_actividad,
-            act.titulo,
-            act.descripcion,
-            act.fecha_inicio,
-            act.fecha_fin,
-            ta.nombre AS tipo_actividad,
-            ta.siglas,
-            e.id_eje,
-            a.id_asignatura,
-            a.nombre AS asignatura
-        FROM actividad act
-        LEFT JOIN tipo_actividad ta ON act.id_tipo_actividad = ta.id_tipo_actividad
-        LEFT JOIN eje_tematico e ON act.id_eje = e.id_eje
-        LEFT JOIN asignatura a ON e.id_asignatura = a.id_asignatura
-        WHERE act.fecha_inicio <= DATE('now');
-        """,
-    ),
-    # 6. Vista: Actividades vencidas
-    (
-        "vw_actividades_vencidas",
-        """
-        CREATE VIEW IF NOT EXISTS vw_actividades_vencidas AS
-        SELECT
-            act.id_actividad,
-            act.titulo,
-            act.fecha_fin,
-            ta.nombre AS tipo_actividad,
-            ta.siglas,
-            a.nombre AS asignatura
-        FROM actividad act
-        LEFT JOIN tipo_actividad ta ON act.id_tipo_actividad = ta.id_tipo_actividad
-        LEFT JOIN eje_tematico e ON act.id_eje = e.id_eje
-        LEFT JOIN asignatura a ON e.id_asignatura = a.id_asignatura
-        WHERE act.fecha_fin < DATE('now');
-        """,
-    ),
-    # 7. Vista: Actividades de la semana
-    (
-        "vw_actividades_semana",
-        """
-        CREATE VIEW IF NOT EXISTS vw_actividades_semana AS
-        SELECT
-            act.id_actividad,
-            act.titulo,
-            act.fecha_inicio,
-            act.fecha_fin,
-            ta.nombre AS tipo_actividad,
-            ta.siglas,
-            a.nombre AS asignatura
-        FROM actividad act
-        LEFT JOIN tipo_actividad ta ON act.id_tipo_actividad = ta.id_tipo_actividad
-        LEFT JOIN eje_tematico e ON act.id_eje = e.id_eje
-        LEFT JOIN asignatura a ON e.id_asignatura = a.id_asignatura
-        WHERE act.fecha_inicio BETWEEN DATE('now') AND DATE('now', '+7 days');
-        """,
-    ),
-    # 8. Vista: Actividades por asignatura
-    (
-        "vw_actividades_por_asignatura",
-        """
-        CREATE VIEW IF NOT EXISTS vw_actividades_por_asignatura AS
-        SELECT
-            a.id_asignatura,
-            a.nombre AS asignatura,
-            a.codigo,
-            act.id_actividad,
-            act.titulo,
-            act.fecha_inicio,
-            act.fecha_fin,
-            ta.nombre AS tipo_actividad,
-            ta.siglas
-        FROM actividad act
-        LEFT JOIN eje_tematico e ON act.id_eje = e.id_eje
-        LEFT JOIN asignatura a ON e.id_asignatura = a.id_asignatura
-        LEFT JOIN tipo_actividad ta ON act.id_tipo_actividad = ta.id_tipo_actividad;
-        """,
-    ),
-    # 9. Vista: Calendario unificado
-    (
-        "vw_calendario_unificado",
-        """
-        CREATE VIEW IF NOT EXISTS vw_calendario_unificado AS
-        SELECT
-            id_actividad AS id,
-            titulo,
-            fecha_inicio,
-            fecha_fin,
-            'actividad' AS origen,
-            NULL AS tipo
-        FROM actividad
-        UNION ALL
-        SELECT
-            id_evento AS id,
-            titulo,
-            fecha_inicio,
-            fecha_fin,
-            'evento' AS origen,
-            tipo
-        FROM calendario_evento;
-        """,
-    ),
-    # 10. Vista: Dashboard rápido del estudiante
-    (
-        "vw_dashboard_estudiante",
-        """
-        CREATE VIEW IF NOT EXISTS vw_dashboard_estudiante AS
-        SELECT
-            e.id_estudiante,
-            COUNT(DISTINCT act.id_actividad) AS total_actividades,
-            SUM(CASE WHEN ea.estado = 'entregada' THEN 1 ELSE 0 END) AS entregadas,
-            SUM(CASE WHEN act.fecha_fin < DATE('now') AND ea.estado IS NULL THEN 1 ELSE 0 END) AS vencidas,
-            SUM(CASE WHEN act.fecha_fin < DATE('now') AND ea.estado = 'entregada' THEN 1 ELSE 0 END) AS vencidas_entregadas
-        FROM estudiante e
-        LEFT JOIN estudiante_actividad ea ON e.id_estudiante = ea.id_estudiante
-        LEFT JOIN actividad act ON ea.id_actividad = act.id_actividad
-        GROUP BY e.id_estudiante;
-        """,
-    ),
-    # 11. Vista: Resumen académico por estudiante
-    (
-        "vw_resumen_academico",
-        """
-        CREATE VIEW IF NOT EXISTS vw_resumen_academico AS
-        SELECT
-            e.id_estudiante,
-            e.nombre,
-            c.nombre AS carrera,
-            COUNT(DISTINCT a.id_asignatura) AS total_asignaturas,
-            SUM(CASE WHEN ea.estado = 'aprobada' THEN 1 ELSE 0 END) AS aprobadas,
-            SUM(CASE WHEN ea.estado = 'cursando' THEN 1 ELSE 0 END) AS cursando,
-            SUM(CASE WHEN ea.estado = 'reprobada' THEN 1 ELSE 0 END) AS reprobadas,
-            ROUND(
-                100.0 * SUM(CASE WHEN ea.estado = 'aprobada' THEN 1 ELSE 0 END)
-                / COUNT(DISTINCT a.id_asignatura),
-                2
-            ) AS porcentaje_avance
-        FROM estudiante e
-        JOIN carrera c ON e.id_carrera = c.id_carrera
-        JOIN asignatura a ON c.id_carrera = a.id_carrera
-        LEFT JOIN estudiante_asignatura ea ON a.id_asignatura = ea.id_asignatura AND ea.id_estudiante = e.id_estudiante
-        GROUP BY e.id_estudiante, e.nombre, c.nombre;
-        """,
-    ),
-    # 12. Vista: Progreso por carrera
-    (
-        "vw_progreso_carreras",
-        """
-        CREATE VIEW IF NOT EXISTS vw_progreso_carreras AS
-        SELECT
-            c.id_carrera,
-            c.nombre AS carrera,
-            c.codigo,
-            COUNT(DISTINCT pe.id_estudiante) AS total_estudiantes,
-            COALESCE(ROUND(AVG(pe.porcentaje_avance), 2), 0) AS progreso_promedio,
-            CASE
-                WHEN COALESCE(AVG(pe.porcentaje_avance), 0) >= 70 THEN 'Activo'
-                WHEN COALESCE(AVG(pe.porcentaje_avance), 0) >= 40 THEN 'Regular'
-                ELSE 'En Riesgo'
-            END AS estado
-        FROM carrera c
-        LEFT JOIN vw_progreso_estudiante pe ON c.id_carrera = pe.id_carrera
-        GROUP BY c.id_carrera, c.nombre, c.codigo;
-        """,
-    ),
-]
+# Lista para almacenar VIEWS a medida que se necesitan
+VIEWS = []
+
+
+def agregar_view(nombre: str, sql: str) -> None:
+    """
+    Agrega una nueva VIEW a la lista de VIEWS a crear.
+
+    Args:
+        nombre (str): Nombre de la VIEW
+        sql (str): Sentencia SQL para crear la VIEW
+    """
+    VIEWS.append((nombre, sql))
+    logger.debug(f"VIEW agregada: {nombre}")
+
+
+# ┌────────────────────────────────────────────────────────────┐
+# │ Agregar VIEWS aquí
+# └────────────────────────────────────────────────────────────┘
+
+# VISTA 1: Eventos Unificados (Actividades + Calendario) CON CARRERA Y ASIGNATURA
+agregar_view(
+    "vw_eventos_unificados",
+    """
+    CREATE VIEW IF NOT EXISTS vw_eventos_unificados AS
+    SELECT 
+        'Actividad' AS tipo_evento,
+        a.id_actividad AS id_evento,
+        a.titulo,
+        a.descripcion,
+        a.fecha_inicio,
+        a.fecha_fin,
+        ta.nombre AS tipo_actividad,
+        NULL AS observaciones,
+        car.nombre AS carrera,
+        car.id_carrera,
+        asig.nombre AS asignatura,
+        asig.id_asignatura
+    FROM actividad a
+    LEFT JOIN tipo_actividad ta ON a.id_tipo_actividad = ta.id_tipo_actividad
+    LEFT JOIN eje_tematico et ON a.id_eje = et.id_eje
+    LEFT JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
+    LEFT JOIN carrera car ON asig.id_carrera = car.id_carrera
+
+    UNION ALL
+
+    SELECT 
+        'Evento Calendario' AS tipo_evento,
+        c.id_evento AS id_evento,
+        c.titulo,
+        NULL AS descripcion,
+        c.fecha_inicio,
+        c.fecha_fin,
+        c.tipo AS tipo_actividad,
+        CASE WHEN c.afecta_actividades = 1 THEN 'Afecta actividades' ELSE NULL END AS observaciones,
+        NULL AS carrera,
+        NULL AS id_carrera,
+        NULL AS asignatura,
+        NULL AS id_asignatura
+    FROM calendario_evento c;
+    """,
+)
 
 
 def crear_todas_las_views(ruta_db: str = RUTA_DB) -> bool:
@@ -311,6 +110,13 @@ def crear_todas_las_views(ruta_db: str = RUTA_DB) -> bool:
         for nombre_view, sql_view in VIEWS:
             try:
                 logger.debug(f"Creando VIEW: {nombre_view}")
+                # Primero intentar borrar la vista si existe
+                try:
+                    cursor.execute(f"DROP VIEW IF EXISTS {nombre_view};")
+                except Error:
+                    pass  # Ignorar errores de DROP VIEW
+
+                # Luego crear la vista
                 cursor.execute(sql_view)
                 views_creadas += 1
             except Error as ex:
