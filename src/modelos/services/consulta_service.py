@@ -1,8 +1,14 @@
 import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
-from modelos.daos.consulta_dao import ConsultaDAO, EventosUnificadosDAO
-from modelos.dtos.consulta_dto import ConsultasDTO, EventosUnificadosDTO
+from modelos.daos.consulta_dao import (
+    ConsultaDAO,
+    EventosUnificadosDAO,
+)
+from modelos.dtos.consulta_dto import (
+    ConsultasDTO,
+    EventosUnificadosDTO,
+)
 
 logger = logging.getLogger(__name__)
 

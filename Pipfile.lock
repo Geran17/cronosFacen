@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "382dde00a83a153d5a72b6c3446c192547585a8db25d05e09b378c55758833fa"
+            "sha256": "b074d868d886638817652f70b583a662327fd23eaf8c75e727adf76ae373eda7"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,15 @@
         ]
     },
     "default": {
+        "icalendar": {
+            "hashes": [
+                "sha256:d400e9c9bb8c025e5a3c77c236941bb690494be52528a0b43cc7e8b7c9505064",
+                "sha256:e0c10ecbfcebe958d33af7d491f6e6b7580d11d475f2eeb29532d0424f9110a1"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==6.3.2"
+        },
         "pillow": {
             "hashes": [
                 "sha256:0869154a2d0546545cde61d1789a6524319fc1897d9ee31218eae7a60ccc5643",
@@ -114,6 +123,14 @@
             "markers": "python_version >= '3.10'",
             "version": "==12.0.0"
         },
+        "python-dateutil": {
+            "hashes": [
+                "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3",
+                "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
+            "version": "==2.9.0.post0"
+        },
         "python-dotenv": {
             "hashes": [
                 "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6",
@@ -123,6 +140,14 @@
             "markers": "python_version >= '3.9'",
             "version": "==1.2.1"
         },
+        "six": {
+            "hashes": [
+                "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+                "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
+            "version": "==1.17.0"
+        },
         "ttkbootstrap": {
             "hashes": [
                 "sha256:58b288e92b0e8aa264a2733f57d9e5a41a8d868e0d8439367d689b8ba3e215eb",
@@ -131,6 +156,14 @@
             "index": "pypi",
             "markers": "python_version >= '3.10'",
             "version": "==1.19.2"
+        },
+        "tzdata": {
+            "hashes": [
+                "sha256:06a47e5700f3081aab02b2e513160914ff0694bce9947d6b76ebd6bf57cfc5d1",
+                "sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7"
+            ],
+            "markers": "python_version >= '2'",
+            "version": "==2025.3"
         }
     },
     "develop": {

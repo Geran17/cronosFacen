@@ -45,6 +45,15 @@ class ControlarAdministrarActividad:
         self.dict_carreras: Dict[int, str] = {}
         self.dict_carreras_inv: Dict[str, int] = {}
 
+        # Diccionarios para asignaturas: id_asignatura -> nombre_asignatura y viceversa
+        self.dict_asignaturas: Dict[int, str] = {}
+        self.dict_asignaturas_inv: Dict[str, int] = {}
+
+        # Diccionario para mapear asignatura -> ejes temáticos disponibles
+        self.dict_ejes_por_asignatura: Dict[int, Dict[int, str]] = (
+            {}
+        )  # id_asignatura -> {id_eje -> nombre_eje}
+
         # cargar widgets
         self._cargar_widgets()
 
@@ -59,6 +68,9 @@ class ControlarAdministrarActividad:
 
         # cargar las carreras en el combobox
         self._cargar_carreras()
+
+        # cargar las asignaturas en el combobox
+        self._cargar_asignaturas()
 
         # mostrar las estadistica en el panel inferior
         self._actualizar_estadisticas()
@@ -88,6 +100,9 @@ class ControlarAdministrarActividad:
         self.cbx_eje.bind("<<ComboboxSelected>>", self._on_eje_seleccionado)
         self.cbx_tipo_actividad.bind("<<ComboboxSelected>>", self._on_tipo_seleccionado)
         self.cbx_carrera_filtro.bind("<<ComboboxSelected>>", self._on_carrera_filtro_seleccionada)
+        self.cbx_asignatura_filtro.bind(
+            "<<ComboboxSelected>>", self._on_asignatura_filtro_seleccionada
+        )
 
     def _establecer_actividad(self) -> ActividadService:
         actividad = ActividadService(ruta_db=None)
@@ -97,6 +112,7 @@ class ControlarAdministrarActividad:
         fecha_inicio = self.var_fecha_inicio.get()
         fecha_fin = self.var_fecha_fin.get()
         descripcion = self.text_descripcion.get("1.0", END).strip()
+        nota = self.var_nota.get()
         label_eje = self.var_nombre_eje.get()
         label_tipo = self.var_nombre_tipo_actividad.get()
         # Convertir nombres a ids
@@ -110,6 +126,7 @@ class ControlarAdministrarActividad:
         actividad.fecha_fin = fecha_fin
         actividad.id_eje = id_eje
         actividad.id_tipo_actividad = id_tipo_actividad
+        actividad.nota = nota
         return actividad
 
     def _cargar_formulario(self, actividad: ActividadService):
@@ -120,6 +137,7 @@ class ControlarAdministrarActividad:
             self.var_fecha_fin.set(actividad.fecha_fin or "")
             self.var_id_eje.set(actividad.id_eje)
             self.var_id_tipo_actividad.set(actividad.id_tipo_actividad)
+            self.var_nota.set(actividad.nota if actividad.nota is not None else 0)
             # Cargar descripción en el widget Text
             self.text_descripcion.delete("1.0", END)
             if actividad.descripcion:
@@ -139,6 +157,7 @@ class ControlarAdministrarActividad:
         self.var_fecha_fin.set("")
         self.var_id_eje.set(0)
         self.var_id_tipo_actividad.set(0)
+        self.var_nota.set(0)
         self.var_nombre_eje.set("")
         self.var_nombre_tipo_actividad.set("")
         self.text_descripcion.delete("1.0", END)
@@ -218,28 +237,52 @@ class ControlarAdministrarActividad:
 
     def _obtener_actividades(self):
         """
-        Obtiene las actividades de la BD, aplicando filtro de carrera si está seleccionado.
+        Obtiene las actividades de la BD, aplicando filtros de carrera y asignatura si están seleccionados.
         """
         if self.lista_actividades:
             self.lista_actividades.clear()
 
         dao = ActividadDAO(ruta_db=None)
 
-        # Obtener ID de carrera del filtro
+        # Obtener IDs de filtros
         id_carrera_filtro = self.map_vars.get('var_id_carrera_filtro', IntVar(value=0)).get()
+        id_asignatura_filtro = self.map_vars.get('var_id_asignatura_filtro', IntVar(value=0)).get()
 
-        # Construir consulta SQL según filtro
+        # Construir consulta SQL según filtros
         if id_carrera_filtro and id_carrera_filtro > 0:
-            # Filtrar por carrera específica
+            if id_asignatura_filtro and id_asignatura_filtro > 0:
+                # Filtrar por carrera Y asignatura específicas
+                sql = """
+                SELECT a.* 
+                FROM actividad a
+                INNER JOIN eje_tematico et ON a.id_eje = et.id_eje
+                INNER JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
+                WHERE asig.id_carrera = ? AND asig.id_asignatura = ?
+                ORDER BY a.fecha_inicio DESC
+                """
+                params = (id_carrera_filtro, id_asignatura_filtro)
+            else:
+                # Filtrar por carrera específica
+                sql = """
+                SELECT a.* 
+                FROM actividad a
+                INNER JOIN eje_tematico et ON a.id_eje = et.id_eje
+                INNER JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
+                WHERE asig.id_carrera = ?
+                ORDER BY a.fecha_inicio DESC
+                """
+                params = (id_carrera_filtro,)
+        elif id_asignatura_filtro and id_asignatura_filtro > 0:
+            # Filtrar por asignatura específica sin carrera
             sql = """
             SELECT a.* 
             FROM actividad a
             INNER JOIN eje_tematico et ON a.id_eje = et.id_eje
             INNER JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
-            WHERE asig.id_carrera = ?
+            WHERE asig.id_asignatura = ?
             ORDER BY a.fecha_inicio DESC
             """
-            params = (id_carrera_filtro,)
+            params = (id_asignatura_filtro,)
         else:
             # Sin filtro: todas las actividades
             sql = "SELECT * FROM actividad ORDER BY fecha_inicio DESC"
@@ -262,8 +305,11 @@ class ControlarAdministrarActividad:
         self.var_nombre_eje: StringVar = self.map_vars['var_nombre_eje']
         self.var_id_tipo_actividad: IntVar = self.map_vars['var_id_tipo_actividad']
         self.var_nombre_tipo_actividad: StringVar = self.map_vars['var_nombre_tipo_actividad']
+        self.var_nota: IntVar = self.map_vars['var_nota']
         self.var_id_carrera_filtro: IntVar = self.map_vars['var_id_carrera_filtro']
         self.var_nombre_carrera_filtro: StringVar = self.map_vars['var_nombre_carrera_filtro']
+        self.var_id_asignatura_filtro: IntVar = self.map_vars['var_id_asignatura_filtro']
+        self.var_nombre_asignatura_filtro: StringVar = self.map_vars['var_nombre_asignatura_filtro']
 
     def _cargar_widgets(self):
         self.tabla_actividad: Tableview = self.map_widgets['tabla_actividad']
@@ -279,6 +325,8 @@ class ControlarAdministrarActividad:
         self.cbx_eje: Combobox = self.map_widgets['cbx_eje']
         self.cbx_tipo_actividad: Combobox = self.map_widgets['cbx_tipo_actividad']
         self.cbx_carrera_filtro: Combobox = self.map_widgets['cbx_carrera_filtro']
+        self.cbx_asignatura_filtro: Combobox = self.map_widgets['cbx_asignatura_filtro']
+        self.entry_nota: Entry = self.map_widgets['entry_nota']
 
     def _actualizar_estadisticas(self):
         # actualizamos la lista de actividades
@@ -327,6 +375,66 @@ class ControlarAdministrarActividad:
 
         except Exception as e:
             logger.error(f"Error al cargar ejes temáticos: {e}")
+            self.cbx_eje['values'] = []
+
+    def _cargar_ejes_por_asignatura(self, id_asignatura: int = 0):
+        """
+        Carga los ejes temáticos de una asignatura específica en el combobox.
+        Si id_asignatura es 0 o no se proporciona, carga todos los ejes temáticos.
+
+        Args:
+            id_asignatura (int): ID de la asignatura a filtrar
+        """
+        try:
+            # Limpiar diccionarios previos
+            self.dict_ejes.clear()
+            self.dict_ejes_inv.clear()
+
+            dao = EjeTematicoDAO(ruta_db=None)
+
+            if id_asignatura and id_asignatura > 0:
+                # Cargar ejes temáticos de la asignatura específica
+                sql = """
+                SELECT DISTINCT et.id_eje, et.nombre 
+                FROM eje_tematico et
+                WHERE et.id_asignatura = ?
+                ORDER BY et.orden, et.nombre
+                """
+                params = (id_asignatura,)
+                logger.debug(f"Cargando ejes temáticos para asignatura ID: {id_asignatura}")
+            else:
+                # Sin filtro: todas los ejes temáticos
+                sql = "SELECT id_eje, nombre FROM eje_tematico ORDER BY orden, nombre"
+                params = ()
+                logger.debug("Cargando todos los ejes temáticos")
+
+            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+
+            if lista_aux:
+                # Construir diccionarios y lista de nombres para el combobox
+                nombres_ejes = []
+                for data in lista_aux:
+                    id_eje = data.get('id_eje')
+                    nombre_eje = data.get('nombre')
+                    # Agregar a diccionarios bidireccionales
+                    self.dict_ejes[id_eje] = nombre_eje
+                    self.dict_ejes_inv[nombre_eje] = id_eje
+                    nombres_ejes.append(nombre_eje)
+
+                # Cargar labels en el combobox
+                self.cbx_eje['values'] = nombres_ejes
+                # Limpiar la selección anterior
+                self.cbx_eje.set('')
+                self.var_nombre_eje.set('')
+                logger.info(f"Se cargaron {len(nombres_ejes)} ejes temáticos para la asignatura")
+            else:
+                logger.warning("No se encontraron ejes temáticos para esta asignatura")
+                self.cbx_eje['values'] = []
+                self.cbx_eje.set('')
+                self.var_nombre_eje.set('')
+
+        except Exception as e:
+            logger.error(f"Error al cargar ejes temáticos por asignatura: {e}")
             self.cbx_eje['values'] = []
 
     def _cargar_tipos_actividad(self):
@@ -427,6 +535,69 @@ class ControlarAdministrarActividad:
             self.cbx_carrera_filtro['values'] = ["📚 Todas las carreras"]
             self.map_vars['var_nombre_carrera_filtro'].set("📚 Todas las carreras")
 
+    def _cargar_asignaturas(self):
+        """
+        Carga la lista de asignaturas desde la BD y las agrega al combobox filtro.
+        Incluye opción "Todas las asignaturas" para mostrar sin filtrar.
+        Si hay una carrera seleccionada, carga solo las asignaturas de esa carrera.
+        """
+        try:
+            from modelos.daos.asignatura_dao import AsignaturaDAO
+
+            # Limpiar diccionarios previos
+            self.dict_asignaturas.clear()
+            self.dict_asignaturas_inv.clear()
+
+            # Obtener ID de carrera del filtro
+            id_carrera_filtro = self.map_vars.get('var_id_carrera_filtro', IntVar(value=0)).get()
+
+            # Obtener asignaturas de la BD
+            dao = AsignaturaDAO(ruta_db=None)
+
+            if id_carrera_filtro and id_carrera_filtro > 0:
+                # Si hay carrera seleccionada, traer solo asignaturas de esa carrera
+                sql = "SELECT id_asignatura, nombre FROM asignatura WHERE id_carrera = ? ORDER BY nombre"
+                params = (id_carrera_filtro,)
+            else:
+                # Sin filtro de carrera: todas las asignaturas
+                sql = "SELECT id_asignatura, nombre FROM asignatura ORDER BY nombre"
+                params = ()
+
+            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+
+            if lista_aux:
+                # Construir diccionarios y lista de labels
+                labels_asignaturas = ["📕 Todas las asignaturas"]
+                self.dict_asignaturas[0] = "📕 Todas las asignaturas"
+                self.dict_asignaturas_inv["📕 Todas las asignaturas"] = 0
+
+                for data in lista_aux:
+                    id_asignatura = data.get('id_asignatura')
+                    nombre_asignatura = data.get('nombre')
+                    label_asignatura = f"📖 {nombre_asignatura}"
+
+                    # Agregar a diccionarios
+                    self.dict_asignaturas[id_asignatura] = label_asignatura
+                    self.dict_asignaturas_inv[label_asignatura] = id_asignatura
+                    labels_asignaturas.append(label_asignatura)
+
+                # Actualizar combobox
+                self.cbx_asignatura_filtro['values'] = labels_asignaturas
+                # Seleccionar "Todas" por defecto
+                self.map_vars['var_nombre_asignatura_filtro'].set("📕 Todas las asignaturas")
+                self.map_vars['var_id_asignatura_filtro'].set(0)
+
+                logger.info(f"Se cargaron {len(lista_aux)} asignaturas para filtro")
+            else:
+                logger.warning("No se encontraron asignaturas")
+                self.cbx_asignatura_filtro['values'] = ["📕 Todas las asignaturas"]
+                self.map_vars['var_nombre_asignatura_filtro'].set("📕 Todas las asignaturas")
+
+        except Exception as e:
+            logger.error(f"Error al cargar asignaturas: {e}")
+            self.cbx_asignatura_filtro['values'] = ["📕 Todas las asignaturas"]
+            self.map_vars['var_nombre_asignatura_filtro'].set("📕 Todas las asignaturas")
+
     def _actualizar_estadisticas_actividad(self, id_actividad: int):
         """
         Actualiza las estadísticas mostrando la información
@@ -474,12 +645,35 @@ class ControlarAdministrarActividad:
         """
         Evento disparado cuando el usuario selecciona una carrera en el filtro.
         Actualiza la tabla para mostrar solo actividades de esa carrera.
+        También recarga la lista de asignaturas para esa carrera.
         """
         label_carrera = self.map_vars['var_nombre_carrera_filtro'].get()
         id_carrera = self.dict_carreras_inv.get(label_carrera, 0)
         self.map_vars['var_id_carrera_filtro'].set(id_carrera)
 
         logger.info(f"Filtro de carrera seleccionado: {label_carrera} (ID: {id_carrera})")
+
+        # Recargar asignaturas para la carrera seleccionada
+        self._cargar_asignaturas()
+
+        # Actualizar tabla con el filtro aplicado
+        self._actualizar_tabla_actividad()
+        self._actualizar_estadisticas()
+
+    def _on_asignatura_filtro_seleccionada(self, event=None):
+        """
+        Evento disparado cuando el usuario selecciona una asignatura en el filtro.
+        Actualiza la tabla para mostrar solo actividades de esa asignatura.
+        También carga los ejes temáticos de esa asignatura en el formulario.
+        """
+        label_asignatura = self.map_vars['var_nombre_asignatura_filtro'].get()
+        id_asignatura = self.dict_asignaturas_inv.get(label_asignatura, 0)
+        self.map_vars['var_id_asignatura_filtro'].set(id_asignatura)
+
+        logger.info(f"Filtro de asignatura seleccionado: {label_asignatura} (ID: {id_asignatura})")
+
+        # Cargar ejes temáticos para la asignatura seleccionada en el formulario
+        self._cargar_ejes_por_asignatura(id_asignatura)
 
         # Actualizar tabla con el filtro aplicado
         self._actualizar_tabla_actividad()

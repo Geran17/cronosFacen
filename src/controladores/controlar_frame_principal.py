@@ -141,10 +141,9 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarCarrera(parent=ventana_raiz)
             dialogo.title = "Administrador de Carreras"
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de carreras: {e}")
@@ -154,9 +153,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarEjeTemático(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de ejes temáticos: {e}")
@@ -166,9 +164,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarTipoActividad(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de tipos de actividad: {e}")
@@ -178,9 +175,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarActividad(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de actividades: {e}")
@@ -190,9 +186,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarEstudiante(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de estudiantes: {e}")
@@ -202,9 +197,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarAsignatura(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de asignaturas: {e}")
@@ -214,9 +208,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarCalendario(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración del calendario: {e}")
@@ -248,9 +241,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarPrerequisitos(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de prerequisitos: {e}")
@@ -260,9 +252,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarEstudianteAsignatura(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de estudiante-asignatura: {e}")
@@ -272,9 +263,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarEstudianteActividad(parent=ventana_raiz)
-            dialogo.grab_set()
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración de estudiante-actividad: {e}")
@@ -284,9 +274,8 @@ class ControlarFramePrincipal:
             # Obtener la ventana raíz
             ventana_raiz = self.master.winfo_toplevel()
 
-            # Crear y abrir el diálogo modal
+            # Crear y abrir el diálogo (no modal, permite interacción con frame_principal)
             dialogo = DialogoAdministrarEstudianteCarrera(parent=ventana_raiz)
-            dialogo.grab_set()
 
             logger.info("Diálogo de administración de estudiante-carrera abierto")
 

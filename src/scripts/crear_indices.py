@@ -39,8 +39,10 @@ INDICES = [
     "CREATE INDEX IF NOT EXISTS idx_actividad_tipo ON actividad (id_tipo_actividad);",
     # 🗓️ CalendarioEvento
     "CREATE INDEX IF NOT EXISTS idx_evento_fechas ON calendario_evento (fecha_inicio, fecha_fin);",
-    # 👤 Estudiante
-    "CREATE INDEX IF NOT EXISTS idx_estudiante_carrera ON estudiante (id_carrera);",
+    # 👤 EstudianteCarrera - relación M:M entre estudiantes y carreras
+    "CREATE INDEX IF NOT EXISTS idx_ec_estudiante ON estudiante_carrera (id_estudiante);",
+    "CREATE INDEX IF NOT EXISTS idx_ec_carrera ON estudiante_carrera (id_carrera);",
+    "CREATE INDEX IF NOT EXISTS idx_ec_estado ON estudiante_carrera (estado);",
     # 🎓 EstudianteAsignatura - clave para progreso
     "CREATE INDEX IF NOT EXISTS idx_ea_estudiante ON estudiante_asignatura (id_estudiante);",
     "CREATE INDEX IF NOT EXISTS idx_ea_asignatura ON estudiante_asignatura (id_asignatura);",

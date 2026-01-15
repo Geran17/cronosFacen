@@ -82,30 +82,22 @@ class FrameAdministrarEstudiante(Frame):
     # │ Frame Central
     # └────────────────────────────────────────────────────────────┘
     def _frame_central(self, frame: Frame):
-        # Configurar columnas: panel izquierdo (60%) y derecho (40%)
-        frame.columnconfigure(0, weight=6, minsize=400)
-        frame.columnconfigure(1, weight=4, minsize=300)
         frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
 
-        # Panel Izquierdo: Tabla de Estudiantes
-        frame_izquierdo = Labelframe(
-            frame,
-            text="👥 Lista de Estudiantes",
-            padding=10,
-            bootstyle="primary",
-        )
-        frame_izquierdo.grid(row=0, column=0, sticky=NSEW, padx=(0, 5))
-        self._frame_tabla(frame_izquierdo)
+        # Crear Notebook (tabs)
+        self.notebook = Notebook(frame)
+        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
 
-        # Panel Derecho: Formulario
-        frame_derecho = Labelframe(
-            frame,
-            text="📝 Detalles del Estudiante",
-            padding=10,
-            bootstyle="info",
-        )
-        frame_derecho.grid(row=0, column=1, sticky=NSEW, padx=(5, 0))
-        self._frame_formulario(frame_derecho)
+        # Tab 1: Tabla
+        frame_tabla_tab = Frame(self.notebook, padding=10)
+        self.notebook.add(frame_tabla_tab, text="👥 Lista de Estudiantes")
+        self._frame_tabla(frame_tabla_tab)
+
+        # Tab 2: Formulario
+        frame_formulario_tab = Frame(self.notebook, padding=10)
+        self.notebook.add(frame_formulario_tab, text="📝 Detalles del Estudiante")
+        self._frame_formulario(frame_formulario_tab)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Tabla

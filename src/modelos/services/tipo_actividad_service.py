@@ -106,7 +106,7 @@ class TipoActividadService(TipoActividadDTO):
         """Representación en string del tipo de actividad."""
         return (
             f"TipoActividadService(id={self.id_tipo_actividad}, nombre={self.nombre}, "
-            f"siglas={self.siglas})"
+            f"siglas={self.siglas}, prioridad={self.prioridad})"
         )
 
     def __repr__(self) -> str:

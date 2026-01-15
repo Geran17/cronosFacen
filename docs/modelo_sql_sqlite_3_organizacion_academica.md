@@ -38,12 +38,15 @@ CREATE TABLE asignatura (
     creditos INTEGER NOT NULL,
     horas_semanales INTEGER,
     tipo TEXT CHECK (tipo IN ('obligatoria', 'electiva')),
+    semestre INTEGER,
     id_carrera INTEGER NOT NULL,
     FOREIGN KEY (id_carrera)
         REFERENCES carrera(id_carrera)
         ON DELETE CASCADE
 );
 ```
+
+📌 **Campo semestre**: Número de semestre al que pertenece la asignatura (1-10).
 
 ---
 
@@ -89,7 +92,8 @@ CREATE TABLE tipo_actividad (
     id_tipo_actividad INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     siglas TEXT NOT NULL UNIQUE,
-    descripcion TEXT
+    descripcion TEXT,
+    prioridad INTEGER --Escala de 0: baja, 1: media, 2: alta
 );
 ```
 
@@ -106,6 +110,7 @@ CREATE TABLE actividad (
     fecha_fin TEXT NOT NULL,
     id_eje INTEGER NOT NULL,
     id_tipo_actividad INTEGER NOT NULL,
+    nota INTEGER DEFAULT 0,
     FOREIGN KEY (id_eje)
         REFERENCES eje_tematico(id_eje)
         ON DELETE CASCADE,

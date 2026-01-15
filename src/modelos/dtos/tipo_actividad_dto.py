@@ -19,12 +19,15 @@ class TipoActividadDTO:
             (ej: "TAR", "QZ", "EXN"). Defaults to None.
         descripcion (Optional[str]): Descripción detallada del tipo
             de actividad. Defaults to None.
+        prioridad (Optional[int]): Nivel de prioridad de la actividad.
+            Escala: 0 = baja, 1 = media, 2 = alta. Defaults to None.
     """
 
     id_tipo_actividad: Optional[int] = None
     nombre: Optional[str] = None
     siglas: Optional[str] = None
     descripcion: Optional[str] = None
+    prioridad: Optional[int] = None
 
     def get_data(self) -> Dict[str, Any]:
         """
@@ -39,14 +42,16 @@ class TipoActividadDTO:
             ...     id_tipo_actividad=1,
             ...     nombre='Tarea',
             ...     siglas='TAR',
-            ...     descripcion='Actividad de refuerzo enviada a casa'
+            ...     descripcion='Actividad de refuerzo enviada a casa',
+            ...     prioridad=1
             ... )
             >>> tipo.get_data()
             {
                 'id_tipo_actividad': 1,
                 'nombre': 'Tarea',
                 'siglas': 'TAR',
-                'descripcion': 'Actividad de refuerzo enviada a casa'
+                'descripcion': 'Actividad de refuerzo enviada a casa',
+                'prioridad': 1
             }
         """
         return {
@@ -54,6 +59,7 @@ class TipoActividadDTO:
             'nombre': self.nombre,
             'siglas': self.siglas,
             'descripcion': self.descripcion,
+            'prioridad': self.prioridad,
         }
 
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -70,7 +76,8 @@ class TipoActividadDTO:
             ...     'id_tipo_actividad': 1,
             ...     'nombre': 'Tarea',
             ...     'siglas': 'TAR',
-            ...     'descripcion': 'Actividad de refuerzo enviada a casa'
+            ...     'descripcion': 'Actividad de refuerzo enviada a casa',
+            ...     'prioridad': 1
             ... })
         """
         if data:
@@ -78,3 +85,4 @@ class TipoActividadDTO:
             self.nombre = data.get('nombre', self.nombre)
             self.siglas = data.get('siglas', self.siglas)
             self.descripcion = data.get('descripcion', self.descripcion)
+            self.prioridad = data.get('prioridad', self.prioridad)

@@ -61,6 +61,8 @@ class ControlarAdministrarEstudianteActividad:
         self.entry_buscar_actividad = self.map_widgets.get('entry_buscar_actividad')
         self.cbx_filtro_estado = self.map_widgets.get('cbx_filtro_estado')
         self.cbx_filtro_tipo = self.map_widgets.get('cbx_filtro_tipo')
+        self.cbx_filtro_asignatura = self.map_widgets.get('cbx_filtro_asignatura')
+        self.btn_limpiar_filtros = self.map_widgets.get('btn_limpiar_filtros')
         self.lbl_estadisticas = self.map_widgets.get('lbl_estadisticas')
         self.lbl_total_actividades = self.map_widgets.get('lbl_total_actividades')
         self.lbl_pendientes = self.map_widgets.get('lbl_pendientes')
@@ -79,6 +81,7 @@ class ControlarAdministrarEstudianteActividad:
         self.var_fecha_entrega = self.map_vars.get('var_fecha_entrega')
         self.var_filtro_estado = self.map_vars.get('var_filtro_estado')
         self.var_filtro_tipo = self.map_vars.get('var_filtro_tipo')
+        self.var_filtro_asignatura = self.map_vars.get('var_filtro_asignatura')
 
         # cargar los widgets
         self._cargar_widgets()
@@ -116,7 +119,12 @@ class ControlarAdministrarEstudianteActividad:
         # Filtros
         self.cbx_filtro_estado.bind("<<ComboboxSelected>>", self._on_filtrar)
         self.cbx_filtro_tipo.bind("<<ComboboxSelected>>", self._on_filtrar)
+        self.cbx_filtro_asignatura.bind("<<ComboboxSelected>>", self._on_filtrar)
         self.entry_buscar_actividad.bind("<KeyRelease>", self._on_buscar_actividad)
+
+        # Botón limpiar filtros
+        if self.btn_limpiar_filtros:
+            self.btn_limpiar_filtros.config(command=self._on_limpiar_filtros)
 
     def _cargar_widgets(self):
         """Configura el estado inicial de los widgets."""
@@ -142,7 +150,6 @@ class ControlarAdministrarEstudianteActividad:
             FROM estudiante e
             LEFT JOIN estudiante_carrera ec 
                 ON e.id_estudiante = ec.id_estudiante 
-                AND ec.estado = 'activa'
             LEFT JOIN carrera c 
                 ON ec.id_carrera = c.id_carrera
             ORDER BY e.nombre, ec.es_carrera_principal DESC, c.nombre
@@ -255,17 +262,25 @@ class ControlarAdministrarEstudianteActividad:
             logger.error(f"Error al cargar actividades: {e}")
 
     def _cargar_filtros_iniciales(self):
-        """Carga los filtros iniciales de tipos de actividad."""
+        """Carga los filtros iniciales de tipos de actividad y asignaturas."""
         try:
             # Cargar tipos de actividad desde las actividades cargadas
             tipos_set = set()
+            asignaturas_set = set()
             for actividad in self.dict_actividades.values():
                 if actividad.get('sigla_tipo'):
                     tipos_set.add(actividad.get('sigla_tipo'))
+                if actividad.get('nombre_asignatura'):
+                    asignaturas_set.add(actividad.get('nombre_asignatura'))
 
             tipos = ["Todos"] + sorted(list(tipos_set))
             self.cbx_filtro_tipo.config(values=tipos)
             self.var_filtro_tipo.set("Todos")
+
+            # Configurar filtro de asignaturas
+            asignaturas = ["Todos"] + sorted(list(asignaturas_set))
+            self.cbx_filtro_asignatura.config(values=asignaturas)
+            self.var_filtro_asignatura.set("Todos")
 
         except Exception as e:
             logger.error(f"Error al cargar filtros iniciales: {e}")
@@ -302,11 +317,64 @@ class ControlarAdministrarEstudianteActividad:
         except Exception as e:
             logger.error(f"Error al cargar registros del estudiante: {e}")
 
+    def _cargar_carreras_estudiante(self, id_estudiante: int):
+        """Carga las carreras disponibles para un estudiante."""
+        try:
+            self.dict_carreras_estudiante.clear()
+            self.dict_carreras_estudiante_inv.clear()
+
+            dao = EstudianteDAO(ruta_db=None)
+
+            sql = """
+            SELECT DISTINCT ec.id_carrera, c.nombre, ec.estado
+            FROM estudiante_carrera ec
+            INNER JOIN carrera c ON ec.id_carrera = c.id_carrera
+            WHERE ec.id_estudiante = ?
+            ORDER BY ec.es_carrera_principal DESC, c.nombre
+            """
+            params = (id_estudiante,)
+            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+
+            if lista_aux:
+                carreras_labels = []
+                for data in lista_aux:
+                    id_carrera = data.get('id_carrera')
+                    nombre_carrera = data.get('nombre')
+                    estado = data.get('estado')
+
+                    # Agregar indicador de estado
+                    label_carrera = nombre_carrera
+                    if estado != 'activa':
+                        label_carrera += f" ({estado})"
+
+                    self.dict_carreras_estudiante[id_carrera] = {
+                        'nombre': nombre_carrera,
+                        'estado': estado,
+                    }
+                    self.dict_carreras_estudiante_inv[label_carrera] = id_carrera
+                    carreras_labels.append(label_carrera)
+
+                self.cbx_carrera.config(values=carreras_labels)
+                # Seleccionar la primera carrera por defecto
+                if carreras_labels:
+                    self.var_carrera_seleccionada.set(carreras_labels[0])
+                    self._on_carrera_seleccionada()
+
+                logger.info(f"Se cargaron {len(carreras_labels)} carreras para el estudiante")
+            else:
+                logger.warning("El estudiante no tiene carreras")
+                self.cbx_carrera.config(values=[])
+                self.var_carrera_seleccionada.set("")
+
+        except Exception as e:
+            logger.error(f"Error al cargar carreras del estudiante: {e}")
+
     def _actualizar_tabla_actividades(
         self,
         filtro_busqueda: str = "",
         filtro_estado: str = "Todos",
         filtro_tipo: str = "Todos",
+        filtro_asignatura: str = "Todos",
     ):
         """Actualiza la tabla con las actividades y sus estados."""
         try:
@@ -361,6 +429,12 @@ class ControlarAdministrarEstudianteActividad:
                 # Aplicar filtro de tipo de actividad
                 if filtro_tipo != "Todos":
                     if datos.get('sigla_tipo') != filtro_tipo:
+                        continue
+
+                # Aplicar filtro de asignatura
+                if filtro_asignatura != "Todos":
+                    nombre_asignatura = datos.get('nombre_asignatura', '')
+                    if nombre_asignatura != filtro_asignatura:
                         continue
 
                 # Contadores
@@ -495,7 +569,7 @@ class ControlarAdministrarEstudianteActividad:
     # └────────────────────────────────────────────────────────────┘
 
     def _on_cargar_estudiante(self):
-        """Carga los datos del estudiante-carrera seleccionado."""
+        """Carga los datos del estudiante seleccionado."""
         try:
             label_estudiante = self.var_nombre_estudiante.get()
             if not label_estudiante:
@@ -506,41 +580,31 @@ class ControlarAdministrarEstudianteActividad:
                 )
                 return
 
-            # ✅ Obtener clave única (id_estudiante_id_carrera)
+            # Obtener clave única (id_estudiante_id_carrera)
             clave_dict = self.dict_estudiantes_inv.get(label_estudiante, None)
             if not clave_dict:
                 return
 
-            # Obtener info del estudiante-carrera
+            # Obtener info del estudiante
             info_estudiante = self.dict_estudiantes.get(clave_dict)
             if not info_estudiante:
                 return
 
-            # ✅ Extraer id_estudiante y id_carrera
+            # Extraer id_estudiante
             id_estudiante = info_estudiante.get('id_estudiante')
             id_carrera = info_estudiante.get('id_carrera')
-
-            # ✅ VALIDACIÓN: Verificar que tenga carrera
-            if not id_carrera:
-                nombre_carrera = info_estudiante.get('nombre_carrera', 'Sin carrera')
-                showwarning(
-                    parent=self.master,
-                    title="Sin Carrera Asignada",
-                    message=f"El estudiante seleccionado no tiene una carrera asignada.\n\n"
-                    f"Por favor, use el módulo 'Estudiante-Carrera' para inscribir "
-                    f"al estudiante en una carrera antes de asignar actividades.",
-                )
-                logger.warning(f"Estudiante {id_estudiante} sin carrera")
-                return
 
             self.id_estudiante_actual = id_estudiante
             self.id_carrera_estudiante = id_carrera
             self.var_id_estudiante.set(id_estudiante)
 
-            # Cargar actividades de la carrera seleccionada
-            self._cargar_actividades(id_carrera=id_carrera)
+            # Cargar actividades de la carrera
+            if id_carrera:
+                self._cargar_actividades(id_carrera=id_carrera)
+            else:
+                self._cargar_actividades()
 
-            # Recargar filtros de tipo basados en las nuevas actividades
+            # Recargar filtros de tipo
             self._cargar_filtros_iniciales()
 
             # Cargar registros del estudiante
@@ -555,11 +619,7 @@ class ControlarAdministrarEstudianteActividad:
             # Actualizar estadísticas
             self._actualizar_estadisticas()
 
-            # ✅ Mostrar información de la carrera
-            nombre_carrera = info_estudiante.get('nombre_carrera', 'Desconocida')
-            logger.info(
-                f"Estudiante cargado: {label_estudiante} - Carrera: {nombre_carrera} (ID: {id_carrera})"
-            )
+            logger.info(f"Estudiante cargado: {label_estudiante}")
 
         except Exception as e:
             logger.error(f"Error al cargar estudiante: {e}", exc_info=True)
@@ -590,12 +650,15 @@ class ControlarAdministrarEstudianteActividad:
             logger.error(f"Error al seleccionar actividad: {e}")
 
     def _on_filtrar(self, event=None):
-        """Maneja todos los filtros (estado, tipo)."""
+        """Maneja todos los filtros (estado, tipo, asignatura)."""
         try:
             filtro_busqueda = self.entry_buscar_actividad.get()
             filtro_estado = self.var_filtro_estado.get()
             filtro_tipo = self.var_filtro_tipo.get()
-            self._actualizar_tabla_actividades(filtro_busqueda, filtro_estado, filtro_tipo)
+            filtro_asignatura = self.var_filtro_asignatura.get()
+            self._actualizar_tabla_actividades(
+                filtro_busqueda, filtro_estado, filtro_tipo, filtro_asignatura
+            )
 
         except Exception as e:
             logger.error(f"Error al filtrar: {e}")
@@ -606,10 +669,21 @@ class ControlarAdministrarEstudianteActividad:
             filtro_busqueda = self.entry_buscar_actividad.get()
             filtro_estado = self.var_filtro_estado.get()
             filtro_tipo = self.var_filtro_tipo.get()
-            self._actualizar_tabla_actividades(filtro_busqueda, filtro_estado, filtro_tipo)
+            filtro_asignatura = self.var_filtro_asignatura.get()
+            self._actualizar_tabla_actividades(
+                filtro_busqueda, filtro_estado, filtro_tipo, filtro_asignatura
+            )
 
         except Exception as e:
             logger.error(f"Error en búsqueda: {e}")
+
+    def _on_limpiar_filtros(self):
+        """Limpia todos los filtros."""
+        self.entry_buscar_actividad.delete(0, "end")
+        self.var_filtro_estado.set("Todos")
+        self.var_filtro_tipo.set("Todos")
+        self.var_filtro_asignatura.set("Todos")
+        self._actualizar_tabla_actividades()
 
     def _on_limpiar_formulario(self):
         """Limpia el formulario."""

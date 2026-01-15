@@ -59,6 +59,30 @@ class CalendarioEventoDAO(DAO):
 
         return self.ejecutar_insertar(sql, params)
 
+    def actualizar(self, dto: CalendarioEventoDTO) -> bool:
+        """
+        Actualiza un registro de evento del calendario en la base de datos.
+
+        Args:
+            dto (CalendarioEventoDTO): DTO con los datos del evento a actualizar.
+
+        Returns:
+            bool: True si se actualizó correctamente, False en caso contrario.
+        """
+        sql = """UPDATE calendario_evento 
+                 SET titulo = ?, tipo = ?, fecha_inicio = ?, fecha_fin = ?, afecta_actividades = ?
+                 WHERE id_evento = ?"""
+        params = (
+            dto.titulo,
+            dto.tipo,
+            dto.fecha_inicio,
+            dto.fecha_fin,
+            dto.afecta_actividades,
+            dto.id_evento,
+        )
+
+        return self.ejecutar_actualizacion(sql, params)
+
     def eliminar(self, dto: CalendarioEventoDTO) -> bool:
         """
         Elimina un registro de evento del calendario de la base de datos por su ID.

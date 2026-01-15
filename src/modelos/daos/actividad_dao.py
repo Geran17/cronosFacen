@@ -34,6 +34,7 @@ class ActividadDAO(DAO):
                 fecha_fin TEXT NOT NULL,
                 id_eje INTEGER NOT NULL,
                 id_tipo_actividad INTEGER NOT NULL,
+                nota INTEGER DEFAULT 0,
                 FOREIGN KEY (id_eje)
                     REFERENCES eje_tematico(id_eje)
                     ON DELETE CASCADE,
@@ -53,8 +54,8 @@ class ActividadDAO(DAO):
         Returns:
             Optional[int]: ID del registro insertado o None si hay error.
         """
-        sql = """INSERT INTO actividad (titulo, descripcion, fecha_inicio, fecha_fin, id_eje, id_tipo_actividad)
-                 VALUES (?, ?, ?, ?, ?, ?)"""
+        sql = """INSERT INTO actividad (titulo, descripcion, fecha_inicio, fecha_fin, id_eje, id_tipo_actividad, nota)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)"""
         params = (
             dto.titulo,
             dto.descripcion,
@@ -62,6 +63,7 @@ class ActividadDAO(DAO):
             dto.fecha_fin,
             dto.id_eje,
             dto.id_tipo_actividad,
+            dto.nota if dto.nota is not None else 0,
         )
 
         return self.ejecutar_insertar(sql, params)
@@ -78,6 +80,33 @@ class ActividadDAO(DAO):
         """
         sql = "DELETE FROM actividad WHERE id_actividad = ?"
         params = (dto.id_actividad,)
+
+        return self.ejecutar_actualizacion(sql, params)
+
+    def actualizar(self, dto: ActividadDTO) -> bool:
+        """
+        Actualiza un registro de actividad en la base de datos.
+
+        Args:
+            dto (ActividadDTO): DTO con los datos a actualizar.
+
+        Returns:
+            bool: True si se actualizó correctamente, False en caso contrario.
+        """
+        sql = """UPDATE actividad 
+                 SET titulo = ?, descripcion = ?, fecha_inicio = ?, fecha_fin = ?, 
+                     id_eje = ?, id_tipo_actividad = ?, nota = ?
+                 WHERE id_actividad = ?"""
+        params = (
+            dto.titulo,
+            dto.descripcion,
+            dto.fecha_inicio,
+            dto.fecha_fin,
+            dto.id_eje,
+            dto.id_tipo_actividad,
+            dto.nota if dto.nota is not None else 0,
+            dto.id_actividad,
+        )
 
         return self.ejecutar_actualizacion(sql, params)
 

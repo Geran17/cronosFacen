@@ -58,6 +58,9 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.var_filtro_tipo = StringVar(value="Todos")
         self.map_vars['var_filtro_tipo'] = self.var_filtro_tipo
 
+        self.var_filtro_asignatura = StringVar(value="Todos")
+        self.map_vars['var_filtro_asignatura'] = self.var_filtro_asignatura
+
         # creamos los widgets
         self._crear_widgets()
 
@@ -179,16 +182,37 @@ class FrameAdministrarEstudianteActividad(Frame):
         frame_filtros.pack(fill=X, pady=(0, 10))
 
         # Búsqueda
-        lbl_buscar = Label(frame_filtros, text="Buscar:", anchor=W)
+        lbl_buscar = Label(
+            frame_filtros, text="🔎 Buscar por título:", anchor=W, font=("Helvetica", 9, "bold")
+        )
         lbl_buscar.pack(side=LEFT, padx=(0, 5))
 
-        self.entry_buscar_actividad = Entry(frame_filtros, width=30)
-        self.entry_buscar_actividad.pack(side=LEFT, padx=(0, 15))
+        self.entry_buscar_actividad = Entry(frame_filtros, width=25)
+        self.entry_buscar_actividad.pack(side=LEFT, padx=(0, 10), fill=X, expand=True)
         self.map_widgets['entry_buscar_actividad'] = self.entry_buscar_actividad
-        ToolTip(self.entry_buscar_actividad, "Buscar por título o asignatura")
+        ToolTip(self.entry_buscar_actividad, "Busca por título de la actividad en tiempo real")
+
+        # Separador visual
+        Separator(frame_filtros, orient=VERTICAL).pack(side=LEFT, fill=Y, padx=5)
+
+        # Filtro por asignatura
+        lbl_asignatura = Label(
+            frame_filtros, text="Asignatura:", anchor=W, font=("Helvetica", 9, "bold")
+        )
+        lbl_asignatura.pack(side=LEFT, padx=(5, 5))
+
+        self.cbx_filtro_asignatura = Combobox(
+            frame_filtros,
+            textvariable=self.var_filtro_asignatura,
+            state=READONLY,
+            width=18,
+        )
+        self.cbx_filtro_asignatura.pack(side=LEFT, padx=(0, 10))
+        self.map_widgets['cbx_filtro_asignatura'] = self.cbx_filtro_asignatura
+        ToolTip(self.cbx_filtro_asignatura, "Filtrar actividades por asignatura")
 
         # Filtro por estado
-        lbl_estado = Label(frame_filtros, text="Estado:", anchor=W)
+        lbl_estado = Label(frame_filtros, text="Estado:", anchor=W, font=("Helvetica", 9, "bold"))
         lbl_estado.pack(side=LEFT, padx=(0, 5))
 
         self.cbx_filtro_estado = Combobox(
@@ -198,34 +222,45 @@ class FrameAdministrarEstudianteActividad(Frame):
             state=READONLY,
             width=15,
         )
-        self.cbx_filtro_estado.pack(side=LEFT, padx=(0, 15))
+        self.cbx_filtro_estado.pack(side=LEFT, padx=(0, 10))
         self.map_widgets['cbx_filtro_estado'] = self.cbx_filtro_estado
         ToolTip(self.cbx_filtro_estado, "Filtrar actividades por estado")
 
         # Filtro por tipo de actividad
-        lbl_tipo = Label(frame_filtros, text="Tipo:", anchor=W)
+        lbl_tipo = Label(frame_filtros, text="Tipo:", anchor=W, font=("Helvetica", 9, "bold"))
         lbl_tipo.pack(side=LEFT, padx=(0, 5))
 
         self.cbx_filtro_tipo = Combobox(
             frame_filtros,
             textvariable=self.var_filtro_tipo,
             state=READONLY,
-            width=20,
+            width=15,
         )
-        self.cbx_filtro_tipo.pack(side=LEFT)
+        self.cbx_filtro_tipo.pack(side=LEFT, padx=(0, 10))
         self.map_widgets['cbx_filtro_tipo'] = self.cbx_filtro_tipo
         ToolTip(self.cbx_filtro_tipo, "Filtrar por tipo de actividad")
 
+        # Botón para limpiar filtros
+        self.btn_limpiar_filtros = Button(
+            frame_filtros,
+            text="🔄 Limpiar",
+            bootstyle="secondary-outline",
+            width=12,
+        )
+        self.btn_limpiar_filtros.pack(side=LEFT, padx=(5, 0))
+        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
+        ToolTip(self.btn_limpiar_filtros, "Limpiar todos los filtros")
+
         # Tabla
         columnas = [
-            {"text": "Título", "stretch": True, "width": 200},
-            {"text": "Asignatura", "stretch": False, "width": 130},
-            {"text": "Tipo", "stretch": False, "width": 50},
-            {"text": "F. Inicio", "stretch": False, "width": 80},
-            {"text": "F. Fin", "stretch": False, "width": 80},
-            {"text": "Días", "stretch": False, "width": 50},
-            {"text": "Estado", "stretch": False, "width": 110},
-            {"text": "F. Entrega", "stretch": False, "width": 90},
+            {"text": "Título", "stretch": True, "anchor": "w", "minwidth": 200},
+            {"text": "Asignatura", "stretch": False, "anchor": "w", "width": 130},
+            {"text": "Tipo", "stretch": False, "anchor": "center", "width": 70},
+            {"text": "F. Inicio", "stretch": False, "anchor": "center", "width": 90},
+            {"text": "F. Fin", "stretch": False, "anchor": "center", "width": 90},
+            {"text": "Días", "stretch": False, "anchor": "center", "width": 50},
+            {"text": "Estado", "stretch": False, "anchor": "center", "width": 110},
+            {"text": "F. Entrega", "stretch": False, "anchor": "center", "width": 100},
         ]
 
         self.tabla_actividades = Tableview(

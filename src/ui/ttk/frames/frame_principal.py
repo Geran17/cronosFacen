@@ -31,6 +31,7 @@ from ui.ttk.styles.icons import (
 )
 from ui.ttk.frames.frame_bienvenidad import FrameBienvenidad
 from ui.ttk.frames.frame_calendario import FrameCalendario
+from ui.ttk.frames.frame_actividades import FrameActividades
 from scripts.logging_config import obtener_logger_modulo
 from controladores.controlar_frame_principal import ControlarFramePrincipal
 
@@ -409,3 +410,7 @@ class FramePrincipal(Frame):
         # Tab Calendario
         self.frame_calendario = FrameCalendario(master=self.notebook_central)
         self.notebook_central.add(self.frame_calendario, text=f"{ICON_CALENDARIO} Calendario")
+
+        # Tab Actividades
+        self.frame_actividades = FrameActividades(master=self.notebook_central)
+        self.notebook_central.add(self.frame_actividades, text=f"{ICON_ACTIVIDAD} Actividades")

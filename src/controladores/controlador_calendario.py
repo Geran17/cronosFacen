@@ -1,9 +1,12 @@
 import calendar
+import csv
 from typing import Dict, Any, List
+from tkinter import filedialog
 from ttkbootstrap import Frame, Label, Button, StringVar, Separator
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.constants import *
 from datetime import datetime
+from pathlib import Path
 from modelos.services.consulta_service import EventosUnificadosService
 from modelos.dtos.consulta_dto import EventosUnificadosDTO
 from scripts.logging_config import obtener_logger_modulo
@@ -26,6 +29,7 @@ class ControladorCalendario:
         self.map_frame_dias: Dict[int, Frame] = {}
         self.eventos_del_mes: List[EventosUnificadosService] = []
         self.eventos_por_dia: Dict[int, List] = {}  # Almacenar eventos por día
+        self.eventos_filtrados: List[EventosUnificadosDTO] = []  # Almacenar eventos filtrados
 
         # cargar los widgets y variables
         self._cargar_widgets()
@@ -49,10 +53,37 @@ class ControladorCalendario:
 
         # Combobox de filtros
         self.cbx_carrera = self.map_widgets.get('cbx_carrera')
+        self.cbx_asignatura = self.map_widgets.get('cbx_asignatura')
+        self.cbx_tipo_evento = self.map_widgets.get('cbx_tipo_evento')
         self.cbx_tipo_actividad = self.map_widgets.get('cbx_tipo_actividad')
-        self.cbx_estado_actividad = self.map_widgets.get('cbx_estado_actividad')
+
+        # Botones de filtrado
+        self.btn_aplicar_filtros = self.map_widgets.get('btn_aplicar_filtros')
+        self.btn_refrescar = self.map_widgets.get('btn_refrescar')
+        self.btn_limpiar_filtros = self.map_widgets.get('btn_limpiar_filtros')
+
+        # Botones de exportación
+        self.btn_exportar_csv = self.map_widgets.get('btn_exportar_csv')
+        self.btn_exportar_ical = self.map_widgets.get('btn_exportar_ical')
+
+        # Conectar eventos de botones de filtrado
+        if self.btn_aplicar_filtros:
+            self.btn_aplicar_filtros.config(command=self._aplicar_filtros)
+        if self.btn_refrescar:
+            self.btn_refrescar.config(command=self._actualizar_mes_año)
+        if self.btn_limpiar_filtros:
+            self.btn_limpiar_filtros.config(command=self._resetear_filtros)
+
+        # Conectar eventos de botones de exportación
+        if self.btn_exportar_csv:
+            self.btn_exportar_csv.config(command=self._exportar_eventos_csv)
+        if self.btn_exportar_ical:
+            self.btn_exportar_ical.config(command=self._exportar_a_icalendar)
 
         self.treeview_eventos = self.map_widgets.get('treeview_eventos')
+
+        # Label de estadísticas
+        self.lbl_stats = self.map_widgets.get('lbl_stats')
 
         # Conectar eventos
         if self.btn_anterior:
@@ -62,6 +93,9 @@ class ControladorCalendario:
         if self.btn_hoy:
             self.btn_hoy.config(command=self._ir_mes_actual)
 
+        # Cargar datos en los combobox
+        self._cargar_combobox_filtros()
+
         # Actualizar el label con la fecha actual
         self._actualizar_mes_año()
 
@@ -70,6 +104,265 @@ class ControladorCalendario:
         self.var_carrera: StringVar = self.map_vars.get('var_carrera')
         self.var_tipo_actividad: StringVar = self.map_vars.get('var_tipo_actividad')
         self.var_estado_actividad: StringVar = self.map_vars.get('var_estado_activdad')
+        self.var_asignatura: StringVar = self.map_vars.get('var_asignatura')
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Cargar Combobox Filtros
+    # └────────────────────────────────────────────────────────────┘
+    def _cargar_combobox_filtros(self):
+        """Carga los datos en los combobox de filtros desde la base de datos."""
+        try:
+            eventos_service = EventosUnificadosService(ruta_db=None)
+            eventos = eventos_service.obtener_todos()
+
+            if not eventos:
+                logger.warning("⚠️ No hay eventos para cargar en los combobox")
+                return
+
+            # Extraer valores únicos para cada combobox
+            carreras = set()
+            asignaturas = set()
+            tipos_evento = set()
+            tipos_actividad = set()
+
+            for evento in eventos:
+                if evento.carrera:
+                    carreras.add(evento.carrera)
+                if evento.asignatura:
+                    asignaturas.add(evento.asignatura)
+                tipos_evento.add(evento.tipo_evento)
+                if evento.tipo_actividad:
+                    tipos_actividad.add(evento.tipo_actividad)
+
+            # Convertir a listas ordenadas
+            lista_carreras = sorted(list(carreras))
+            lista_asignaturas = sorted(list(asignaturas))
+            lista_tipos_evento = sorted(list(tipos_evento))
+            lista_tipos_actividad = sorted(list(tipos_actividad))
+
+            # Agregar "Todos" al inicio de cada lista
+            lista_carreras = ["Todos"] + lista_carreras
+            lista_asignaturas = ["Todos"] + lista_asignaturas
+            lista_tipos_evento = ["Todos"] + lista_tipos_evento
+            lista_tipos_actividad = ["Todos"] + lista_tipos_actividad
+
+            # Cargar combobox de carrera
+            if self.cbx_carrera:
+                self.cbx_carrera['values'] = lista_carreras
+                self.cbx_carrera.current(0)  # Establecer "Todos" como valor inicial
+                logger.info(f"✅ Cargadas {len(lista_carreras) - 1} carreras en combobox")
+
+            # Cargar combobox de asignatura
+            if self.cbx_asignatura:
+                self.cbx_asignatura['values'] = lista_asignaturas
+                self.cbx_asignatura.current(0)  # Establecer "Todos" como valor inicial
+                logger.info(f"✅ Cargadas {len(lista_asignaturas) - 1} asignaturas en combobox")
+
+            # Cargar combobox de tipo de evento
+            if self.cbx_tipo_evento:
+                self.cbx_tipo_evento['values'] = lista_tipos_evento
+                self.cbx_tipo_evento.current(0)  # Establecer "Todos" como valor inicial
+                logger.info(
+                    f"✅ Cargados {len(lista_tipos_evento) - 1} tipos de evento en combobox"
+                )
+
+            # Cargar combobox de tipo de actividad
+            if self.cbx_tipo_actividad:
+                self.cbx_tipo_actividad['values'] = lista_tipos_actividad
+                self.cbx_tipo_actividad.current(0)  # Establecer "Todos" como valor inicial
+                logger.info(
+                    f"✅ Cargados {len(lista_tipos_actividad) - 1} tipos de actividad en combobox"
+                )
+
+        except Exception as e:
+            logger.error(f"❌ Error al cargar combobox de filtros: {e}", exc_info=True)
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Métodos de Filtrado
+    # └────────────────────────────────────────────────────────────┘
+    def _aplicar_filtros(self):
+        """Aplica los filtros seleccionados a los eventos mostrados."""
+        try:
+            # Obtener valores de los combobox
+            carrera_seleccionada = self.var_carrera.get()
+            asignatura_seleccionada = self.var_asignatura.get()
+            tipo_evento_seleccionado = self.var_estado_actividad.get()
+            tipo_actividad_seleccionado = self.var_tipo_actividad.get()
+
+            logger.info(
+                f"🔍 Aplicando filtros: Carrera='{carrera_seleccionada}', "
+                f"Asignatura='{asignatura_seleccionada}', "
+                f"Tipo Evento='{tipo_evento_seleccionado}', "
+                f"Tipo Actividad='{tipo_actividad_seleccionado}'"
+            )
+
+            # Obtener todos los eventos del mes
+            eventos_service = EventosUnificadosService(ruta_db=None)
+            lista_eventos = eventos_service.obtener_por_mes(
+                ano=self.año_actual, mes=self.mes_actual
+            )
+
+            if not lista_eventos:
+                logger.warning(f"⚠️ No hay eventos para {self.año_actual}-{self.mes_actual:02d}")
+                self.eventos_filtrados = []
+                self._cargar_calendario()
+                self._cargar_agenda()
+                return
+
+            # Aplicar filtros
+            self.eventos_filtrados = lista_eventos
+
+            # Filtrar por carrera (si no es "Todos")
+            if carrera_seleccionada != "Todos":
+                self.eventos_filtrados = [
+                    e for e in self.eventos_filtrados if e.carrera == carrera_seleccionada
+                ]
+
+            # Filtrar por asignatura (si no es "Todos")
+            if asignatura_seleccionada != "Todos":
+                self.eventos_filtrados = [
+                    e for e in self.eventos_filtrados if e.asignatura == asignatura_seleccionada
+                ]
+
+            # Filtrar por tipo de evento (si no es "Todos")
+            if tipo_evento_seleccionado != "Todos":
+                self.eventos_filtrados = [
+                    e for e in self.eventos_filtrados if e.tipo_evento == tipo_evento_seleccionado
+                ]
+
+            # Filtrar por tipo de actividad (si no es "Todos")
+            if tipo_actividad_seleccionado != "Todos":
+                self.eventos_filtrados = [
+                    e
+                    for e in self.eventos_filtrados
+                    if e.tipo_actividad == tipo_actividad_seleccionado
+                ]
+
+            logger.info(f"✅ Filtrados {len(self.eventos_filtrados)} eventos")
+
+            # Actualizar calendario y agenda con eventos filtrados
+            self._cargar_calendario()
+            self._cargar_agenda_filtrada()
+
+        except Exception as e:
+            logger.error(f"❌ Error al aplicar filtros: {e}", exc_info=True)
+
+    def _resetear_filtros(self):
+        """Limpia todos los filtros y vuelve a mostrar todos los eventos."""
+        try:
+            logger.info("🔄 Reseteando filtros...")
+
+            # Establecer todos los combobox en "Todos"
+            if self.cbx_carrera:
+                self.cbx_carrera.current(0)
+            if self.cbx_asignatura:
+                self.cbx_asignatura.current(0)
+            if self.cbx_tipo_evento:
+                self.cbx_tipo_evento.current(0)
+            if self.cbx_tipo_actividad:
+                self.cbx_tipo_actividad.current(0)
+
+            # Limpiar eventos filtrados
+            self.eventos_filtrados = []
+
+            # Recarga calendario y agenda sin filtros
+            logger.info("✅ Filtros reseteados correctamente")
+            self._actualizar_mes_año()
+
+        except Exception as e:
+            logger.error(f"❌ Error al resetear filtros: {e}", exc_info=True)
+
+    def _cargar_agenda_filtrada(self):
+        """Carga la agenda mostrando solo los eventos filtrados."""
+        try:
+            # Limpiar el frame anterior
+            for widget in self.frame_agenda.winfo_children():
+                widget.destroy()
+
+            # IMPORTANTE: Limpiar el mapa de frames de días para evitar conflictos
+            self.map_frame_dias.clear()
+
+            # Scroll Frame
+            scroll_frame = ScrolledFrame(self.frame_agenda, autohide=True)
+            scroll_frame.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+
+            dias_mes = calendar.monthcalendar(year=self.año_actual, month=self.mes_actual)
+
+            self._agenda(dias_mes=dias_mes, scroll_frame=scroll_frame)
+
+            # Agrupar eventos filtrados por fecha
+            eventos_por_fecha = {}
+            for evento in self.eventos_filtrados:
+                # Agregar evento a fecha de inicio
+                fecha_inicio = evento.fecha_inicio
+                if fecha_inicio not in eventos_por_fecha:
+                    eventos_por_fecha[fecha_inicio] = []
+                eventos_por_fecha[fecha_inicio].append((evento, 'inicio'))
+
+                # Agregar evento a fecha de fin (si es diferente a la de inicio)
+                fecha_fin = evento.fecha_fin
+                if fecha_fin and fecha_fin != fecha_inicio:
+                    if fecha_fin not in eventos_por_fecha:
+                        eventos_por_fecha[fecha_fin] = []
+                    eventos_por_fecha[fecha_fin].append((evento, 'fin'))
+
+            # Guardar eventos filtrados por día
+            self.eventos_por_dia.clear()
+            for evento in self.eventos_filtrados:
+                fecha = evento.fecha_inicio
+                dia = int(fecha.split('-')[2])
+                if dia not in self.eventos_por_dia:
+                    self.eventos_por_dia[dia] = []
+                self.eventos_por_dia[dia].append(evento)
+
+            # Mostrar eventos en la agenda
+            for fecha, eventos_con_tipo in eventos_por_fecha.items():
+                partes_fecha = fecha.split('-')
+                año = partes_fecha[0]
+                mes = partes_fecha[1]
+                dia = int(partes_fecha[2])
+                clave_dia = f"{año}-{mes}-{dia:02d}"
+                frame_dia = self.map_frame_dias.get(clave_dia)
+
+                if frame_dia:
+                    for evento, tipo_fecha in eventos_con_tipo:
+                        if evento.es_actividad():
+                            metadata = []
+                            if evento.asignatura:
+                                metadata.append(evento.asignatura)
+                            if evento.carrera:
+                                metadata.append(evento.carrera)
+
+                            if metadata:
+                                texto = f"• {evento.titulo} ({' - '.join(metadata)})"
+                            else:
+                                texto = f"• {evento.titulo}"
+                        else:
+                            texto = f"• {evento.titulo}"
+
+                        if evento.es_actividad():
+                            if tipo_fecha == 'fin':
+                                texto = f"{texto} [FIN]"
+                                bootstyle_evento = WARNING
+                            else:
+                                texto = f"{texto} [INICIO]"
+                                bootstyle_evento = SUCCESS
+                        else:
+                            bootstyle_evento = INFO
+
+                        lbl_evento = Label(
+                            frame_dia,
+                            text=texto,
+                            font=("Helvetica", 8),
+                            bootstyle=bootstyle_evento,
+                        )
+                        lbl_evento.pack(side=TOP, fill=X, padx=10, pady=2)
+
+            # Marcar días con eventos filtrados en el calendario
+            self._marcar_dias_con_eventos(eventos_por_fecha)
+
+        except Exception as e:
+            logger.error(f"❌ Error al cargar agenda filtrada: {e}", exc_info=True)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Métodos de Navegación de Meses
@@ -132,6 +425,37 @@ class ControladorCalendario:
         self.dia_actual = ahora.day
         self._actualizar_mes_año()
 
+    def _actualizar_estadisticas(self):
+        """Actualiza las estadísticas del mes en el label."""
+        try:
+            # Usar eventos del mes actual
+            eventos = self.eventos_del_mes if self.eventos_del_mes else []
+
+            if not eventos:
+                texto_stats = "Total: 0 | Actividades: 0 | Eventos: 0"
+            else:
+                # Servicio para análisis
+                eventos_service = EventosUnificadosService(ruta_db=None)
+
+                # Contar tipos
+                actividades = len([e for e in eventos if e.es_actividad()])
+                eventos_calendario = len([e for e in eventos if e.es_evento_calendario()])
+                total = len(eventos)
+
+                # Contar días con eventos
+                dias_con_eventos = len(self.eventos_por_dia)
+
+                texto_stats = f"Total: {total} | Actividades: {actividades} | Eventos: {eventos_calendario} | Días: {dias_con_eventos}"
+
+            if self.lbl_stats:
+                self.lbl_stats.config(text=texto_stats)
+                logger.debug(f"Estadísticas actualizadas: {texto_stats}")
+
+        except Exception as e:
+            logger.error(f"❌ Error al actualizar estadísticas: {e}", exc_info=True)
+            if self.lbl_stats:
+                self.lbl_stats.config(text="Error en estadísticas")
+
     def _actualizar_mes_año(self):
         """Actualiza el label del mes/año."""
         if self.lbl_mes_año:
@@ -140,6 +464,8 @@ class ControladorCalendario:
         self._cargar_agenda()
         # cargamos los eventos en la agenda
         self._cargar_eventos_agenda()
+        # actualizamos las estadísticas
+        self._actualizar_estadisticas()
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Cargar Calendario
@@ -149,6 +475,9 @@ class ControladorCalendario:
         # Limpiar el frame anterior
         for widget in self.frame_calendario.winfo_children():
             widget.destroy()
+
+        # IMPORTANTE: Limpiar el mapa de días para evitar conflictos con otros meses
+        self.map_dias_mes.clear()
 
         dias_del_mes = calendar.monthcalendar(year=self.año_actual, month=self.mes_actual)
 
@@ -249,7 +578,9 @@ class ControladorCalendario:
                             width=5,
                         )
                 lbl_dia.grid(row=fila, column=col, sticky=NSEW, padx=5, pady=5)
-                self.map_dias_mes[dia] = lbl_dia
+                # Usar clave con mes/año para evitar conflictos entre meses
+                clave_dia = f"{self.año_actual}-{self.mes_actual:02d}-{dia:02d}"
+                self.map_dias_mes[clave_dia] = lbl_dia
 
                 # Agregar evento de double-click si el día tiene eventos
                 if dia != 0:
@@ -262,6 +593,9 @@ class ControladorCalendario:
         # Limpiar el frame anterior
         for widget in self.frame_agenda.winfo_children():
             widget.destroy()
+
+        # IMPORTANTE: Limpiar el mapa de frames de días para evitar conflictos con otros meses
+        self.map_frame_dias.clear()
 
         # Scroll Frame
         scroll_frame = ScrolledFrame(self.frame_agenda, autohide=True)
@@ -310,7 +644,9 @@ class ControladorCalendario:
                     lbl_dia = Label(frame, text=str(dia), bootstyle=SECONDARY)
                     lbl_dia.pack(side=LEFT, padx=5, pady=5)
                     Separator(scroll_frame, orient=HORIZONTAL).pack(fill=X, expand=True)
-                    self.map_frame_dias[dia] = frame
+                    # Usar clave con mes/año para evitar conflictos entre meses
+                    clave_dia = f"{self.año_actual}-{self.mes_actual:02d}-{dia:02d}"
+                    self.map_frame_dias[clave_dia] = frame
 
     def _obtener_eventos_por_mes(self):
         """Obtiene eventos del mes actual desde la base de datos."""
@@ -347,6 +683,9 @@ class ControladorCalendario:
                 ano=self.año_actual, mes=self.mes_actual
             )
 
+            # Guardar los eventos del mes
+            self.eventos_del_mes = lista_eventos
+
             if not lista_eventos:
                 logger.info(f"No hay eventos para {self.año_actual}-{self.mes_actual:02d}")
                 return
@@ -380,11 +719,15 @@ class ControladorCalendario:
 
             # Mostrar eventos en la agenda (en los frames creados en _plantilla_agenda)
             for fecha, eventos_con_tipo in eventos_por_fecha.items():
-                # Extraer día de la fecha (YYYY-MM-DD)
-                dia = int(fecha.split('-')[2])
+                # Extraer año, mes y día de la fecha (YYYY-MM-DD)
+                partes_fecha = fecha.split('-')
+                año = partes_fecha[0]
+                mes = partes_fecha[1]
+                dia = int(partes_fecha[2])
 
-                # Obtener el frame del día de la agenda
-                frame_dia = self.map_frame_dias.get(dia)
+                # Usar clave con mes/año para obtener el frame correcto
+                clave_dia = f"{año}-{mes}-{dia:02d}"
+                frame_dia = self.map_frame_dias.get(clave_dia)
 
                 if frame_dia:
                     # Agregar eventos al frame del día
@@ -443,11 +786,15 @@ class ControladorCalendario:
         """
         try:
             for fecha, eventos in eventos_por_fecha.items():
-                # Extraer día de la fecha (YYYY-MM-DD)
-                dia = int(fecha.split('-')[2])
+                # Extraer año, mes y día de la fecha (YYYY-MM-DD)
+                partes_fecha = fecha.split('-')
+                año = partes_fecha[0]
+                mes = partes_fecha[1]
+                dia = int(partes_fecha[2])
 
-                # Obtener el label del día en el calendario
-                lbl_dia = self.map_dias_mes.get(dia)
+                # Usar clave con mes/año para obtener el label correcto
+                clave_dia = f"{año}-{mes}-{dia:02d}"
+                lbl_dia = self.map_dias_mes.get(clave_dia)
 
                 if lbl_dia:
                     # Cambiar el estilo del día para indicar que tiene eventos
@@ -475,8 +822,19 @@ class ControladorCalendario:
         Args:
             dia: El número del día del mes que fue clickeado.
         """
-        # Verificar si el día tiene eventos
-        eventos = self.eventos_por_dia.get(dia, [])
+        # Usar clave con mes/año para obtener eventos del mes/año actual
+        clave_dia = f"{self.año_actual}-{self.mes_actual:02d}-{dia:02d}"
+
+        # Obtener eventos del mes/año actual (no solo del diccionario por día)
+        eventos = []
+        for evento in self.eventos_del_mes:
+            fecha_inicio = evento.fecha_inicio
+            if fecha_inicio:
+                partes_fecha = fecha_inicio.split('-')
+                if len(partes_fecha) >= 3:
+                    día_evento = int(partes_fecha[2])
+                    if día_evento == dia:
+                        eventos.append(evento)
 
         if eventos:
             self._cargar_eventos_treeview(dia, eventos)
@@ -577,3 +935,164 @@ class ControladorCalendario:
 
         except Exception as e:
             logger.error(f"❌ Error al cargar eventos en treeview: {e}", exc_info=True)
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Métodos de Exportación
+    # └────────────────────────────────────────────────────────────┘
+    def _exportar_eventos_csv(self) -> None:
+        """Exporta eventos filtrados a archivo CSV."""
+        try:
+            # Usar eventos filtrados si existen, sino todos los del mes
+            eventos = self.eventos_filtrados if self.eventos_filtrados else self.eventos_del_mes
+
+            if not eventos:
+                logger.warning("⚠️ No hay eventos para exportar")
+                return
+
+            # Solicitar ubicación de guardado al usuario
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                initialfile=f"eventos_{self.año_actual}_{self.mes_actual:02d}.csv",
+                title="Guardar eventos como CSV",
+            )
+
+            if not filename:
+                logger.info("ℹ️ Exportación a CSV cancelada por el usuario")
+                return
+
+            filename = Path(filename)
+
+            with open(filename, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+                # Encabezados
+                writer.writerow(
+                    [
+                        'Título',
+                        'Tipo Evento',
+                        'Carrera',
+                        'Asignatura',
+                        'Tipo Actividad',
+                        'Fecha Inicio',
+                        'Fecha Fin',
+                        'Descripción',
+                    ]
+                )
+
+                # Datos
+                for evento in eventos:
+                    writer.writerow(
+                        [
+                            evento.titulo,
+                            evento.tipo_evento,
+                            evento.carrera or '-',
+                            evento.asignatura or '-',
+                            evento.tipo_actividad or '-',
+                            evento.fecha_inicio,
+                            evento.fecha_fin,
+                            evento.descripcion or '-',
+                        ]
+                    )
+
+            logger.info(f"✅ Exportados {len(eventos)} eventos a CSV: {filename}")
+
+        except Exception as e:
+            logger.error(f"❌ Error al exportar CSV: {e}", exc_info=True)
+
+    def _exportar_a_icalendar(self) -> None:
+        """Exporta eventos a formato iCalendar (.ics) compatible con Google Calendar."""
+        try:
+            from icalendar import Calendar, Event
+            from datetime import datetime as dt
+
+            # Usar eventos filtrados si existen, sino todos los del mes
+            eventos = self.eventos_filtrados if self.eventos_filtrados else self.eventos_del_mes
+
+            if not eventos:
+                logger.warning("⚠️ No hay eventos para exportar")
+                return
+
+            # Solicitar ubicación de guardado al usuario
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".ics",
+                filetypes=[("iCalendar files", "*.ics"), ("All files", "*.*")],
+                initialfile=f"eventos_{self.año_actual}_{self.mes_actual:02d}.ics",
+                title="Guardar eventos como iCalendar",
+            )
+
+            if not filename:
+                logger.info("ℹ️ Exportación a iCalendar cancelada por el usuario")
+                return
+
+            filename = Path(filename)
+
+            # Crear calendario
+            cal = Calendar()
+            cal.add('prodid', '-//CronosFacen//Calendario Académico//ES')
+            cal.add('version', '2.0')
+            cal.add('x-wr-calname', f'Calendario {self.año_actual}-{self.mes_actual:02d}')
+            cal.add('x-wr-timezone', 'America/Bogota')
+
+            # Agregar eventos
+            for evento in eventos:
+                event = Event()
+                event.add('summary', evento.titulo)
+
+                # Descripción con metadata
+                descripcion_parts = []
+                if evento.tipo_evento:
+                    descripcion_parts.append(f"Tipo: {evento.tipo_evento}")
+                if evento.carrera:
+                    descripcion_parts.append(f"Carrera: {evento.carrera}")
+                if evento.asignatura:
+                    descripcion_parts.append(f"Asignatura: {evento.asignatura}")
+                if evento.tipo_actividad:
+                    descripcion_parts.append(f"Tipo Actividad: {evento.tipo_actividad}")
+                if evento.descripcion:
+                    descripcion_parts.append(f"Descripción: {evento.descripcion}")
+
+                if descripcion_parts:
+                    event.add('description', '\n'.join(descripcion_parts))
+
+                # Convertir fechas de string a datetime
+                try:
+                    # Intentar parsear como datetime completo (YYYY-MM-DD HH:MM:SS)
+                    if ' ' in str(evento.fecha_inicio):
+                        fecha_inicio = dt.strptime(str(evento.fecha_inicio), '%Y-%m-%d %H:%M:%S')
+                    else:
+                        # Si solo es fecha (YYYY-MM-DD), parsear como date
+                        fecha_inicio = dt.strptime(str(evento.fecha_inicio), '%Y-%m-%d').date()
+
+                    if evento.fecha_fin:
+                        if ' ' in str(evento.fecha_fin):
+                            fecha_fin = dt.strptime(str(evento.fecha_fin), '%Y-%m-%d %H:%M:%S')
+                        else:
+                            fecha_fin = dt.strptime(str(evento.fecha_fin), '%Y-%m-%d').date()
+                    else:
+                        fecha_fin = fecha_inicio
+
+                    # Agregar fechas al evento
+                    event.add('dtstart', fecha_inicio)
+                    event.add('dtend', fecha_fin)
+                except ValueError as ve:
+                    logger.warning(f"⚠️ Error al parsear fechas del evento {evento.titulo}: {ve}")
+                    continue
+
+                # Ubicación (carrera)
+                if evento.carrera:
+                    event.add('location', evento.carrera)
+
+                # ID único
+                event.add('uid', f"{evento.id_evento}-{evento.tipo_evento}@cronosfacen.edu")
+
+                cal.add_component(event)
+
+            with open(filename, 'wb') as f:
+                f.write(cal.to_ical())
+
+            logger.info(f"✅ Exportados {len(eventos)} eventos a iCalendar: {filename}")
+
+        except ImportError:
+            logger.error("❌ Instala la librería: pip install icalendar")
+        except Exception as e:
+            logger.error(f"❌ Error al exportar iCalendar: {e}", exc_info=True)

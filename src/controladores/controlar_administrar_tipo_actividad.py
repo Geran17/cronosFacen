@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Optional
 from tkinter.messagebox import askyesno, showinfo
-from ttkbootstrap import Button, StringVar, IntVar, Label, Text
+from ttkbootstrap import Button, StringVar, IntVar, Label, Text, Combobox
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
 from modelos.daos.tipo_actividad_dao import TipoActividadDAO
@@ -68,11 +68,20 @@ class ControlarAdministrarTipoActividad:
         nombre = self.var_nombre.get()
         siglas = self.var_siglas.get()
         descripcion = self.text_descripcion.get("1.0", END).strip()
+
+        # Extraer el número de prioridad del combobox (ej: "2 - Alta" -> 2)
+        prioridad_texto = self.var_prioridad.get()
+        try:
+            prioridad = int(prioridad_texto.split(" - ")[0])
+        except (ValueError, IndexError):
+            prioridad = 0
+
         # cargamos los datos al tipo de actividad
         tipo_actividad.id_tipo_actividad = id_tipo_actividad
         tipo_actividad.nombre = nombre
         tipo_actividad.siglas = siglas
         tipo_actividad.descripcion = descripcion
+        tipo_actividad.prioridad = prioridad
         return tipo_actividad
 
     def _cargar_formulario(self, tipo_actividad: TipoActividadService):
@@ -84,6 +93,13 @@ class ControlarAdministrarTipoActividad:
             self.text_descripcion.delete("1.0", END)
             if tipo_actividad.descripcion:
                 self.text_descripcion.insert("1.0", tipo_actividad.descripcion)
+            # Cargar prioridad - convertir número a formato "X - Nombre"
+            if tipo_actividad.prioridad is not None:
+                opciones_prioridad = {0: "0 - Baja", 1: "1 - Media", 2: "2 - Alta"}
+                valor_prioridad = opciones_prioridad.get(tipo_actividad.prioridad, "0 - Baja")
+                self.var_prioridad.set(valor_prioridad)
+            else:
+                self.var_prioridad.set("0 - Baja")
             # Actualizar estadísticas del tipo de actividad seleccionado
             self._actualizar_estadisticas_tipo_actividad(tipo_actividad.id_tipo_actividad)
 
@@ -92,6 +108,7 @@ class ControlarAdministrarTipoActividad:
         self.var_nombre.set("")
         self.var_siglas.set("")
         self.text_descripcion.delete("1.0", END)
+        self.var_prioridad.set("0 - Baja")
 
     def _insertar_fila(self, tipo_actividad: TipoActividadService):
         if tipo_actividad:
@@ -141,6 +158,7 @@ class ControlarAdministrarTipoActividad:
         self.var_nombre: StringVar = self.map_vars['var_nombre']
         self.var_siglas: StringVar = self.map_vars['var_siglas']
         self.var_descripcion: StringVar = self.map_vars['var_descripcion']
+        self.var_prioridad: StringVar = self.map_vars['var_prioridad']
 
     def _cargar_widgets(self):
         self.tabla_tipo_actividad: Tableview = self.map_widgets['tabla_tipo_actividad']
@@ -153,6 +171,7 @@ class ControlarAdministrarTipoActividad:
         self.btn_siguiente: Button = self.map_widgets['btn_siguiente']
         self.btn_ultimo: Button = self.map_widgets['btn_ultimo']
         self.text_descripcion: Text = self.map_widgets['text_descripcion']
+        self.cbx_prioridad: Combobox = self.map_widgets['cbx_prioridad']
 
     def _actualizar_estadisticas(self):
         # actualizamos la lista de tipos de actividad

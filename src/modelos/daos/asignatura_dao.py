@@ -33,6 +33,7 @@ class AsignaturaDAO(DAO):
                 creditos INTEGER NOT NULL,
                 horas_semanales INTEGER,
                 tipo TEXT CHECK (tipo IN ('obligatoria', 'electiva')),
+                semestre INTEGER,
                 id_carrera INTEGER NOT NULL,
                 FOREIGN KEY (id_carrera)
                     REFERENCES carrera(id_carrera)
@@ -51,14 +52,15 @@ class AsignaturaDAO(DAO):
         Returns:
             Optional[int]: ID del registro insertado o None si hay error.
         """
-        sql = """INSERT INTO asignatura (codigo, nombre, creditos, horas_semanales, tipo, id_carrera)
-                 VALUES (?, ?, ?, ?, ?, ?)"""
+        sql = """INSERT INTO asignatura (codigo, nombre, creditos, horas_semanales, tipo, semestre, id_carrera)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)"""
         params = (
             dto.codigo,
             dto.nombre,
             dto.creditos,
             dto.horas_semanales,
             dto.tipo,
+            dto.semestre,
             dto.id_carrera,
         )
 
@@ -76,7 +78,7 @@ class AsignaturaDAO(DAO):
             bool: True si se actualizó correctamente, False en caso contrario.
         """
         sql = """UPDATE asignatura 
-                 SET codigo = ?, nombre = ?, creditos = ?, horas_semanales = ?, tipo = ?, id_carrera = ?
+                 SET codigo = ?, nombre = ?, creditos = ?, horas_semanales = ?, tipo = ?, semestre = ?, id_carrera = ?
                  WHERE id_asignatura = ?"""
         params = (
             dto.codigo,
@@ -84,6 +86,7 @@ class AsignaturaDAO(DAO):
             dto.creditos,
             dto.horas_semanales,
             dto.tipo,
+            dto.semestre,
             dto.id_carrera,
             dto.id_asignatura,
         )

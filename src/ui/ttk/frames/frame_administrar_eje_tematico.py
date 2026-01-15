@@ -44,6 +44,19 @@ class FrameAdministrarEjeTematico(Frame):
         self.var_nombre_asignatura = StringVar()
         self.map_vars['var_nombre_asignatura'] = self.var_nombre_asignatura
 
+        # Variables para filtros
+        self.var_id_carrera_filtro = IntVar(value=0)
+        self.map_vars['var_id_carrera_filtro'] = self.var_id_carrera_filtro
+
+        self.var_nombre_carrera_filtro = StringVar()
+        self.map_vars['var_nombre_carrera_filtro'] = self.var_nombre_carrera_filtro
+
+        self.var_id_asignatura_filtro = IntVar(value=0)
+        self.map_vars['var_id_asignatura_filtro'] = self.var_id_asignatura_filtro
+
+        self.var_nombre_asignatura_filtro = StringVar()
+        self.map_vars['var_nombre_asignatura_filtro'] = self.var_nombre_asignatura_filtro
+
         # creamos los widgets
         self._crear_widgets()
 
@@ -88,6 +101,11 @@ class FrameAdministrarEjeTematico(Frame):
     # │ Frame Central
     # └────────────────────────────────────────────────────────────┘
     def _frame_central(self, frame: Frame):
+        # Frame de filtros
+        frame_filtros = Frame(frame, padding=(1, 1))
+        self._frame_filtros(frame=frame_filtros)
+        frame_filtros.pack(side=TOP, fill=X, padx=1, pady=1)
+
         note_book = Notebook(frame, bootstyle="primary")
         note_book.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
 
@@ -98,6 +116,57 @@ class FrameAdministrarEjeTematico(Frame):
         frame_formulario = Frame(note_book, padding=(1, 1))
         self._frame_formulario(frame=frame_formulario)
         note_book.add(frame_formulario, text="Formulario")
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Frame Filtros
+    # └────────────────────────────────────────────────────────────┘
+    def _frame_filtros(self, frame: Frame):
+        lf_filtros = Labelframe(
+            frame,
+            text="🔍 Filtros",
+            bootstyle="secondary",
+            padding=(5, 5),
+        )
+        lf_filtros.pack(side=TOP, fill=X, padx=1, pady=1)
+
+        # Configuraciones de las columnas
+        lf_filtros.columnconfigure(0, weight=1)
+        lf_filtros.columnconfigure(1, weight=1)
+        lf_filtros.columnconfigure(2, weight=1)
+
+        # Filtro por Carrera
+        lbl_carrera_filtro = Label(lf_filtros, text="Carrera:", anchor=W)
+        lbl_carrera_filtro.grid(column=0, row=0, sticky=W, padx=5, pady=2)
+
+        self.cbx_carrera_filtro = Combobox(
+            lf_filtros,
+            textvariable=self.var_nombre_carrera_filtro,
+            state=READONLY,
+        )
+        self.cbx_carrera_filtro.grid(column=0, row=1, pady=2, padx=5, sticky=EW)
+        self.map_widgets['cbx_carrera_filtro'] = self.cbx_carrera_filtro
+        ToolTip(self.cbx_carrera_filtro, "Seleccione una carrera para filtrar")
+
+        # Filtro por Asignatura
+        lbl_asignatura_filtro = Label(lf_filtros, text="Asignatura:", anchor=W)
+        lbl_asignatura_filtro.grid(column=1, row=0, sticky=W, padx=5, pady=2)
+
+        self.cbx_asignatura_filtro = Combobox(
+            lf_filtros,
+            textvariable=self.var_nombre_asignatura_filtro,
+            state=READONLY,
+        )
+        self.cbx_asignatura_filtro.grid(column=1, row=1, pady=2, padx=5, sticky=EW)
+        self.map_widgets['cbx_asignatura_filtro'] = self.cbx_asignatura_filtro
+        ToolTip(self.cbx_asignatura_filtro, "Seleccione una asignatura para filtrar")
+
+        # Botón Limpiar Filtros
+        self.btn_limpiar_filtros = Button(
+            lf_filtros, text="🔄 Limpiar Filtros", bootstyle="secondary-outline"
+        )
+        self.btn_limpiar_filtros.grid(column=2, row=1, pady=2, padx=5, sticky=EW)
+        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
+        ToolTip(self.btn_limpiar_filtros, "Mostrar todos los ejes temáticos")
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Tabla

@@ -33,6 +33,7 @@ class AsignaturaDTO:
     creditos: Optional[int] = None
     horas_semanales: Optional[int] = None
     tipo: Optional[str] = None
+    semestre: Optional[int] = None
     id_carrera: Optional[int] = None
 
     def get_data(self) -> Dict[str, Any]:
@@ -71,6 +72,7 @@ class AsignaturaDTO:
             'creditos': self.creditos,
             'horas_semanales': self.horas_semanales,
             'tipo': self.tipo,
+            'semestre': self.semestre,
             'id_carrera': self.id_carrera,
         }
 
@@ -101,4 +103,5 @@ class AsignaturaDTO:
             self.creditos = data.get('creditos', self.creditos)
             self.horas_semanales = data.get('horas_semanales', self.horas_semanales)
             self.tipo = data.get('tipo', self.tipo)
+            self.semestre = data.get('semestre', self.semestre)
             self.id_carrera = data.get('id_carrera', self.id_carrera)

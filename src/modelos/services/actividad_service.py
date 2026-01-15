@@ -96,7 +96,7 @@ class ActividadService(ActividadDTO):
         if not self.titulo or len(str(self.titulo).strip()) == 0:
             logger.warning("Título de actividad vacío o inválido")
             return False
-        if self.id_eje_tematico is None:
+        if self.id_eje is None:
             logger.warning("ID de eje temático no está definido")
             return False
         if self.id_tipo_actividad is None:
@@ -109,7 +109,7 @@ class ActividadService(ActividadDTO):
         """Representación en string de la actividad."""
         return (
             f"ActividadService(id={self.id_actividad}, titulo={self.titulo}, "
-            f"id_eje_tematico={self.id_eje_tematico}, id_tipo_actividad={self.id_tipo_actividad})"
+            f"id_eje={self.id_eje}, id_tipo_actividad={self.id_tipo_actividad}, nota={self.nota})"
         )
 
     def __repr__(self) -> str:

@@ -30,7 +30,8 @@ class TipoActividadDAO(DAO):
                 id_tipo_actividad INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre TEXT NOT NULL,
                 siglas TEXT NOT NULL UNIQUE,
-                descripcion TEXT
+                descripcion TEXT,
+                prioridad INTEGER
             )"""
 
         return self.ejecutar_actualizacion(sql=sql, params=())
@@ -45,9 +46,9 @@ class TipoActividadDAO(DAO):
         Returns:
             Optional[int]: ID del registro insertado o None si hay error.
         """
-        sql = """INSERT INTO tipo_actividad (nombre, siglas, descripcion)
-                 VALUES (?, ?, ?)"""
-        params = (dto.nombre, dto.siglas, dto.descripcion)
+        sql = """INSERT INTO tipo_actividad (nombre, siglas, descripcion, prioridad)
+                 VALUES (?, ?, ?, ?)"""
+        params = (dto.nombre, dto.siglas, dto.descripcion, dto.prioridad)
 
         return self.ejecutar_insertar(sql, params)
 
@@ -63,6 +64,23 @@ class TipoActividadDAO(DAO):
         """
         sql = "DELETE FROM tipo_actividad WHERE id_tipo_actividad = ?"
         params = (dto.id_tipo_actividad,)
+
+        return self.ejecutar_actualizacion(sql, params)
+
+    def actualizar(self, dto: TipoActividadDTO) -> bool:
+        """
+        Actualiza un registro de tipo de actividad en la base de datos.
+
+        Args:
+            dto (TipoActividadDTO): DTO con los datos a actualizar.
+
+        Returns:
+            bool: True si se actualizó correctamente, False en caso contrario.
+        """
+        sql = """UPDATE tipo_actividad 
+                 SET nombre = ?, siglas = ?, descripcion = ?, prioridad = ?
+                 WHERE id_tipo_actividad = ?"""
+        params = (dto.nombre, dto.siglas, dto.descripcion, dto.prioridad, dto.id_tipo_actividad)
 
         return self.ejecutar_actualizacion(sql, params)
 

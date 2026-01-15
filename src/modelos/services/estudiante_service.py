@@ -102,9 +102,6 @@ class EstudianteService(EstudianteDTO):
         if "@" not in str(self.correo):
             logger.warning("Correo de estudiante inválido")
             return False
-        if self.id_carrera is None:
-            logger.warning("ID de carrera no está definido")
-            return False
         logger.debug(f"Estudiante válido: {self.nombre}")
         return True
 
@@ -112,7 +109,7 @@ class EstudianteService(EstudianteDTO):
         """Representación en string del estudiante."""
         return (
             f"EstudianteService(id={self.id_estudiante}, nombre={self.nombre}, "
-            f"correo={self.correo}, id_carrera={self.id_carrera})"
+            f"correo={self.correo})"
         )
 
     def __repr__(self) -> str:

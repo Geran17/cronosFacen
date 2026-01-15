@@ -25,6 +25,8 @@ class ActividadDTO:
             Defaults to None.
         id_tipo_actividad (Optional[int]): ID del tipo de actividad.
             Defaults to None.
+        nota (Optional[int]): Nota o puntuación asociada a la actividad.
+            Valor por defecto 0. Defaults to None.
     """
 
     id_actividad: Optional[int] = None
@@ -34,6 +36,7 @@ class ActividadDTO:
     fecha_fin: Optional[str] = None
     id_eje: Optional[int] = None
     id_tipo_actividad: Optional[int] = None
+    nota: Optional[int] = None
 
     def get_data(self) -> Dict[str, Any]:
         """
@@ -51,7 +54,8 @@ class ActividadDTO:
             ...     fecha_inicio='2025-01-15',
             ...     fecha_fin='2025-01-22',
             ...     id_eje=1,
-            ...     id_tipo_actividad=1
+            ...     id_tipo_actividad=1,
+            ...     nota=0
             ... )
             >>> actividad.get_data()
             {
@@ -61,7 +65,8 @@ class ActividadDTO:
                 'fecha_inicio': '2025-01-15',
                 'fecha_fin': '2025-01-22',
                 'id_eje': 1,
-                'id_tipo_actividad': 1
+                'id_tipo_actividad': 1,
+                'nota': 0
             }
         """
         return {
@@ -72,6 +77,7 @@ class ActividadDTO:
             'fecha_fin': self.fecha_fin,
             'id_eje': self.id_eje,
             'id_tipo_actividad': self.id_tipo_actividad,
+            'nota': self.nota,
         }
 
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -91,7 +97,8 @@ class ActividadDTO:
             ...     'fecha_inicio': '2025-01-15',
             ...     'fecha_fin': '2025-01-22',
             ...     'id_eje': 1,
-            ...     'id_tipo_actividad': 1
+            ...     'id_tipo_actividad': 1,
+            ...     'nota': 0
             ... })
         """
         if data:
@@ -102,3 +109,4 @@ class ActividadDTO:
             self.fecha_fin = data.get('fecha_fin', self.fecha_fin)
             self.id_eje = data.get('id_eje', self.id_eje)
             self.id_tipo_actividad = data.get('id_tipo_actividad', self.id_tipo_actividad)
+            self.nota = data.get('nota', self.nota)

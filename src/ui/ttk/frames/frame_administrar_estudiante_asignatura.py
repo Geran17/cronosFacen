@@ -171,19 +171,27 @@ class FrameAdministrarEstudianteAsignatura(Frame):
         frame_filtros.pack(fill=X, pady=(0, 10))
 
         # Campo de búsqueda
-        lbl_buscar = Label(frame_filtros, text="🔎 Buscar:", anchor=W)
+        lbl_buscar = Label(
+            frame_filtros,
+            text="🔎 Buscar por código/nombre:",
+            anchor=W,
+            font=("Helvetica", 9, "bold"),
+        )
         lbl_buscar.pack(side=LEFT, padx=(0, 5))
 
-        self.entry_buscar_asignatura = Entry(frame_filtros, width=20)
+        self.entry_buscar_asignatura = Entry(frame_filtros, width=25)
         self.entry_buscar_asignatura.pack(side=LEFT, padx=(0, 10), fill=X, expand=True)
         self.map_widgets['entry_buscar_asignatura'] = self.entry_buscar_asignatura
         ToolTip(
             self.entry_buscar_asignatura,
-            "Buscar por código o nombre de asignatura",
+            "Escribe para filtrar por código o nombre de asignatura en tiempo real",
         )
 
+        # Separador visual
+        Separator(frame_filtros, orient=VERTICAL).pack(side=LEFT, fill=Y, padx=5)
+
         # Filtro por estado
-        lbl_estado = Label(frame_filtros, text="Estado:", anchor=W)
+        lbl_estado = Label(frame_filtros, text="Estado:", anchor=W, font=("Helvetica", 9, "bold"))
         lbl_estado.pack(side=LEFT, padx=(0, 5))
 
         self.cbx_filtro_estado = Combobox(
@@ -191,11 +199,22 @@ class FrameAdministrarEstudianteAsignatura(Frame):
             textvariable=self.var_filtro_estado,
             values=["Todos", "🔵 No cursada", "🟡 Cursando", "🟢 Aprobada", "🔴 Reprobada"],
             state=READONLY,
-            width=15,
+            width=18,
         )
-        self.cbx_filtro_estado.pack(side=LEFT)
+        self.cbx_filtro_estado.pack(side=LEFT, padx=(0, 5))
         self.map_widgets['cbx_filtro_estado'] = self.cbx_filtro_estado
         ToolTip(self.cbx_filtro_estado, "Filtrar asignaturas por estado")
+
+        # Botón para limpiar filtros
+        self.btn_limpiar_filtros = Button(
+            frame_filtros,
+            text="🔄 Limpiar",
+            bootstyle="secondary-outline",
+            width=12,
+        )
+        self.btn_limpiar_filtros.pack(side=LEFT, padx=(5, 0))
+        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
+        ToolTip(self.btn_limpiar_filtros, "Limpiar filtros y mostrar todas las asignaturas")
 
         # Tabla de asignaturas
         self.tabla_asignaturas = Tableview(
@@ -204,12 +223,12 @@ class FrameAdministrarEstudianteAsignatura(Frame):
             paginated=True,
             pagesize=10,
             coldata=[
-                {'text': 'Código', 'stretch': False, 'anchor': 'w'},
-                {'text': 'Asignatura', 'stretch': True, 'anchor': 'w'},
-                {'text': 'Créditos', 'stretch': False, 'anchor': 'center'},
-                {'text': 'Estado', 'stretch': False, 'anchor': 'center'},
-                {'text': 'Nota', 'stretch': False, 'anchor': 'e'},
-                {'text': 'Período', 'stretch': False, 'anchor': 'center'},
+                {'text': 'Código', 'stretch': False, 'anchor': 'w', 'width': 80},
+                {'text': 'Asignatura', 'stretch': True, 'anchor': 'w', 'minwidth': 200},
+                {'text': 'Créditos', 'stretch': False, 'anchor': 'center', 'width': 70},
+                {'text': 'Estado', 'stretch': False, 'anchor': 'center', 'width': 120},
+                {'text': 'Nota', 'stretch': False, 'anchor': 'e', 'width': 60},
+                {'text': 'Período', 'stretch': False, 'anchor': 'center', 'width': 80},
             ],
             bootstyle="primary",
         )

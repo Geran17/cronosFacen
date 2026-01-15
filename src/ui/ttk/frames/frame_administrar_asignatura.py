@@ -47,6 +47,9 @@ class FrameAdministrarAsignatura(Frame):
         self.var_tipo = StringVar()
         self.map_vars['var_tipo'] = self.var_tipo
 
+        self.var_semestre = IntVar(value=0)
+        self.map_vars['var_semestre'] = self.var_semestre
+
         self.var_carrera = StringVar()
         self.map_vars['var_carrera'] = self.var_carrera
 
@@ -94,30 +97,22 @@ class FrameAdministrarAsignatura(Frame):
     # │ Frame Central
     # └────────────────────────────────────────────────────────────┘
     def _frame_central(self, frame: Frame):
-        # Configurar columnas: panel izquierdo (60%) y derecho (40%)
-        frame.columnconfigure(0, weight=6, minsize=400)
-        frame.columnconfigure(1, weight=4, minsize=300)
         frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
 
-        # Panel Izquierdo: Tabla de Asignaturas
-        frame_izquierdo = Labelframe(
-            frame,
-            text="📚 Lista de Asignaturas",
-            padding=10,
-            bootstyle="primary",
-        )
-        frame_izquierdo.grid(row=0, column=0, sticky=NSEW, padx=(0, 5))
-        self._frame_tabla(frame_izquierdo)
+        # Crear Notebook (tabs)
+        self.notebook = Notebook(frame)
+        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
 
-        # Panel Derecho: Formulario
-        frame_derecho = Labelframe(
-            frame,
-            text="📝 Detalles de Asignatura",
-            padding=10,
-            bootstyle="info",
-        )
-        frame_derecho.grid(row=0, column=1, sticky=NSEW, padx=(5, 0))
-        self._frame_formulario(frame_derecho)
+        # Tab 1: Tabla
+        frame_tabla_tab = Frame(self.notebook, padding=10)
+        self.notebook.add(frame_tabla_tab, text="📚 Lista de Asignaturas")
+        self._frame_tabla(frame_tabla_tab)
+
+        # Tab 2: Formulario
+        frame_formulario_tab = Frame(self.notebook, padding=10)
+        self.notebook.add(frame_formulario_tab, text="📝 Detalles de Asignatura")
+        self._frame_formulario(frame_formulario_tab)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Tabla
@@ -146,6 +141,7 @@ class FrameAdministrarAsignatura(Frame):
                 {'text': 'Creditos', 'stretch': False, 'anchor': 'e'},  # Derecha
                 {'text': 'Horas', 'stretch': False, 'anchor': 'e'},  # Derecha
                 {'text': 'Tipo', 'stretch': False, 'anchor': 'center'},  # Centro
+                {'text': 'Semestre', 'stretch': False, 'anchor': 'center'},  # Centro
                 {'text': 'Carrera', 'stretch': True, 'anchor': 'w'},  # Izquierda
             ],
             bootstyle="primary",
@@ -248,11 +244,23 @@ class FrameAdministrarAsignatura(Frame):
         self.cbx_tipo.grid(column=0, row=7, pady=(0, 8), sticky=EW, padx=5, columnspan=2)
         self.map_widgets['cbx_tipo'] = self.cbx_tipo
 
+        # Semestre (ocupa todo el ancho)
+        lbl_semestre = Label(
+            frame_campos, text="📅 Semestre:", anchor=W, font=("Helvetica", 10, "bold")
+        )
+        lbl_semestre.grid(column=0, row=8, padx=5, pady=(5, 2), sticky=W, columnspan=2)
+
+        self.entry_semestre = Entry(
+            frame_campos, textvariable=self.var_semestre, justify=CENTER, bootstyle="info"
+        )
+        self.entry_semestre.grid(column=0, row=9, pady=(0, 8), sticky=EW, padx=5, columnspan=2)
+        self.map_widgets['entry_semestre'] = self.entry_semestre
+
         # Carrera (ocupa todo el ancho)
         lbl_carrera = Label(
             frame_campos, text="🏫 Carrera:", anchor=W, font=("Helvetica", 10, "bold")
         )
-        lbl_carrera.grid(column=0, row=8, sticky=W, padx=5, pady=(5, 2), columnspan=2)
+        lbl_carrera.grid(column=0, row=10, sticky=W, padx=5, pady=(5, 2), columnspan=2)
 
         self.cbx_carrera = Combobox(
             frame_campos,
@@ -260,17 +268,17 @@ class FrameAdministrarAsignatura(Frame):
             state=READONLY,
             bootstyle="info",
         )
-        self.cbx_carrera.grid(column=0, row=9, pady=(0, 10), sticky=EW, columnspan=2, padx=5)
+        self.cbx_carrera.grid(column=0, row=11, pady=(0, 10), sticky=EW, columnspan=2, padx=5)
         self.map_widgets['cbx_carrera'] = self.cbx_carrera
 
         # Separador
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=10, columnspan=2, sticky=EW, padx=5, pady=10
+            column=0, row=12, columnspan=2, sticky=EW, padx=5, pady=10
         )
 
         # Botones de acción principales
         frame_acciones = Frame(frame_campos)
-        frame_acciones.grid(column=0, row=11, columnspan=2, sticky=EW, padx=5, pady=(0, 10))
+        frame_acciones.grid(column=0, row=13, columnspan=2, sticky=EW, padx=5, pady=(0, 10))
         frame_acciones.columnconfigure(0, weight=1)
         frame_acciones.columnconfigure(1, weight=1)
         frame_acciones.columnconfigure(2, weight=1)
@@ -293,12 +301,12 @@ class FrameAdministrarAsignatura(Frame):
 
         # Separador antes de navegación
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=12, columnspan=2, sticky=EW, padx=5, pady=10
+            column=0, row=14, columnspan=2, sticky=EW, padx=5, pady=10
         )
 
         # Botones de navegación
         frame_navegacion = Frame(frame_campos)
-        frame_navegacion.grid(column=0, row=13, columnspan=2, sticky=EW, padx=5)
+        frame_navegacion.grid(column=0, row=15, columnspan=2, sticky=EW, padx=5)
 
         Label(
             frame_navegacion,

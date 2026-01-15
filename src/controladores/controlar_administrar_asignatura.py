@@ -80,6 +80,7 @@ class ControlarAdministrarAsignatura:
         creditos = self.var_creditos.get()
         horas_semanales = self.var_horas_semanales.get()
         tipo = self.var_tipo.get()
+        semestre = self.var_semestre.get()
         label_carrera = self.var_carrera.get()
         # Convertir nombre de carrera a id_carrera
         id_carrera = self.dict_carreras_inv.get(label_carrera, 0)
@@ -90,6 +91,7 @@ class ControlarAdministrarAsignatura:
         asignatura.creditos = creditos
         asignatura.horas_semanales = horas_semanales
         asignatura.tipo = tipo
+        asignatura.semestre = semestre
         asignatura.id_carrera = id_carrera
         return asignatura
 
@@ -101,6 +103,7 @@ class ControlarAdministrarAsignatura:
             self.var_creditos.set(asignatura.creditos)
             self.var_horas_semanales.set(asignatura.horas_semanales)
             self.var_tipo.set(asignatura.tipo)
+            self.var_semestre.set(asignatura.semestre if asignatura.semestre else 0)
             # Convertir id_carrera a label de carrera
             label_carrera = self.dict_carreras.get(asignatura.id_carrera, "")
             self.var_carrera.set(label_carrera)
@@ -114,6 +117,7 @@ class ControlarAdministrarAsignatura:
         self.var_creditos.set(0)
         self.var_horas_semanales.set(0)
         self.var_tipo.set("")
+        self.var_semestre.set(0)
         self.var_carrera.set("")
 
     def _insertar_fila(self, asignatura: AsignaturaService):
@@ -130,6 +134,7 @@ class ControlarAdministrarAsignatura:
                     asignatura.creditos,
                     asignatura.horas_semanales,
                     asignatura.tipo,
+                    asignatura.semestre if asignatura.semestre else "",
                     label_carrera,
                 ),
             )
@@ -167,6 +172,7 @@ class ControlarAdministrarAsignatura:
         self.var_creditos: IntVar = self.map_vars['var_creditos']
         self.var_horas_semanales: IntVar = self.map_vars['var_horas_semanales']
         self.var_tipo: StringVar = self.map_vars['var_tipo']
+        self.var_semestre: IntVar = self.map_vars['var_semestre']
         self.var_carrera: StringVar = self.map_vars['var_carrera']
 
     def _cargar_widgets(self):
@@ -181,6 +187,7 @@ class ControlarAdministrarAsignatura:
         self.btn_ultimo: Button = self.map_widgets['btn_ultimo']
         self.cbx_carrera: Combobox = self.map_widgets['cbx_carrera']
         self.cbx_tipo: Combobox = self.map_widgets['cbx_tipo']
+        self.entry_semestre: Entry = self.map_widgets['entry_semestre']
 
     def _actualizar_estadisticas(self):
         # actualizamos la lista de asignaturas

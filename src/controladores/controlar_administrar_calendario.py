@@ -1,11 +1,13 @@
 from typing import Dict, Any, List, Optional
-from tkinter.messagebox import askyesno, showinfo
+from tkinter.messagebox import askyesno, showinfo, showerror
+from tkinter.filedialog import askopenfilename
 from ttkbootstrap import Button, Entry, StringVar, IntVar, Label, Combobox, Checkbutton
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
 from modelos.daos.calendario_evento_dao import CalendarioEventoDAO
 from modelos.services.calendario_evento_service import CalendarioEventoService
 from scripts.logging_config import obtener_logger_modulo
+import csv
 
 logger = obtener_logger_modulo(__name__)
 
@@ -54,6 +56,7 @@ class ControlarAdministrarCalendario:
         # Vinculamos el evento nuevo
         self.btn_nuevo.config(command=self._on_nuevo)
         self.btn_aplicar.config(command=self._on_aplicar)
+        self.btn_importar.config(command=self._on_importar)
         self.btn_eliminar.config(command=self._on_eliminar_evento)
         # Vinculamos los botones de desplazamiento
         self.btn_primero.config(command=self._on_primero)
@@ -93,9 +96,9 @@ class ControlarAdministrarCalendario:
     def _limpiar_formulario(self):
         self.var_id_evento.set(0)
         self.var_titulo.set("")
-        self.var_tipo.set("")
-        self.var_fecha_inicio.set("")
-        self.var_fecha_fin.set("")
+        # self.var_tipo.set("")
+        # self.var_fecha_inicio.set("")
+        # self.var_fecha_fin.set("")
         self.var_afecta_actividades.set(0)
 
     def _insertar_fila(self, evento: CalendarioEventoService):
@@ -154,6 +157,7 @@ class ControlarAdministrarCalendario:
         self.lbl_estadisticas: Label = self.map_widgets['lbl_estadisticas']
         self.btn_nuevo: Button = self.map_widgets['btn_nuevo']
         self.btn_aplicar: Button = self.map_widgets['btn_aplicar']
+        self.btn_importar: Button = self.map_widgets['btn_importar']
         self.btn_eliminar: Button = self.map_widgets['btn_eliminar']
         self.btn_primero: Button = self.map_widgets['btn_primero']
         self.btn_anterior: Button = self.map_widgets['btn_anterior']
@@ -369,4 +373,107 @@ class ControlarAdministrarCalendario:
                 parent=self.master,
                 title="Información",
                 message="No hay eventos para mostrar",
+            )
+
+    def _on_importar(self):
+        """Abre un diálogo para seleccionar un archivo CSV e importar eventos"""
+        archivo = askopenfilename(
+            parent=self.master,
+            title="Seleccionar archivo CSV de eventos",
+            filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")],
+            initialdir="/home/geran/MEGA/Workspaces/proyectos/cronosFacen/data/exported_csv",
+        )
+
+        if not archivo:
+            return
+
+        try:
+            contador_insertados = 0
+            contador_errores = 0
+
+            with open(archivo, 'r', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+
+                # Validar que el archivo tenga las columnas esperadas
+                if reader.fieldnames is None:
+                    showerror(
+                        parent=self.master,
+                        title="Error",
+                        message="El archivo CSV está vacío o no tiene un formato válido",
+                    )
+                    return
+
+                columnas_esperadas = {
+                    'titulo',
+                    'tipo',
+                    'fecha_inicio',
+                    'fecha_fin',
+                    'afecta_actividades',
+                }
+                columnas_csv = set(reader.fieldnames)
+
+                if not columnas_esperadas.issubset(columnas_csv):
+                    columnas_faltantes = columnas_esperadas - columnas_csv
+                    showerror(
+                        parent=self.master,
+                        title="Error de formato",
+                        message=f"El archivo CSV falta las siguientes columnas:\n{', '.join(columnas_faltantes)}",
+                    )
+                    return
+
+                # Procesar cada fila del CSV
+                for idx, fila in enumerate(reader, start=1):
+                    try:
+                        evento = CalendarioEventoService(ruta_db=None)
+                        evento.titulo = fila.get('titulo', '').strip()
+                        evento.tipo = fila.get('tipo', '').strip()
+                        evento.fecha_inicio = fila.get('fecha_inicio', '').strip()
+                        evento.fecha_fin = fila.get('fecha_fin', '').strip()
+
+                        # Convertir afecta_actividades a int
+                        afecta_str = fila.get('afecta_actividades', '0').strip().lower()
+                        evento.afecta_actividades = (
+                            1 if afecta_str in ('1', 'sí', 'si', 'true', 'yes') else 0
+                        )
+
+                        # Validar datos obligatorios
+                        if not evento.titulo:
+                            logger.warning(f"Fila {idx}: Título vacío. Saltando.")
+                            contador_errores += 1
+                            continue
+
+                        # Insertar el evento
+                        id_evento = evento.insertar()
+                        if id_evento and id_evento != 0:
+                            contador_insertados += 1
+                            logger.info(f"Evento insertado: {evento.titulo}")
+                        else:
+                            contador_errores += 1
+                            logger.error(
+                                f"Fila {idx}: No se pudo insertar el evento {evento.titulo}"
+                            )
+
+                    except Exception as e:
+                        contador_errores += 1
+                        logger.error(f"Fila {idx}: Error al procesar evento: {e}")
+                        continue
+
+            # Mostrar resultado
+            mensaje = f"Importación completada:\n\n✅ Insertados: {contador_insertados}\n❌ Errores: {contador_errores}"
+            showinfo(
+                parent=self.master,
+                title="Importación completada",
+                message=mensaje,
+            )
+
+            # Recargar la tabla
+            self._actualizar_tabla_evento()
+            self._limpiar_formulario()
+
+        except Exception as e:
+            logger.error(f"Error al importar archivo CSV: {e}")
+            showerror(
+                parent=self.master,
+                title="Error de importación",
+                message=f"Error al importar el archivo:\n{str(e)}",
             )

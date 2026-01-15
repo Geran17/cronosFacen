@@ -10,6 +10,7 @@ from ttkbootstrap import (
     IntVar,
     Text,
     Scrollbar,
+    Combobox,
 )
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
@@ -41,6 +42,9 @@ class FrameAdministrarTipoActividad(Frame):
 
         self.var_descripcion = StringVar()
         self.map_vars['var_descripcion'] = self.var_descripcion
+
+        self.var_prioridad = StringVar(value="0 - Baja")
+        self.map_vars['var_prioridad'] = self.var_prioridad
 
         # creamos los widgets
         self._crear_widgets()
@@ -86,30 +90,22 @@ class FrameAdministrarTipoActividad(Frame):
     # │ Frame Central
     # └────────────────────────────────────────────────────────────┘
     def _frame_central(self, frame: Frame):
-        # Configurar columnas: panel izquierdo (60%) y derecho (40%)
-        frame.columnconfigure(0, weight=6, minsize=400)
-        frame.columnconfigure(1, weight=4, minsize=300)
         frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
 
-        # Panel Izquierdo: Tabla
-        frame_izquierdo = Labelframe(
-            frame,
-            text="📋 Lista de Tipos de Actividad",
-            padding=10,
-            bootstyle="primary",
-        )
-        frame_izquierdo.grid(row=0, column=0, sticky=NSEW, padx=(0, 5))
-        self._frame_tabla(frame_izquierdo)
+        # Crear Notebook (tabs)
+        self.notebook = Notebook(frame)
+        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
 
-        # Panel Derecho: Formulario
-        frame_derecho = Labelframe(
-            frame,
-            text="📝 Detalles del Tipo",
-            padding=10,
-            bootstyle="info",
-        )
-        frame_derecho.grid(row=0, column=1, sticky=NSEW, padx=(5, 0))
-        self._frame_formulario(frame_derecho)
+        # Tab 1: Tabla
+        frame_tabla_tab = Frame(self.notebook, padding=10)
+        self.notebook.add(frame_tabla_tab, text="📋 Lista de Tipos de Actividad")
+        self._frame_tabla(frame_tabla_tab)
+
+        # Tab 2: Formulario
+        frame_formulario_tab = Frame(self.notebook, padding=10)
+        self.notebook.add(frame_formulario_tab, text="📝 Detalles del Tipo")
+        self._frame_formulario(frame_formulario_tab)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Tabla
@@ -224,14 +220,31 @@ class FrameAdministrarTipoActividad(Frame):
         scrollbar_descripcion.grid(column=1, row=0, sticky=NS)
         self.text_descripcion.configure(yscrollcommand=scrollbar_descripcion.set)
 
+        # Prioridad
+        lbl_prioridad = Label(
+            frame_campos, text="⚡ Prioridad:", anchor=W, font=("Helvetica", 10, "bold")
+        )
+        lbl_prioridad.grid(column=0, row=6, sticky=W, padx=5, pady=(5, 2))
+
+        self.cbx_prioridad = Combobox(
+            frame_campos,
+            textvariable=self.var_prioridad,
+            values=["0 - Baja", "1 - Media", "2 - Alta"],
+            state="readonly",
+            bootstyle="info",
+            justify=CENTER,
+        )
+        self.cbx_prioridad.grid(column=0, row=7, padx=5, pady=(0, 8), sticky=EW)
+        self.map_widgets['cbx_prioridad'] = self.cbx_prioridad
+
         # Separador
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=6, columnspan=2, sticky=EW, padx=5, pady=10
+            column=0, row=8, columnspan=2, sticky=EW, padx=5, pady=10
         )
 
         # Botones de acción principales
         frame_acciones = Frame(frame_campos)
-        frame_acciones.grid(column=0, row=7, columnspan=2, sticky=EW, padx=5, pady=(0, 5))
+        frame_acciones.grid(column=0, row=9, columnspan=2, sticky=EW, padx=5, pady=(0, 5))
 
         self.btn_nuevo = Button(frame_acciones, text="➕ Nuevo", bootstyle="success", width=12)
         self.btn_nuevo.pack(side=LEFT, padx=2)
@@ -247,7 +260,7 @@ class FrameAdministrarTipoActividad(Frame):
 
         # Botones de navegación
         frame_navegacion = Frame(frame_campos)
-        frame_navegacion.grid(column=0, row=8, columnspan=2, sticky=EW, padx=5)
+        frame_navegacion.grid(column=0, row=10, columnspan=2, sticky=EW, padx=5)
 
         self.btn_primero = Button(frame_navegacion, text="⏮️", bootstyle="secondary", width=6)
         self.btn_primero.pack(side=LEFT, padx=1, expand=True, fill=X)

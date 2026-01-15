@@ -21,11 +21,16 @@ class FrameCalendario(Frame):
         self.var_estado_actividad = StringVar()
         self.map_vars['var_estado_activdad'] = self.var_estado_actividad
 
+        self.var_asignatura = StringVar()
+        self.map_vars['var_asignatura'] = self.var_asignatura
+
         # cargamos los widgets
         self._crear_widgets()
 
         # Cargamos el controlador
-        ControladorCalendario(map_widgets=self.map_widgets, map_vars=self.map_vars)
+        self.controlador = ControladorCalendario(
+            map_widgets=self.map_widgets, map_vars=self.map_vars
+        )
 
     def _crear_widgets(self):
         # frame superior
@@ -78,50 +83,100 @@ class FrameCalendario(Frame):
         frame_notebook.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
 
         frame_treeview_eventos = Frame(frame, padding=1)
-        self._frame_treeview(frame=frame)
+        self._frame_treeview(frame=frame_treeview_eventos)
         frame_treeview_eventos.pack(side=TOP, fill=X, padx=1, pady=1)
 
     def _frame_inferior(self, frame: Frame):
-        pass
+        # Botón Aplicar Filtros
+        btn_aplicar_filtros = Button(frame, text="Aplicar Filtros", bootstyle=SUCCESS, width=15)
+        btn_aplicar_filtros.pack(side=LEFT, padx=5, pady=5)
+        self.map_widgets['btn_aplicar_filtros'] = btn_aplicar_filtros
+
+        # Botón Refrescar
+        btn_refrescar = Button(frame, text="Refrescar", bootstyle=INFO, width=15)
+        btn_refrescar.pack(side=LEFT, padx=5, pady=5)
+        self.map_widgets['btn_refrescar'] = btn_refrescar
+
+        # Botón Limpiar Filtros
+        btn_limpiar_filtros = Button(frame, text="Limpiar Filtros", bootstyle=WARNING, width=15)
+        btn_limpiar_filtros.pack(side=LEFT, padx=5, pady=5)
+        self.map_widgets['btn_limpiar_filtros'] = btn_limpiar_filtros
+
+        # Separator
+        Separator(frame, orient=VERTICAL).pack(side=LEFT, fill=Y, padx=10, pady=5)
+
+        # Botón Exportar CSV
+        btn_exportar_csv = Button(frame, text="📋 Exportar CSV", bootstyle=SECONDARY, width=15)
+        btn_exportar_csv.pack(side=LEFT, padx=5, pady=5)
+        self.map_widgets['btn_exportar_csv'] = btn_exportar_csv
+
+        # Botón Exportar iCalendar
+        btn_exportar_ical = Button(frame, text="📅 Exportar iCal", bootstyle=SECONDARY, width=15)
+        btn_exportar_ical.pack(side=LEFT, padx=5, pady=5)
+        self.map_widgets['btn_exportar_ical'] = btn_exportar_ical
 
     def _frame_filtrado(self, frame: Frame):
+        # Configurar columnas para que sean redimensionables
+        frame.columnconfigure(1, weight=1)
+        frame.columnconfigure(3, weight=1)
+
+        # Configurar filas para mejor distribución
+        frame.rowconfigure(0, weight=0)
+        frame.rowconfigure(1, weight=0)
+        frame.rowconfigure(2, weight=0)
+
         # Label Filtro
-        lbl_filtro = Label(frame, text="Filtrar por: ", bootstyle=INFO)
-        lbl_filtro.pack(side=LEFT, fill=X, padx=1, pady=1, ipadx=10)
+        lbl_filtro = Label(frame, text="Filtrar por:", bootstyle=INFO)
+        lbl_filtro.grid(row=0, column=0, padx=1, pady=1, sticky=W)
 
         # Carrera
         lbl_carrera = Label(frame, text="Carrera: ")
-        lbl_carrera.pack(side=LEFT, padx=1, pady=1, fill=X)
+        lbl_carrera.grid(row=1, column=0, padx=1, pady=1, sticky=W)
 
         cbx_carrera = Combobox(
             frame,
             state=READONLY,
             textvariable=self.var_carrera,
         )
-        cbx_carrera.pack(side=LEFT, padx=1, pady=1, fill=X, expand=TRUE)
+        cbx_carrera.grid(row=1, column=1, padx=1, pady=1, sticky=EW)
         self.map_widgets['cbx_carrera'] = cbx_carrera
 
-        # Tipo Actividad
-        lbl_tipo_actividad = Label(frame, text="Tipo: ")
-        lbl_tipo_actividad.pack(side=LEFT, padx=1, pady=1, fill=X)
+        # Asignatura
+        lbl_asignatura = Label(frame, text="Asignatura: ")
+        lbl_asignatura.grid(row=1, column=2, padx=1, pady=1, sticky=W)
+
+        cbx_asignatura = Combobox(
+            frame,
+            state=READONLY,
+            textvariable=self.var_asignatura,
+        )
+        cbx_asignatura.grid(row=1, column=3, padx=1, pady=1, sticky=EW)
+        self.map_widgets['cbx_asignatura'] = cbx_asignatura
+
+        # Fila 2: Tipo de Evento y Tipo de Actividad
+        # Tipo de Evento
+        lbl_tipo_evento = Label(frame, text="Tipo de Evento: ")
+        lbl_tipo_evento.grid(row=2, column=0, padx=1, pady=1, sticky=W)
+
+        cbx_tipo_evento = Combobox(
+            frame,
+            state=READONLY,
+            textvariable=self.var_estado_actividad,
+        )
+        cbx_tipo_evento.grid(row=2, column=1, padx=1, pady=1, sticky=EW)
+        self.map_widgets['cbx_tipo_evento'] = cbx_tipo_evento
+
+        # Tipo de Actividad
+        lbl_tipo_actividad = Label(frame, text="Tipo de Actividad: ")
+        lbl_tipo_actividad.grid(row=2, column=2, padx=1, pady=1, sticky=W)
 
         cbx_tipo_actividad = Combobox(
             frame,
             state=READONLY,
             textvariable=self.var_tipo_actividad,
         )
-        cbx_tipo_actividad.pack(side=LEFT, padx=1, pady=1, fill=X, expand=TRUE)
+        cbx_tipo_actividad.grid(row=2, column=3, padx=1, pady=1, sticky=EW)
         self.map_widgets['cbx_tipo_actividad'] = cbx_tipo_actividad
-
-        # Estado Actividad
-        lbl_estado_actividad = Label(frame, text="Estado: ")
-        lbl_estado_actividad.pack(side=LEFT, padx=1, pady=1, fill=X)
-
-        cbx_estado_actividad = Combobox(
-            frame, state=READONLY, textvariable=self.var_estado_actividad
-        )
-        cbx_estado_actividad.pack(side=LEFT, padx=1, pady=1, fill=X, expand=TRUE)
-        self.map_widgets['cbx_estado_actividad'] = cbx_estado_actividad
 
     def _frame_desplazar_meses(self, frame: Frame):
         """Frame para navegar entre meses."""
@@ -217,3 +272,30 @@ class FrameCalendario(Frame):
             font=("Helvetica", 9),
         )
         lbl_evento_calendario.pack(side=LEFT, padx=10, pady=5)
+
+        Separator(frame, orient=VERTICAL).pack(side=LEFT, fill=Y, padx=10, pady=5)
+
+        # Estadísticas del mes
+        lbl_estadisticas_titulo = Label(
+            frame,
+            text="Estadísticas:",
+            bootstyle=PRIMARY,
+            font=("Helvetica", 10, "bold"),
+        )
+        lbl_estadisticas_titulo.pack(side=LEFT, padx=5, pady=5)
+
+        # Frame para las estadísticas
+        frame_stats = Frame(frame, padding=(1, 1))
+        frame_stats.pack(side=LEFT, padx=10, pady=5, fill=BOTH, expand=True)
+
+        # Label de estadísticas que se actualizará dinámicamente
+        self.lbl_stats = Label(
+            frame_stats,
+            text="Cargando...",
+            bootstyle=SECONDARY,
+            font=("Helvetica", 9),
+        )
+        self.lbl_stats.pack(side=LEFT, padx=5, pady=5)
+
+        # Guardar referencia para acceso desde el controlador
+        self.map_widgets['lbl_stats'] = self.lbl_stats

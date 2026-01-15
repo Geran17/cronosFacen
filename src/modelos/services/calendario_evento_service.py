@@ -85,7 +85,7 @@ class CalendarioEventoService(CalendarioEventoDTO):
             return False
         try:
             resultado = self.dao.existe(dto=self)
-            logger.debug(f"Evento de calendario {self.id_calendario_evento} existe: {resultado}")
+            logger.debug(f"Evento de calendario {self.id_evento} existe: {resultado}")
             return resultado
         except Exception as e:
             logger.error(f"Error al verificar existencia de evento de calendario: {e}")
@@ -93,19 +93,19 @@ class CalendarioEventoService(CalendarioEventoDTO):
 
     def es_valida(self) -> bool:
         """Valida que los datos del evento de calendario sean correctos."""
-        if not self.nombre or len(str(self.nombre).strip()) == 0:
-            logger.warning("Nombre de evento de calendario vacío o inválido")
+        if not self.titulo or len(str(self.titulo).strip()) == 0:
+            logger.warning("Título de evento de calendario vacío o inválido")
             return False
         if not self.fecha_inicio:
             logger.warning("Fecha de inicio de evento de calendario no definida")
             return False
-        logger.debug(f"Evento de calendario válido: {self.nombre}")
+        logger.debug(f"Evento de calendario válido: {self.titulo}")
         return True
 
     def __str__(self) -> str:
         """Representación en string del evento de calendario."""
         return (
-            f"CalendarioEventoService(id={self.id_calendario_evento}, nombre={self.nombre}, "
+            f"CalendarioEventoService(id={self.id_evento}, titulo={self.titulo}, "
             f"fecha_inicio={self.fecha_inicio}, fecha_fin={self.fecha_fin})"
         )
 

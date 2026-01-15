@@ -84,6 +84,65 @@ agregar_view(
     """,
 )
 
+# VISTA 2: Estudiante - Asignatura - Carrera (Relación completa)
+agregar_view(
+    "vw_estudiante_asignatura_carrera",
+    """
+    CREATE VIEW IF NOT EXISTS vw_estudiante_asignatura_carrera AS
+    SELECT 
+        carrera.id_carrera,
+        carrera.nombre as nombre_carrera,
+        asignatura.id_asignatura,
+        asignatura.nombre as nombre_asignatura,
+        estudiante_asignatura.id_estudiante, 
+        estudiante_asignatura.estado, 
+        estudiante_asignatura.nota_final
+    FROM 
+        carrera
+        INNER JOIN asignatura ON asignatura.id_carrera = carrera.id_carrera
+        INNER JOIN estudiante_asignatura ON estudiante_asignatura.id_asignatura = asignatura.id_asignatura
+    ORDER BY carrera.nombre, asignatura.nombre;
+    """,
+)
+
+# VISTA 4: Estudiante - Actividades con Detalles Completos
+agregar_view(
+    "vw_estudiante_actividades_detalladas",
+    """
+    CREATE VIEW IF NOT EXISTS vw_estudiante_actividades_detalladas AS
+    SELECT 
+        estudiante.id_estudiante AS id_estudiante,
+        carrera.id_carrera AS carrera_id,
+        asignatura.id_asignatura AS id_asignatura,
+        actividad.id_actividad AS actividad_id,
+        actividad.id_eje AS eje_id,
+        tipo_actividad.id_tipo_actividad AS tipo_actividad_id,
+        eje_tematico.nombre AS eje_nombre,
+        eje_tematico.orden AS eje_orden,
+        asignatura.nombre AS nombre_asignatura,
+        actividad.titulo AS titulo,
+        actividad.descripcion AS descripcion,
+        actividad.fecha_inicio AS fecha_inicio,
+        actividad.fecha_fin AS fecha_fin,
+        tipo_actividad.nombre AS actividad_nombre,
+        tipo_actividad.siglas AS siglas,
+        tipo_actividad.prioridad AS prioridad,
+        estudiante_actividad.estado AS actividad_estado,
+        estudiante_actividad.fecha_entrega AS fecha_entrega,
+        CAST((julianday(actividad.fecha_fin) - julianday(actividad.fecha_inicio)) AS INTEGER) AS dias_duracion,
+        CAST((julianday(date('now')) - julianday(actividad.fecha_fin)) AS INTEGER) AS dias_desde_fin
+    FROM
+        actividad
+        INNER JOIN eje_tematico ON actividad.id_eje = eje_tematico.id_eje
+        INNER JOIN asignatura ON asignatura.id_asignatura = eje_tematico.id_asignatura
+        INNER JOIN carrera ON asignatura.id_carrera = carrera.id_carrera
+        INNER JOIN tipo_actividad ON actividad.id_tipo_actividad = tipo_actividad.id_tipo_actividad
+        INNER JOIN estudiante_actividad ON actividad.id_actividad = estudiante_actividad.id_actividad
+        INNER JOIN estudiante ON estudiante_actividad.id_estudiante = estudiante.id_estudiante
+    ORDER BY actividad.fecha_fin;
+    """,
+)
+
 
 def crear_todas_las_views(ruta_db: str = RUTA_DB) -> bool:
     """

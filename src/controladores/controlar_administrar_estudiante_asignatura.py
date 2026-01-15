@@ -91,6 +91,11 @@ class ControlarAdministrarEstudianteAsignatura:
         self.btn_aplicar.config(command=self._on_aplicar)
         self.btn_limpiar.config(command=self._on_limpiar_formulario)
 
+        # Botón de limpiar filtros
+        if 'btn_limpiar_filtros' in self.map_widgets:
+            self.btn_limpiar_filtros: Button = self.map_widgets['btn_limpiar_filtros']
+            self.btn_limpiar_filtros.config(command=self._on_limpiar_filtros)
+
     def _cargar_vars(self):
         self.var_id_estudiante: IntVar = self.map_vars['var_id_estudiante']
         self.var_nombre_estudiante: StringVar = self.map_vars['var_nombre_estudiante']
@@ -126,14 +131,14 @@ class ControlarAdministrarEstudianteAsignatura:
         self.lbl_estadisticas: Label = self.map_widgets['lbl_estadisticas']
 
     def _cargar_estudiantes(self):
-        """Carga todos los estudiantes con sus carreras activas."""
+        """Carga todos los estudiantes con todas sus carreras (activas e inactivas)."""
         try:
             self.dict_estudiantes.clear()
             self.dict_estudiantes_inv.clear()
 
             dao = EstudianteDAO(ruta_db=None)
 
-            # ✅ CONSULTA: Une con estudiante_carrera para obtener todas las carreras activas
+            # ✅ CONSULTA: Une con estudiante_carrera para obtener TODAS las carreras
             sql = """
             SELECT 
                 e.id_estudiante, 
@@ -141,11 +146,11 @@ class ControlarAdministrarEstudianteAsignatura:
                 e.correo,
                 ec.id_carrera,
                 c.nombre as nombre_carrera,
-                ec.es_carrera_principal
+                ec.es_carrera_principal,
+                ec.estado as estado_carrera
             FROM estudiante e
             LEFT JOIN estudiante_carrera ec 
-                ON e.id_estudiante = ec.id_estudiante 
-                AND ec.estado = 'activa'
+                ON e.id_estudiante = ec.id_estudiante
             LEFT JOIN carrera c 
                 ON ec.id_carrera = c.id_carrera
             ORDER BY e.nombre, ec.es_carrera_principal DESC, c.nombre
@@ -162,6 +167,7 @@ class ControlarAdministrarEstudianteAsignatura:
                     id_carrera = data.get('id_carrera')
                     nombre_carrera = data.get('nombre_carrera', 'Sin carrera')
                     es_principal = data.get('es_carrera_principal', 0)
+                    estado_carrera = data.get('estado_carrera', 'inactiva')
 
                     # Formato: "Juan Pérez (juan@mail.com) - Ingeniería ⭐"
                     label = f"{nombre}"
@@ -171,17 +177,25 @@ class ControlarAdministrarEstudianteAsignatura:
                         label += f" - {nombre_carrera}"
                         if es_principal:
                             label += " ⭐"  # Marca la carrera principal
+                        # Indicar si la carrera está activa o inactiva
+                        if estado_carrera == 'activa':
+                            label += " ✓"  # Activa
+                        else:
+                            label += " ✗"  # Inactiva
 
                     # ✅ Crear clave única: combinación de estudiante + carrera
                     # Esto permite múltiples entradas para el mismo estudiante
-                    clave_dict = f"{id_estudiante}_{id_carrera}" if id_carrera else f"{id_estudiante}_0"
-                    
+                    clave_dict = (
+                        f"{id_estudiante}_{id_carrera}" if id_carrera else f"{id_estudiante}_0"
+                    )
+
                     # Guardamos con clave única
                     self.dict_estudiantes[clave_dict] = {
                         'id_estudiante': id_estudiante,
                         'label': label,
                         'id_carrera': id_carrera,
                         'nombre_carrera': nombre_carrera,
+                        'estado_carrera': estado_carrera,
                     }
                     self.dict_estudiantes_inv[label] = clave_dict
                     labels_estudiantes.append(label)
@@ -574,6 +588,12 @@ class ControlarAdministrarEstudianteAsignatura:
         """Limpia el formulario."""
         self._limpiar_formulario()
         self._actualizar_estadisticas()
+
+    def _on_limpiar_filtros(self):
+        """Limpia los filtros de búsqueda y estado."""
+        self.entry_buscar_asignatura.delete(0, END)
+        self.var_filtro_estado.set("Todos")
+        self._actualizar_tabla_asignaturas()
 
     def _on_aplicar(self):
         """Aplica los cambios del formulario."""

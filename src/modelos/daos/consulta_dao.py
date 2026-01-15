@@ -1,5 +1,7 @@
 from modelos.daos.base_dao import DAO
-from modelos.dtos.consulta_dto import EventosUnificadosDTO
+from modelos.dtos.consulta_dto import (
+    EventosUnificadosDTO,
+)
 from typing import Optional, List, Dict, Any
 from sqlite3 import Error
 from scripts.logging_config import obtener_logger_modulo

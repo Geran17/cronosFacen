@@ -5,7 +5,6 @@ from ttkbootstrap import (
     Separator,
     Entry,
     Combobox,
-    Labelframe,
     Notebook,
     StringVar,
     IntVar,
@@ -92,30 +91,23 @@ class FrameAdministrarCalendario(Frame):
     # │ Frame Central
     # └────────────────────────────────────────────────────────────┘
     def _frame_central(self, frame: Frame):
-        # Configurar columnas: panel izquierdo (60%) y derecho (40%)
-        frame.columnconfigure(0, weight=6, minsize=400)
-        frame.columnconfigure(1, weight=4, minsize=300)
+        # Configurar el frame para usar todo el espacio disponible
+        frame.columnconfigure(0, weight=1)
         frame.rowconfigure(0, weight=1)
 
-        # Panel Izquierdo: Tabla
-        frame_izquierdo = Labelframe(
-            frame,
-            text="📋 Lista de Eventos",
-            padding=10,
-            bootstyle="primary",
-        )
-        frame_izquierdo.grid(row=0, column=0, sticky=NSEW, padx=(0, 5))
-        self._frame_tabla(frame_izquierdo)
+        # Crear Notebook para las pestañas
+        notebook = Notebook(frame)
+        notebook.grid(row=0, column=0, sticky=NSEW, padx=10, pady=10)
 
-        # Panel Derecho: Formulario
-        frame_derecho = Labelframe(
-            frame,
-            text="📝 Detalles del Evento",
-            padding=10,
-            bootstyle="info",
-        )
-        frame_derecho.grid(row=0, column=1, sticky=NSEW, padx=(5, 0))
-        self._frame_formulario(frame_derecho)
+        # Pestaña 1: Tabla de Eventos
+        tab_tabla = Frame(notebook)
+        notebook.add(tab_tabla, text="📋 Lista de Eventos")
+        self._frame_tabla(tab_tabla)
+
+        # Pestaña 2: Formulario
+        tab_formulario = Frame(notebook)
+        notebook.add(tab_formulario, text="📝 Detalles del Evento")
+        self._frame_formulario(tab_formulario)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Tabla
@@ -183,8 +175,15 @@ class FrameAdministrarCalendario(Frame):
         self.cbx_tipo = Combobox(
             frame_campos,
             textvariable=self.var_tipo,
-            state=READONLY,
-            values=["receso", "examen", "entrega", "festivo", "reunion", "otro"],
+            state=NORMAL,
+            values=[
+                "Feriando",
+                "Asueto",
+                "Administrativo",
+                "Conmemorativo",
+                "Evalución",
+                "Académico",
+            ],
             bootstyle="info",
         )
         self.cbx_tipo.grid(column=1, row=1, padx=5, pady=(0, 8), sticky=EW)
@@ -271,6 +270,10 @@ class FrameAdministrarCalendario(Frame):
         self.btn_aplicar = Button(frame_acciones, text="💾 Guardar", bootstyle="primary", width=12)
         self.btn_aplicar.pack(side=LEFT, padx=2)
         self.map_widgets['btn_aplicar'] = self.btn_aplicar
+
+        self.btn_importar = Button(frame_acciones, text="📥 Importar", bootstyle="info", width=12)
+        self.btn_importar.pack(side=LEFT, padx=2)
+        self.map_widgets['btn_importar'] = self.btn_importar
 
         self.btn_eliminar = Button(frame_acciones, text="🗑️ Eliminar", bootstyle="danger", width=12)
         self.btn_eliminar.pack(side=LEFT, padx=2)
