@@ -32,6 +32,7 @@ from ui.ttk.styles.icons import (
 from ui.ttk.frames.frame_bienvenidad import FrameBienvenidad
 from ui.ttk.frames.frame_calendario import FrameCalendario
 from ui.ttk.frames.frame_actividades import FrameActividades
+from ui.ttk.frames.frame_carreras import FrameCarreras
 from scripts.logging_config import obtener_logger_modulo
 from controladores.controlar_frame_principal import ControlarFramePrincipal
 
@@ -89,6 +90,7 @@ class FramePrincipal(Frame):
             # Frames del Notebook central
             'frame_bienvenidad': self.frame_bienvenidad,
             'frame_calendario': self.frame_calendario,
+            'frame_carreras': self.frame_carreras,
         }
 
         # Controlador del Frame Principal
@@ -414,3 +416,7 @@ class FramePrincipal(Frame):
         # Tab Actividades
         self.frame_actividades = FrameActividades(master=self.notebook_central)
         self.notebook_central.add(self.frame_actividades, text=f"{ICON_ACTIVIDAD} Actividades")
+
+        # Tab Carreras
+        self.frame_carreras = FrameCarreras(master=self.notebook_central)
+        self.notebook_central.add(self.frame_carreras, text=f"{ICON_CARRERA} Carreras")

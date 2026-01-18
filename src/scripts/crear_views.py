@@ -144,6 +144,157 @@ agregar_view(
 )
 
 
+# ┌────────────────────────────────────────────────────────────┐
+# │ VISTAS PARA FRAME CARRERAS
+# └────────────────────────────────────────────────────────────┘
+
+# VISTA 5: Asignaturas por Semestre con Detalles (Para Frame Carreras)
+agregar_view(
+    "vw_asignaturas_semestre_detalle",
+    """
+    CREATE VIEW IF NOT EXISTS vw_asignaturas_semestre_detalle AS
+    SELECT 
+        a.id_asignatura,
+        a.id_carrera,
+        a.nombre AS nombre_asignatura,
+        a.codigo,
+        a.semestre,
+        a.tipo,
+        a.creditos,
+        COUNT(DISTINCT et.id_eje) AS cantidad_ejes_tematicos,
+        COUNT(DISTINCT act.id_actividad) AS cantidad_actividades,
+        COALESCE(ea.estado, 'no_cursada') AS estado_asignatura,
+        COALESCE(ea.nota_final, 0) AS nota_final
+    FROM 
+        asignatura a
+        LEFT JOIN eje_tematico et ON a.id_asignatura = et.id_asignatura
+        LEFT JOIN actividad act ON et.id_eje = act.id_eje
+        LEFT JOIN estudiante_asignatura ea ON a.id_asignatura = ea.id_asignatura
+    GROUP BY a.id_asignatura, ea.id_estudiante
+    ORDER BY a.semestre, a.nombre;
+    """,
+)
+
+# VISTA 6: Prerrequisitos de Asignaturas
+agregar_view(
+    "vw_asignatura_prerequisitos",
+    """
+    CREATE VIEW IF NOT EXISTS vw_asignatura_prerequisitos AS
+    SELECT 
+        p.id_asignatura,
+        GROUP_CONCAT(ap.nombre, ', ') AS prerequisitos,
+        COUNT(ap.id_asignatura) AS cantidad_prerequisitos
+    FROM 
+        prerrequisito p
+        INNER JOIN asignatura ap ON p.id_asignatura_prerrequisito = ap.id_asignatura
+    GROUP BY p.id_asignatura;
+    """,
+)
+
+# VISTA 7: Progreso de Actividades por Estudiante y Asignatura
+agregar_view(
+    "vw_progreso_actividades_estudiante",
+    """
+    CREATE VIEW IF NOT EXISTS vw_progreso_actividades_estudiante AS
+    SELECT 
+        ea.id_estudiante,
+        a.id_asignatura,
+        a.nombre AS nombre_asignatura,
+        COUNT(DISTINCT act.id_actividad) AS total_actividades,
+        COUNT(DISTINCT CASE WHEN estud_act.estado IN ('entregada', 'en_progreso') THEN act.id_actividad END) AS actividades_entregadas,
+        ROUND(
+            CASE 
+                WHEN COUNT(DISTINCT act.id_actividad) = 0 THEN 0
+                ELSE (COUNT(DISTINCT CASE WHEN estud_act.estado IN ('entregada', 'en_progreso') THEN act.id_actividad END) * 100.0) / COUNT(DISTINCT act.id_actividad)
+            END, 
+            1
+        ) AS porcentaje_progreso
+    FROM 
+        estudiante_asignatura ea
+        INNER JOIN asignatura a ON ea.id_asignatura = a.id_asignatura
+        LEFT JOIN eje_tematico et ON a.id_asignatura = et.id_asignatura
+        LEFT JOIN actividad act ON et.id_eje = act.id_eje
+        LEFT JOIN estudiante_actividad estud_act ON act.id_actividad = estud_act.id_actividad 
+            AND estud_act.id_estudiante = ea.id_estudiante
+    GROUP BY ea.id_estudiante, a.id_asignatura;
+    """,
+)
+
+# VISTA 8: Carreras del Estudiante con Información Completa
+agregar_view(
+    "vw_carreras_estudiante",
+    """
+    CREATE VIEW IF NOT EXISTS vw_carreras_estudiante AS
+    SELECT 
+        ec.id_estudiante,
+        ec.id_carrera,
+        c.nombre AS nombre_carrera,
+        c.plan,
+        c.modalidad,
+        c.creditos_totales,
+        ec.estado AS estado_carrera,
+        ec.es_carrera_principal,
+        ec.fecha_inscripcion,
+        COUNT(DISTINCT a.id_asignatura) AS total_asignaturas,
+        COUNT(DISTINCT CASE WHEN a.semestre <= 4 THEN a.id_asignatura END) AS asignaturas_primer_ciclo,
+        ROUND(
+            CASE 
+                WHEN COUNT(DISTINCT a.id_asignatura) = 0 THEN 0
+                ELSE (COUNT(DISTINCT CASE WHEN ea.estado = 'aprobada' THEN ea.id_asignatura END) * 100.0) / COUNT(DISTINCT a.id_asignatura)
+            END,
+            1
+        ) AS porcentaje_progreso_carrera
+    FROM 
+        estudiante_carrera ec
+        INNER JOIN carrera c ON ec.id_carrera = c.id_carrera
+        LEFT JOIN asignatura a ON c.id_carrera = a.id_carrera
+        LEFT JOIN estudiante_asignatura ea ON a.id_asignatura = ea.id_asignatura 
+            AND ea.id_estudiante = ec.id_estudiante
+    GROUP BY ec.id_estudiante, ec.id_carrera;
+    """,
+)
+
+# VISTA 9: Asignaturas del Estudiante con Información Completa (Para Frame Carreras)
+agregar_view(
+    "vw_asignaturas_estudiante_completo",
+    """
+    CREATE VIEW IF NOT EXISTS vw_asignaturas_estudiante_completo AS
+    SELECT 
+        ea.id_estudiante,
+        a.id_asignatura,
+        a.nombre AS nombre_asignatura,
+        a.codigo,
+        a.semestre,
+        a.tipo,
+        a.creditos,
+        a.id_carrera,
+        c.nombre AS nombre_carrera,
+        ea.estado,
+        ea.nota_final,
+        COUNT(DISTINCT et.id_eje) AS cantidad_ejes_tematicos,
+        COUNT(DISTINCT act.id_actividad) AS cantidad_actividades,
+        COALESCE(aprereq.prerequisitos, '-') AS prerequisitos,
+        ROUND(
+            CASE 
+                WHEN COUNT(DISTINCT act.id_actividad) = 0 THEN 0
+                ELSE (COUNT(DISTINCT CASE WHEN estud_act.estado IN ('entregada', 'en_progreso') THEN act.id_actividad END) * 100.0) / COUNT(DISTINCT act.id_actividad)
+            END, 
+            1
+        ) AS progreso_actividades
+    FROM 
+        estudiante_asignatura ea
+        INNER JOIN asignatura a ON ea.id_asignatura = a.id_asignatura
+        INNER JOIN carrera c ON a.id_carrera = c.id_carrera
+        LEFT JOIN eje_tematico et ON a.id_asignatura = et.id_asignatura
+        LEFT JOIN actividad act ON et.id_eje = act.id_eje
+        LEFT JOIN estudiante_actividad estud_act ON act.id_actividad = estud_act.id_actividad 
+            AND estud_act.id_estudiante = ea.id_estudiante
+        LEFT JOIN vw_asignatura_prerequisitos aprereq ON a.id_asignatura = aprereq.id_asignatura
+    GROUP BY ea.id_estudiante, a.id_asignatura;
+    """,
+)
+
+
 def crear_todas_las_views(ruta_db: str = RUTA_DB) -> bool:
     """
     Crea todas las VIEWS recomendadas en la base de datos.
