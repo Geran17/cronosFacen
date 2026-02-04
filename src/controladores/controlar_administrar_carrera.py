@@ -3,7 +3,6 @@ from tkinter.messagebox import askyesno, showinfo
 from ttkbootstrap import Button, Entry, StringVar, Combobox, IntVar, Label
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.carrera_dao import CarreraDAO
 from modelos.services.carrera_service import CarreraService
 from scripts.logging_config import obtener_logger_modulo
 
@@ -129,15 +128,8 @@ class ControlarAdministrarCarrera:
         if self.lista_carreras:
             self.lista_carreras.clear()
 
-        dao = CarreraDAO(ruta_db=None)
-        sql = "SELECT * FROM Carrera"
-        params = ()
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
-        if lista_aux:
-            for data in lista_aux:
-                carrera = CarreraService(ruta_db=None)
-                carrera.set_data(data=data)
-                self.lista_carreras.append(carrera)
+        servicio = CarreraService(ruta_db=None)
+        self.lista_carreras.extend(servicio.obtener_todas())
 
     def _cargar_vars(self):
         self.var_id: IntVar = self.map_vars['var_id']

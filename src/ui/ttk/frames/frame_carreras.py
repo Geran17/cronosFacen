@@ -13,6 +13,7 @@ from ttkbootstrap.constants import *
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.tooltip import ToolTip
 from typing import Dict, Any
+from ui.ttk.styles.estilos import PADDING_SM, PADDING_MD, PADDING_XS
 from ui.ttk.styles.icons import *
 from controladores.controlador_carreras import ControladorCarreras
 
@@ -21,15 +22,16 @@ class FrameCarreras(Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master=master, **kwargs)
 
-        self.map_vars: Dict[str, Any] = {}
-        self.map_widgets: Dict[str, Any] = {}
-
         # Variables
         self.var_carrera = StringVar()
-        self.map_vars['var_carrera'] = self.var_carrera
-
         self.var_estudiante = StringVar()
-        self.map_vars['var_estudiante'] = self.var_estudiante
+
+        self.map_vars: Dict[str, Any] = {
+            'var_carrera': self.var_carrera,
+            'var_estudiante': self.var_estudiante,
+        }
+
+        self.map_widgets: Dict[str, Any] = {}
 
         # Crear widgets
         self._crear_widgets()
@@ -45,17 +47,17 @@ class FrameCarreras(Frame):
 
     def _crear_widgets(self):
         """Crea la estructura principal de widgets"""
-        frame_superior = Frame(self, padding=(1, 1))
+        frame_superior = Frame(self, padding=(PADDING_XS, PADDING_XS))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=5, pady=10)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_XS, pady=PADDING_SM)
 
-        frame_central = Frame(self, padding=(1, 1))
+        frame_central = Frame(self, padding=(PADDING_XS, PADDING_XS))
         self._frame_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=5, pady=5, expand=TRUE)
+        frame_central.pack(side=TOP, fill=BOTH, padx=PADDING_XS, pady=PADDING_XS, expand=TRUE)
 
-        frame_inferior = Frame(self, padding=(1, 1))
+        frame_inferior = Frame(self, padding=(PADDING_XS, PADDING_XS))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=5, pady=5)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_XS, pady=PADDING_XS)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frames Principales
@@ -63,43 +65,50 @@ class FrameCarreras(Frame):
 
     def _frame_superior(self, frame: Frame):
         """Frame superior con título y subtítulo"""
-        frame_titulo = Frame(frame, padding=(1, 1))
+        frame_titulo = Frame(frame, padding=(PADDING_XS, PADDING_XS))
         frame_titulo.pack(side=TOP, padx=1, pady=1, fill=X)
 
         lbl_titulo = Label(
             frame_titulo,
             text="🎓 Carreras",
-            font=("Helvetica", 18, "bold"),
+            style="Title.TLabel",
             bootstyle=INFO,
         )
-        lbl_titulo.pack(side=TOP, fill=X, padx=1, pady=10)
+        lbl_titulo.pack(side=TOP, fill=X, padx=1, pady=PADDING_MD)
 
         lbl_subtitulo = Label(
             frame_titulo,
             text="Gestiona y visualiza las carreras académicas",
             bootstyle=SECONDARY,
-            font=("Helvetica", 9),
+            style="Subtitle.TLabel",
         )
-        lbl_subtitulo.pack(side=TOP, fill=X, padx=1, pady=1)
+        lbl_subtitulo.pack(side=TOP, fill=X, padx=1, pady=PADDING_SM)
 
         Separator(frame).pack(side=TOP, fill=X, padx=1, pady=1)
 
     def _frame_central(self, frame: Frame):
         """Frame central con filtros y contenido principal"""
-        frame_filtrado = Labelframe(frame, text="Filtros", padding=(1, 1))
+        frame_filtrado = Labelframe(frame, text="Filtros", padding=(PADDING_XS, PADDING_XS))
         self._frame_filtrado(frame=frame_filtrado)
-        frame_filtrado.pack(side=TOP, fill=X, padx=1, pady=1, ipadx=5, ipady=5)
+        frame_filtrado.pack(
+            side=TOP,
+            fill=X,
+            padx=1,
+            pady=1,
+            ipadx=PADDING_XS,
+            ipady=PADDING_XS,
+        )
 
         Separator(frame).pack(side=TOP, fill=X, padx=1, pady=1)
 
-        scrolled_frame = ScrolledFrame(frame, padding=(1, 1))
-        scrolled_frame.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
+        scrolled_frame = ScrolledFrame(frame, padding=(PADDING_XS, PADDING_XS))
+        scrolled_frame.pack(side=TOP, fill=BOTH, padx=PADDING_XS, pady=PADDING_XS, expand=TRUE)
         self.map_widgets['scrolled_frame'] = scrolled_frame
 
     def _frame_inferior(self, frame: Frame):
         """Frame inferior con botón de refrescar"""
-        btn_refrescar = Button(frame, text="🔄 Refrescar", bootstyle=WARNING, width=20)
-        btn_refrescar.pack(side=LEFT, padx=5, pady=5)
+        btn_refrescar = Button(frame, text="🔄 Refrescar", bootstyle=WARNING)
+        btn_refrescar.pack(side=LEFT, padx=PADDING_XS, pady=PADDING_XS)
         self.map_widgets['btn_refrescar'] = btn_refrescar
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -112,11 +121,11 @@ class FrameCarreras(Frame):
         frame.columnconfigure(1, weight=1)
 
         # Label y Combobox para Estudiantes
-        lbl_estudiante = Label(frame, text="Estudiante: ")
-        lbl_estudiante.grid(row=0, column=0, padx=2, pady=2, sticky=W)
+        lbl_estudiante = Label(frame, text="Estudiante:", style="FormLabel.TLabel")
+        lbl_estudiante.grid(row=0, column=0, padx=PADDING_XS, pady=PADDING_XS, sticky=W)
 
-        cbx_estudiante = Combobox(frame, textvariable=self.var_estudiante, state=READONLY, width=30)
-        cbx_estudiante.grid(row=1, column=0, padx=2, pady=2, sticky=EW)
+        cbx_estudiante = Combobox(frame, textvariable=self.var_estudiante, state=READONLY)
+        cbx_estudiante.grid(row=1, column=0, padx=PADDING_XS, pady=PADDING_XS, sticky=EW)
         self.map_widgets['cbx_estudiante'] = cbx_estudiante
         ToolTip(
             cbx_estudiante,
@@ -124,11 +133,11 @@ class FrameCarreras(Frame):
         )
 
         # Label y Combobox para Carreras
-        lbl_carrera = Label(frame, text="Carrera: ")
-        lbl_carrera.grid(row=0, column=1, padx=2, pady=2, sticky=W)
+        lbl_carrera = Label(frame, text="Carrera:", style="FormLabel.TLabel")
+        lbl_carrera.grid(row=0, column=1, padx=PADDING_XS, pady=PADDING_XS, sticky=W)
 
-        cbx_carrera = Combobox(frame, textvariable=self.var_carrera, state=READONLY, width=30)
-        cbx_carrera.grid(row=1, column=1, padx=2, pady=2, sticky=EW)
+        cbx_carrera = Combobox(frame, textvariable=self.var_carrera, state=READONLY)
+        cbx_carrera.grid(row=1, column=1, padx=PADDING_XS, pady=PADDING_XS, sticky=EW)
         self.map_widgets['cbx_carrera'] = cbx_carrera
         ToolTip(
             cbx_carrera,
@@ -156,7 +165,7 @@ class FrameCarreras(Frame):
 
             # Frame contenedor para la sección del semestre
             section_frame = Frame(scrolled_frame)
-            section_frame.pack(fill=BOTH, padx=10, pady=15, expand=TRUE)
+            section_frame.pack(fill=BOTH, padx=PADDING_XS, pady=PADDING_SM, expand=TRUE)
 
             # -------- ARRIBA: TARJETA DE SEMESTRE --------
             self._crear_tarjeta_semestre_header(section_frame, numero_semestre, porcentaje)
@@ -182,13 +191,13 @@ class FrameCarreras(Frame):
         """
         # Frame de la tarjeta de semestre
         card_frame = Frame(parent)
-        card_frame.pack(fill=X, pady=10)
+        card_frame.pack(fill=X, pady=4)
 
         # Contenedor con estilo
         sem_box = Labelframe(
             card_frame,
             text=f"📚 Semestre {numero_semestre}",
-            padding=10,
+            padding=6,
             bootstyle="info",
         )
         sem_box.pack(fill=X, expand=FALSE)
@@ -201,30 +210,30 @@ class FrameCarreras(Frame):
         lbl_numero = Label(
             content,
             text=f"Semestre {numero_semestre}",
-            font=("Helvetica", 14, "bold"),
+            style="Section.TLabel",
             bootstyle="info",
         )
-        lbl_numero.pack(side=LEFT, padx=20, pady=10)
+        lbl_numero.pack(side=LEFT, padx=10, pady=4)
 
         # Porcentaje con barra de progreso
         progress_frame = Frame(content)
-        progress_frame.pack(side=LEFT, fill=BOTH, expand=TRUE, padx=20, pady=10)
+        progress_frame.pack(side=LEFT, fill=BOTH, expand=TRUE, padx=10, pady=4)
 
         # Label de porcentaje
         lbl_porcentaje = Label(
             progress_frame,
             text=f"Progreso: {porcentaje:.1f}%",
-            font=("Helvetica", 10, "bold"),
+            style="FormLabel.TLabel",
             bootstyle="info",
         )
-        lbl_porcentaje.pack(side=TOP, pady=3)
+        lbl_porcentaje.pack(side=TOP, pady=1)
 
         # Barra de progreso
         progress_bar = Progressbar(
             progress_frame,
             value=porcentaje,
             maximum=100,
-            length=300,
+            length=220,
             bootstyle="info",
         )
         progress_bar.pack(side=TOP, fill=X)
@@ -238,7 +247,7 @@ class FrameCarreras(Frame):
         """
         # Frame contenedor para asignaturas
         asig_container = Frame(parent)
-        asig_container.pack(fill=BOTH, expand=TRUE, padx=5, pady=10)
+        asig_container.pack(fill=BOTH, expand=TRUE, padx=2, pady=4)
 
         # Label de encabezado (opcional, ya que el semestre lo indica)
         # lbl_asignaturas = Label(
@@ -251,10 +260,10 @@ class FrameCarreras(Frame):
 
         # Frame para la grilla
         grid_frame = Frame(asig_container)
-        grid_frame.pack(fill=BOTH, expand=TRUE, padx=5, pady=5)
+        grid_frame.pack(fill=BOTH, expand=TRUE, padx=2, pady=2)
 
         # Configurar columnas (5 asignaturas por fila)
-        num_columnas = 5
+        num_columnas = 6
         for col in range(num_columnas):
             grid_frame.columnconfigure(col, weight=1)
 
@@ -320,10 +329,10 @@ class FrameCarreras(Frame):
             card_frame = Labelframe(
                 parent,
                 text=f"📖 {nombre}",
-                padding=8,
+                padding=5,
                 bootstyle=color_estado,
             )
-            card_frame.grid(row=row, column=col, sticky="nsew", padx=5, pady=5)
+            card_frame.grid(row=row, column=col, sticky="nsew", padx=3, pady=3)
 
             # Fila 1: Estado y nota
             header_frame = Frame(card_frame)
@@ -332,7 +341,7 @@ class FrameCarreras(Frame):
             lbl_estado = Label(
                 header_frame,
                 text=f"{icon_estado} {estado.title()}",
-                font=("Helvetica", 8, "bold"),
+                style="Small.TLabel",
                 bootstyle=color_estado,
             )
             lbl_estado.pack(side=LEFT, padx=2)
@@ -340,19 +349,19 @@ class FrameCarreras(Frame):
             lbl_nota = Label(
                 header_frame,
                 text=f"📊 Nota: {nota:.1f}",
-                font=("Helvetica", 8, "bold"),
+                style="Small.TLabel",
                 bootstyle="info",
             )
             lbl_nota.pack(side=RIGHT, padx=2)
 
             # Fila 2: Ejes temáticos y actividades
             content_frame = Frame(card_frame)
-            content_frame.pack(fill=X, pady=2)
+            content_frame.pack(fill=X, pady=1)
 
             lbl_ejes = Label(
                 content_frame,
                 text=f"🎯 Ejes: {ejes_tematicos}",
-                font=("Helvetica", 8),
+                style="Small.TLabel",
                 bootstyle="secondary",
             )
             lbl_ejes.pack(side=LEFT, padx=2)
@@ -360,22 +369,22 @@ class FrameCarreras(Frame):
             lbl_actividades = Label(
                 content_frame,
                 text=f"✔️ Actividades: {actividades}",
-                font=("Helvetica", 8),
+                style="Small.TLabel",
                 bootstyle="secondary",
             )
             lbl_actividades.pack(side=LEFT, padx=2)
 
             # Fila 3: Barra de progreso de actividades
             progress_frame = Frame(card_frame)
-            progress_frame.pack(fill=X, pady=3, padx=2)
+            progress_frame.pack(fill=X, pady=2, padx=2)
 
             lbl_progress_title = Label(
                 progress_frame,
                 text=f"Actividades: {progreso_actividades:.0f}%",
-                font=("Helvetica", 7, "bold"),
+                style="Small.TLabel",
                 bootstyle="secondary",
             )
-            lbl_progress_title.pack(side=TOP, pady=1)
+            lbl_progress_title.pack(side=TOP, pady=0)
 
             progress_bar = Progressbar(
                 progress_frame,
@@ -388,15 +397,18 @@ class FrameCarreras(Frame):
             # Fila 4: Barra de progreso de prerequisitos (si existen)
             if prerequisitos_totales > 0:
                 prereq_progress_frame = Frame(card_frame)
-                prereq_progress_frame.pack(fill=X, pady=3, padx=2)
+                prereq_progress_frame.pack(fill=X, pady=2, padx=2)
 
                 lbl_prereq_progress_title = Label(
                     prereq_progress_frame,
-                    text=f"Prerequisitos: {progreso_prerequisitos:.0f}% ({prerequisitos_completados}/{prerequisitos_totales})",
-                    font=("Helvetica", 7, "bold"),
+                    text=(
+                        f"Prereq: {progreso_prerequisitos:.0f}% "
+                        f"({prerequisitos_completados}/{prerequisitos_totales})"
+                    ),
+                    style="Small.TLabel",
                     bootstyle="secondary",
                 )
-                lbl_prereq_progress_title.pack(side=TOP, pady=1)
+                lbl_prereq_progress_title.pack(side=TOP, pady=0)
 
                 prereq_progress_bar = Progressbar(
                     prereq_progress_frame,
@@ -408,14 +420,14 @@ class FrameCarreras(Frame):
 
             # Fila 5: Prerrequisitos (si existen)
             prerequisitos = prerequisitos if prerequisitos else '-'
-            if prerequisitos and prerequisitos != '-':
+            if prerequisitos and prerequisitos != '-' and progreso_prerequisitos < 100:
                 prereq_frame = Frame(card_frame)
-                prereq_frame.pack(fill=X, pady=2)
+                prereq_frame.pack(fill=X, pady=1)
 
                 lbl_prereq_title = Label(
                     prereq_frame,
                     text="📋 Requerimientos:",
-                    font=("Helvetica", 7, "bold"),
+                    style="Small.TLabel",
                     bootstyle="secondary",
                 )
                 lbl_prereq_title.pack(side=LEFT, padx=2)
@@ -423,9 +435,9 @@ class FrameCarreras(Frame):
                 lbl_prereq = Label(
                     prereq_frame,
                     text=prerequisitos,
-                    font=("Helvetica", 7),
+                    style="Small.TLabel",
                     bootstyle="secondary",
-                    wraplength=180,
+                    wraplength=140,
                     justify=LEFT,
                 )
                 lbl_prereq.pack(side=LEFT, padx=2, fill=X, expand=TRUE)
@@ -465,7 +477,7 @@ class FrameCarreras(Frame):
             lbl_numero = Label(
                 content_frame,
                 text=str(numero_semestre),
-                font=("Helvetica", 32, "bold"),
+                style="Display.TLabel",
                 bootstyle="info",
             )
             lbl_numero.pack(pady=10)
@@ -478,7 +490,7 @@ class FrameCarreras(Frame):
             lbl_porcentaje = Label(
                 progress_frame,
                 text=f"Progreso: {porcentaje:.1f}%",
-                font=("Helvetica", 10, "bold"),
+                style="FormLabel.TLabel",
                 bootstyle="info",
             )
             lbl_porcentaje.pack(side=TOP, pady=5)

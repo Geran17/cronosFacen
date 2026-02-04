@@ -17,6 +17,8 @@ from ttkbootstrap.tableview import Tableview
 from typing import Dict, Any
 from scripts.logging_config import obtener_logger_modulo
 from ui.ttk.styles.icons import ICON_ESTUDIANTE
+from ui.ttk.utils.layout import build_header
+from ui.ttk.styles.estilos import PADDING_MD, PADDING_SM
 from controladores.controlar_administrar_estudiante_asignatura import (
     ControlarAdministrarEstudianteAsignatura,
 )
@@ -74,53 +76,50 @@ class FrameAdministrarEstudianteAsignatura(Frame):
     def _crear_widgets(self):
         frame_superior = Frame(self, padding=(5, 5))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_selector = Frame(self, padding=(5, 5))
         self._frame_selector_estudiante(frame=frame_selector)
-        frame_selector.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_selector.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_central = Frame(self, padding=(5, 5))
         self._frame_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+        frame_central.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=True)
 
         frame_inferior = Frame(self, padding=(5, 5))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Superior
     # └────────────────────────────────────────────────────────────┘
     def _frame_superior(self, frame: Frame):
-        label_info = Label(
+        build_header(
             frame,
-            text=f"{ICON_ESTUDIANTE} Seguimiento Académico del Estudiante",
-            bootstyle="info",
-            font=("Helvetica", 16, "bold"),
+            titulo=f"{ICON_ESTUDIANTE} Seguimiento Académico del Estudiante",
+            subtitulo="Control de estado, notas y períodos",
         )
-        label_info.pack(side=TOP, fill=X, padx=1, pady=1, expand=TRUE)
-
-        Separator(frame).pack(side=TOP, fill=X, expand=TRUE, padx=1, pady=1)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Selector Estudiante
     # └────────────────────────────────────────────────────────────┘
     def _frame_selector_estudiante(self, frame: Frame):
+        frame.columnconfigure(1, weight=1)
+
         lbl_estudiante = Label(
             frame,
             text="Estudiante:",
-            font=("Helvetica", 10, "bold"),
+            style="FormLabel.TLabel",
             anchor=W,
         )
-        lbl_estudiante.pack(side=LEFT, padx=5)
+        lbl_estudiante.grid(row=0, column=0, sticky=W, padx=PADDING_SM, pady=PADDING_SM)
 
         self.cbx_estudiante = Combobox(
             frame,
             textvariable=self.var_nombre_estudiante,
             state=READONLY,
-            width=40,
         )
-        self.cbx_estudiante.pack(side=LEFT, padx=5, fill=X, expand=True)
+        self.cbx_estudiante.grid(row=0, column=1, sticky=EW, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['cbx_estudiante'] = self.cbx_estudiante
         ToolTip(
             self.cbx_estudiante,
@@ -130,13 +129,15 @@ class FrameAdministrarEstudianteAsignatura(Frame):
         self.btn_cargar_estudiante = Button(
             frame,
             text="📂 Cargar",
-            bootstyle="info",
-            width=12,
+            bootstyle="info")
+        self.btn_cargar_estudiante.grid(
+            row=0, column=2, sticky=E, padx=PADDING_SM, pady=PADDING_SM
         )
-        self.btn_cargar_estudiante.pack(side=LEFT, padx=5)
         self.map_widgets['btn_cargar_estudiante'] = self.btn_cargar_estudiante
 
-        Separator(frame).pack(side=TOP, fill=X, expand=TRUE, padx=1, pady=10)
+        Separator(frame).grid(
+            row=1, column=0, columnspan=3, sticky=EW, padx=PADDING_SM, pady=PADDING_MD
+        )
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Central - Panel Dividido
@@ -168,53 +169,57 @@ class FrameAdministrarEstudianteAsignatura(Frame):
     def _panel_tabla_asignaturas(self, frame: Frame):
         # Frame para filtros
         frame_filtros = Frame(frame)
-        frame_filtros.pack(fill=X, pady=(0, 10))
+        frame_filtros.pack(fill=X, pady=(0, PADDING_MD))
+        frame_filtros.columnconfigure(1, weight=1)
 
         # Campo de búsqueda
         lbl_buscar = Label(
             frame_filtros,
             text="🔎 Buscar por código/nombre:",
             anchor=W,
-            font=("Helvetica", 9, "bold"),
+            style="FormLabel.TLabel",
         )
-        lbl_buscar.pack(side=LEFT, padx=(0, 5))
+        lbl_buscar.grid(row=0, column=0, sticky=W, padx=PADDING_SM, pady=PADDING_SM)
 
-        self.entry_buscar_asignatura = Entry(frame_filtros, width=25)
-        self.entry_buscar_asignatura.pack(side=LEFT, padx=(0, 10), fill=X, expand=True)
+        self.entry_buscar_asignatura = Entry(frame_filtros)
+        self.entry_buscar_asignatura.grid(
+            row=0, column=1, sticky=EW, padx=PADDING_SM, pady=PADDING_SM
+        )
         self.map_widgets['entry_buscar_asignatura'] = self.entry_buscar_asignatura
         ToolTip(
             self.entry_buscar_asignatura,
             "Escribe para filtrar por código o nombre de asignatura en tiempo real",
         )
 
-        # Separador visual
-        Separator(frame_filtros, orient=VERTICAL).pack(side=LEFT, fill=Y, padx=5)
+        # Botón para limpiar filtros
+        self.btn_limpiar_filtros = Button(
+            frame_filtros,
+            text="🔄 Limpiar",
+            bootstyle="secondary-outline")
+        self.btn_limpiar_filtros.grid(row=0, column=2, sticky=E, padx=PADDING_SM, pady=PADDING_SM)
+        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
+        ToolTip(self.btn_limpiar_filtros, "Limpiar filtros y mostrar todas las asignaturas")
 
         # Filtro por estado
-        lbl_estado = Label(frame_filtros, text="Estado:", anchor=W, font=("Helvetica", 9, "bold"))
-        lbl_estado.pack(side=LEFT, padx=(0, 5))
+        lbl_estado = Label(
+            frame_filtros,
+            text="Estado:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        )
+        lbl_estado.grid(row=1, column=0, sticky=W, padx=PADDING_SM, pady=PADDING_SM)
 
         self.cbx_filtro_estado = Combobox(
             frame_filtros,
             textvariable=self.var_filtro_estado,
             values=["Todos", "🔵 No cursada", "🟡 Cursando", "🟢 Aprobada", "🔴 Reprobada"],
             state=READONLY,
-            width=18,
         )
-        self.cbx_filtro_estado.pack(side=LEFT, padx=(0, 5))
+        self.cbx_filtro_estado.grid(
+            row=1, column=1, sticky=EW, padx=PADDING_SM, pady=PADDING_SM
+        )
         self.map_widgets['cbx_filtro_estado'] = self.cbx_filtro_estado
         ToolTip(self.cbx_filtro_estado, "Filtrar asignaturas por estado")
-
-        # Botón para limpiar filtros
-        self.btn_limpiar_filtros = Button(
-            frame_filtros,
-            text="🔄 Limpiar",
-            bootstyle="secondary-outline",
-            width=12,
-        )
-        self.btn_limpiar_filtros.pack(side=LEFT, padx=(5, 0))
-        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
-        ToolTip(self.btn_limpiar_filtros, "Limpiar filtros y mostrar todas las asignaturas")
 
         # Tabla de asignaturas
         self.tabla_asignaturas = Tableview(
@@ -271,7 +276,7 @@ class FrameAdministrarEstudianteAsignatura(Frame):
         lbl_asig = Label(
             frame,
             text="Asignatura Seleccionada:",
-            font=("Helvetica", 9, "bold"),
+            style="FormLabel.TLabel",
             anchor=W,
         )
         lbl_asig.pack(fill=X, pady=(0, 3))
@@ -279,7 +284,7 @@ class FrameAdministrarEstudianteAsignatura(Frame):
         self.lbl_asignatura_seleccionada = Label(
             frame,
             textvariable=self.var_nombre_asignatura_seleccionada,
-            font=("Helvetica", 9),
+            style="Body.TLabel",
             foreground="blue",
             anchor=W,
         )
@@ -325,15 +330,15 @@ class FrameAdministrarEstudianteAsignatura(Frame):
         ToolTip(self.entry_periodo, "Ejemplo: 2025-I, 2025-II")
 
         # Botones
-        frame_buttons = Frame(frame, padding=(1, 1), bootstyle="success")
+        frame_buttons = Frame(frame, padding=(PADDING_SM, PADDING_SM), bootstyle="success")
         frame_buttons.pack(fill=X, pady=(10, 0))
 
         self.btn_aplicar = Button(frame_buttons, text="Aplicar", bootstyle="success")
-        self.btn_aplicar.pack(side=LEFT, fill=X, padx=1, pady=1, expand=TRUE)
+        self.btn_aplicar.pack(side=LEFT, fill=X, padx=PADDING_SM, pady=PADDING_SM, expand=TRUE)
         self.map_widgets['btn_aplicar'] = self.btn_aplicar
 
         self.btn_limpiar = Button(frame_buttons, text="Limpiar", bootstyle="secondary")
-        self.btn_limpiar.pack(side=LEFT, fill=X, padx=1, pady=1, expand=TRUE)
+        self.btn_limpiar.pack(side=LEFT, fill=X, padx=PADDING_SM, pady=PADDING_SM, expand=TRUE)
         self.map_widgets['btn_limpiar'] = self.btn_limpiar
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -383,7 +388,7 @@ class FrameAdministrarEstudianteAsignatura(Frame):
         self.lbl_promedio = Label(
             frame,
             text="📈 Promedio: -",
-            font=("Helvetica", 9, "bold"),
+            style="Section.TLabel",
             anchor=W,
         )
         self.lbl_promedio.pack(fill=X, pady=(5, 2))
@@ -393,6 +398,6 @@ class FrameAdministrarEstudianteAsignatura(Frame):
     # │ Frame Inferior
     # └────────────────────────────────────────────────────────────┘
     def _frame_inferior(self, frame: Frame):
-        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W)
-        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W, style="Small.TLabel")
+        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['lbl_estadisticas'] = self.lbl_estadisticas

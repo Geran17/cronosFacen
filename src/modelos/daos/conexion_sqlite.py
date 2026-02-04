@@ -1,6 +1,7 @@
 import sqlite3
 import threading
 from sqlite3 import Connection, Cursor
+from scripts.logging_config import obtener_logger_modulo
 from utilidades.config import RUTA_DB
 from os.path import join
 
@@ -14,6 +15,8 @@ class ConexionSQLite:
     _instancia = None
     _lock = threading.Lock()
     _local = threading.local()  # Almacenamiento local por thread
+
+    _logger = obtener_logger_modulo(__name__)
 
     def __new__(cls, ruta_db: str = None):
         if cls._instancia is None:
@@ -34,6 +37,11 @@ class ConexionSQLite:
         # Guardamos la ruta para crear conexiones en cada thread
         if self._ruta_db is None:
             self._ruta_db = ruta_db
+        elif ruta_db != self._ruta_db:
+            # Si cambia la ruta, cerrar la conexión del thread actual y actualizarla
+            # (las conexiones en otros threads se recrearán al usarse).
+            self.cerrar()
+            self._ruta_db = ruta_db
 
     def _obtener_conexion_thread(self) -> Connection:
         if not hasattr(self._local, 'conexion') or self._local.conexion is None:
@@ -53,7 +61,7 @@ class ConexionSQLite:
                 self._local.conexion.execute("PRAGMA temp_store = MEMORY")
 
             except sqlite3.Error as err:
-                print(f"Error al conectar: {err}")
+                self._logger.error(f"Error al conectar: {err}")
                 self._local.conexion = None
                 raise
         else:

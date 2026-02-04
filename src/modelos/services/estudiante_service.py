@@ -91,6 +91,34 @@ class EstudianteService(EstudianteDTO):
             logger.error(f"Error al verificar existencia de estudiante: {e}")
             return False
 
+    def obtener_todos(self) -> list:
+        """Obtiene todos los estudiantes como lista de servicios."""
+        estudiantes = []
+        try:
+            for data in self.dao.obtener_todos():
+                estudiante = EstudianteService(ruta_db=self.dao.ruta_db)
+                estudiante.set_data(data=data)
+                estudiantes.append(estudiante)
+        except Exception as e:
+            logger.error(f"Error al obtener estudiantes: {e}")
+        return estudiantes
+
+    def obtener_id_nombre_correo(self) -> list:
+        """Obtiene id, nombre y correo de estudiantes."""
+        try:
+            return self.dao.obtener_id_nombre_correo()
+        except Exception as e:
+            logger.error(f"Error al obtener estudiantes (nombre/correo): {e}")
+            return []
+
+    def obtener_estudiantes_con_carrera(self) -> list:
+        """Obtiene estudiantes con información de carrera asociada."""
+        try:
+            return self.dao.obtener_estudiantes_con_carrera()
+        except Exception as e:
+            logger.error(f"Error al obtener estudiantes con carrera: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos del estudiante sean correctos."""
         if not self.nombre or len(str(self.nombre).strip()) == 0:

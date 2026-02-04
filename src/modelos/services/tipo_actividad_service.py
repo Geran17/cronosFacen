@@ -91,6 +91,22 @@ class TipoActividadService(TipoActividadDTO):
             logger.error(f"Error al verificar existencia de tipo de actividad: {e}")
             return False
 
+    def obtener_todos(self) -> list:
+        """Obtiene todos los tipos de actividad."""
+        try:
+            return self.dao.obtener_todos()
+        except Exception as e:
+            logger.error(f"Error al obtener tipos de actividad: {e}")
+            return []
+
+    def obtener_todos_por_prioridad(self) -> list:
+        """Obtiene tipos de actividad ordenados por prioridad."""
+        try:
+            return self.dao.obtener_todos_por_prioridad()
+        except Exception as e:
+            logger.error(f"Error al obtener tipos de actividad por prioridad: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos del tipo de actividad sean correctos."""
         if not self.nombre or len(str(self.nombre).strip()) == 0:

@@ -16,6 +16,9 @@ from ttkbootstrap.tableview import Tableview
 from typing import Dict, Any
 from scripts.logging_config import obtener_logger_modulo
 from ui.ttk.styles.icons import ICON_ASIGNATURA
+from ui.ttk.utils.layout import build_header
+from ui.ttk.utils.validation import bind_required
+from ui.ttk.styles.estilos import PADDING_MD, PADDING_SM
 from controladores.controlar_administrar_asignatura import ControlarAdministrarAsignatura
 
 logger = obtener_logger_modulo(__name__)
@@ -69,29 +72,25 @@ class FrameAdministrarAsignatura(Frame):
     def _crear_widgets(self):
         frame_superior = Frame(self, padding=(5, 5))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_central = Frame(self, padding=(5, 5))
         self._frame_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+        frame_central.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=True)
 
         frame_inferior = Frame(self, padding=(5, 5))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Superior
     # └────────────────────────────────────────────────────────────┘
     def _frame_superior(self, frame: Frame):
-        label_info = Label(
+        build_header(
             frame,
-            text=f"{ICON_ASIGNATURA} Administrador de Asignaturas",
-            bootstyle="info",
-            font=("Helvetica", 16, "bold"),
+            titulo=f"{ICON_ASIGNATURA} Administrador de Asignaturas",
+            subtitulo="Gestión de asignaturas y sus atributos",
         )
-        label_info.pack(side=TOP, fill=X, padx=1, pady=1, expand=TRUE)
-
-        Separator(frame).pack(side=TOP, fill=X, expand=TRUE, padx=1, pady=1)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Central
@@ -102,7 +101,7 @@ class FrameAdministrarAsignatura(Frame):
 
         # Crear Notebook (tabs)
         self.notebook = Notebook(frame)
-        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
+        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=PADDING_SM, pady=PADDING_SM)
 
         # Tab 1: Tabla
         frame_tabla_tab = Frame(self.notebook, padding=10)
@@ -126,9 +125,9 @@ class FrameAdministrarAsignatura(Frame):
             frame_busqueda,
             text="💡 Haz doble clic en una fila para editar",
             bootstyle="secondary",
-            font=("Helvetica", 9, "italic"),
+            style="Hint.TLabel",
         )
-        lbl_info.pack(side=LEFT, padx=5)
+        lbl_info.pack(side=LEFT, padx=PADDING_SM)
 
         self.tabla_asignatura = Tableview(
             frame,
@@ -146,7 +145,7 @@ class FrameAdministrarAsignatura(Frame):
             ],
             bootstyle="primary",
         )
-        self.tabla_asignatura.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
+        self.tabla_asignatura.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=TRUE)
         self.map_widgets['tabla_asignatura'] = self.tabla_asignatura
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -162,8 +161,8 @@ class FrameAdministrarAsignatura(Frame):
         frame_campos.columnconfigure(1, weight=1)
 
         # Id (oculto visualmente pero presente)
-        lbl_id = Label(frame_campos, text="ID:", anchor=W, font=("Helvetica", 9))
-        lbl_id.grid(column=0, row=0, sticky=W, padx=5, pady=(5, 2))
+        lbl_id = Label(frame_campos, text="ID:", anchor=W, style="Small.TLabel")
+        lbl_id.grid(column=0, row=0, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         self.entry_id = Entry(
             frame_campos,
@@ -172,45 +171,46 @@ class FrameAdministrarAsignatura(Frame):
             justify=RIGHT,
             bootstyle="secondary",
         )
-        self.entry_id.grid(column=0, row=1, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_id.grid(column=0, row=1, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_id'] = self.entry_id
 
         # Codigo
         lbl_codigo = Label(
-            frame_campos, text="📋 Código:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="📋 Código:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_codigo.grid(column=1, row=0, sticky=W, padx=5, pady=(5, 2))
+        lbl_codigo.grid(column=1, row=0, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         self.entry_codigo = Entry(
             frame_campos,
             textvariable=self.var_codigo,
             bootstyle="info",
         )
-        self.entry_codigo.grid(column=1, row=1, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_codigo.grid(column=1, row=1, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_codigo'] = self.entry_codigo
+        bind_required(self.entry_codigo, "info")
 
         # Creditos
         lbl_creditos = Label(
-            frame_campos, text="🎓 Créditos:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="🎓 Créditos:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_creditos.grid(column=0, row=2, sticky=W, padx=5, pady=(5, 2))
+        lbl_creditos.grid(column=0, row=2, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         self.entry_creditos = Entry(
             frame_campos, textvariable=self.var_creditos, justify=RIGHT, bootstyle="info"
         )
-        self.entry_creditos.grid(column=0, row=3, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_creditos.grid(column=0, row=3, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_creditos'] = self.entry_creditos
 
         # Horas Semanales
         lbl_horas = Label(
-            frame_campos, text="⏰ Horas Semanales:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="⏰ Horas Semanales:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_horas.grid(column=1, row=2, padx=5, pady=(5, 2), sticky=W)
+        lbl_horas.grid(column=1, row=2, padx=PADDING_SM, pady=(5, 2), sticky=W)
 
         self.entry_horas = Entry(
             frame_campos, textvariable=self.var_horas_semanales, justify=RIGHT, bootstyle="info"
         )
-        self.entry_horas.grid(column=1, row=3, pady=(0, 8), sticky=EW, padx=5)
+        self.entry_horas.grid(column=1, row=3, pady=(0, 8), sticky=EW, padx=PADDING_SM)
         self.map_widgets['entry_horas'] = self.entry_horas
 
         # Nombre (ocupa todo el ancho)
@@ -218,21 +218,22 @@ class FrameAdministrarAsignatura(Frame):
             frame_campos,
             text="📚 Nombre de la Asignatura:",
             anchor=W,
-            font=("Helvetica", 10, "bold"),
+            style="FormLabel.TLabel",
         )
-        lbl_nombre.grid(column=0, row=4, sticky=W, padx=5, pady=(5, 2), columnspan=2)
+        lbl_nombre.grid(column=0, row=4, sticky=W, padx=PADDING_SM, pady=(5, 2), columnspan=2)
 
         self.entry_nombre = Entry(
             frame_campos,
             textvariable=self.var_nombre,
             bootstyle="info",
         )
-        self.entry_nombre.grid(column=0, row=5, padx=5, pady=(0, 8), sticky=EW, columnspan=2)
+        self.entry_nombre.grid(column=0, row=5, padx=PADDING_SM, pady=(0, 8), sticky=EW, columnspan=2)
         self.map_widgets['entry_nombre'] = self.entry_nombre
+        bind_required(self.entry_nombre, "info")
 
         # Tipo (ocupa todo el ancho)
-        lbl_tipo = Label(frame_campos, text="📖 Tipo:", anchor=W, font=("Helvetica", 10, "bold"))
-        lbl_tipo.grid(column=0, row=6, padx=5, pady=(5, 2), sticky=W, columnspan=2)
+        lbl_tipo = Label(frame_campos, text="📖 Tipo:", anchor=W, style="FormLabel.TLabel")
+        lbl_tipo.grid(column=0, row=6, padx=PADDING_SM, pady=(5, 2), sticky=W, columnspan=2)
 
         self.cbx_tipo = Combobox(
             frame_campos,
@@ -241,26 +242,26 @@ class FrameAdministrarAsignatura(Frame):
             values=("Obligatoria", "Electiva"),
             bootstyle="info",
         )
-        self.cbx_tipo.grid(column=0, row=7, pady=(0, 8), sticky=EW, padx=5, columnspan=2)
+        self.cbx_tipo.grid(column=0, row=7, pady=(0, 8), sticky=EW, padx=PADDING_SM, columnspan=2)
         self.map_widgets['cbx_tipo'] = self.cbx_tipo
 
         # Semestre (ocupa todo el ancho)
         lbl_semestre = Label(
-            frame_campos, text="📅 Semestre:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="📅 Semestre:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_semestre.grid(column=0, row=8, padx=5, pady=(5, 2), sticky=W, columnspan=2)
+        lbl_semestre.grid(column=0, row=8, padx=PADDING_SM, pady=(5, 2), sticky=W, columnspan=2)
 
         self.entry_semestre = Entry(
             frame_campos, textvariable=self.var_semestre, justify=CENTER, bootstyle="info"
         )
-        self.entry_semestre.grid(column=0, row=9, pady=(0, 8), sticky=EW, padx=5, columnspan=2)
+        self.entry_semestre.grid(column=0, row=9, pady=(0, 8), sticky=EW, padx=PADDING_SM, columnspan=2)
         self.map_widgets['entry_semestre'] = self.entry_semestre
 
         # Carrera (ocupa todo el ancho)
         lbl_carrera = Label(
-            frame_campos, text="🏫 Carrera:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="🏫 Carrera:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_carrera.grid(column=0, row=10, sticky=W, padx=5, pady=(5, 2), columnspan=2)
+        lbl_carrera.grid(column=0, row=10, sticky=W, padx=PADDING_SM, pady=(5, 2), columnspan=2)
 
         self.cbx_carrera = Combobox(
             frame_campos,
@@ -268,72 +269,65 @@ class FrameAdministrarAsignatura(Frame):
             state=READONLY,
             bootstyle="info",
         )
-        self.cbx_carrera.grid(column=0, row=11, pady=(0, 10), sticky=EW, columnspan=2, padx=5)
+        self.cbx_carrera.grid(column=0, row=11, pady=(0, 10), sticky=EW, columnspan=2, padx=PADDING_SM)
         self.map_widgets['cbx_carrera'] = self.cbx_carrera
 
         # Separador
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=12, columnspan=2, sticky=EW, padx=5, pady=10
+            column=0, row=12, columnspan=2, sticky=EW, padx=PADDING_SM, pady=PADDING_MD
         )
 
         # Botones de acción principales
         frame_acciones = Frame(frame_campos)
-        frame_acciones.grid(column=0, row=13, columnspan=2, sticky=EW, padx=5, pady=(0, 10))
+        frame_acciones.grid(column=0, row=13, columnspan=2, sticky=EW, padx=PADDING_SM, pady=(0, 10))
         frame_acciones.columnconfigure(0, weight=1)
         frame_acciones.columnconfigure(1, weight=1)
         frame_acciones.columnconfigure(2, weight=1)
 
-        self.btn_nuevo = Button(
-            frame_acciones, text="➕ Nuevo", bootstyle="success-outline", width=8
-        )
+        self.btn_nuevo = Button(frame_acciones, text="➕ Nuevo", bootstyle="success-outline")
         self.btn_nuevo.grid(row=0, column=0, padx=2, sticky=EW)
         self.map_widgets['btn_nuevo'] = self.btn_nuevo
 
-        self.btn_aplicar = Button(frame_acciones, text="💾 Guardar", bootstyle="primary", width=8)
+        self.btn_aplicar = Button(frame_acciones, text="💾 Guardar", bootstyle="primary")
         self.btn_aplicar.grid(row=0, column=1, padx=2, sticky=EW)
         self.map_widgets['btn_aplicar'] = self.btn_aplicar
 
-        self.btn_eliminar = Button(
-            frame_acciones, text="🗑️ Eliminar", bootstyle="danger-outline", width=8
-        )
+        self.btn_eliminar = Button(frame_acciones, text="🗑️ Eliminar", bootstyle="danger-outline")
         self.btn_eliminar.grid(row=0, column=2, padx=2, sticky=EW)
         self.map_widgets['btn_eliminar'] = self.btn_eliminar
 
         # Separador antes de navegación
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=14, columnspan=2, sticky=EW, padx=5, pady=10
+            column=0, row=14, columnspan=2, sticky=EW, padx=PADDING_SM, pady=PADDING_MD
         )
 
         # Botones de navegación
         frame_navegacion = Frame(frame_campos)
-        frame_navegacion.grid(column=0, row=15, columnspan=2, sticky=EW, padx=5)
+        frame_navegacion.grid(column=0, row=15, columnspan=2, sticky=EW, padx=PADDING_SM)
 
         Label(
             frame_navegacion,
             text="Navegación:",
-            font=("Helvetica", 9, "bold"),
+            style="Small.TLabel",
             bootstyle="secondary",
         ).pack(side=LEFT, padx=(0, 10))
 
         self.btn_primero = Button(
-            frame_navegacion, text="⏮️", bootstyle="secondary-outline", width=3
-        )
+            frame_navegacion, text="⏮️", bootstyle="secondary-outline")
         self.btn_primero.pack(side=LEFT, padx=2)
         self.map_widgets['btn_primero'] = self.btn_primero
 
         self.btn_anterior = Button(
-            frame_navegacion, text="◀️", bootstyle="secondary-outline", width=3
-        )
+            frame_navegacion, text="◀️", bootstyle="secondary-outline")
         self.btn_anterior.pack(side=LEFT, padx=2)
         self.map_widgets['btn_anterior'] = self.btn_anterior
 
         self.btn_siguiente = Button(
-            frame_navegacion, text="▶️", bootstyle="secondary-outline", width=3
-        )
+            frame_navegacion, text="▶️", bootstyle="secondary-outline")
         self.btn_siguiente.pack(side=LEFT, padx=2)
         self.map_widgets['btn_siguiente'] = self.btn_siguiente
 
-        self.btn_ultimo = Button(frame_navegacion, text="⏭️", bootstyle="secondary-outline", width=3)
+        self.btn_ultimo = Button(frame_navegacion, text="⏭️", bootstyle="secondary-outline")
         self.btn_ultimo.pack(side=LEFT, padx=2)
         self.map_widgets['btn_ultimo'] = self.btn_ultimo
 
@@ -341,6 +335,6 @@ class FrameAdministrarAsignatura(Frame):
     # │ Frame Inferior
     # └────────────────────────────────────────────────────────────┘
     def _frame_inferior(self, frame: Frame):
-        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W)
-        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W, style="Small.TLabel")
+        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['lbl_estadisticas'] = self.lbl_estadisticas

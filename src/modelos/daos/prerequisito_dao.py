@@ -131,3 +131,34 @@ class PrerrequisitoDAO(DAO):
         else:
             logger.warning("IDs de asignatura no válidos para verificar existencia")
             return False
+
+    def obtener_por_asignatura(self, id_asignatura: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene los prerequisitos (ids) de una asignatura.
+        """
+        sql = """
+            SELECT id_asignatura_prerrequisito
+            FROM prerrequisito
+            WHERE id_asignatura = ?
+            ORDER BY id_asignatura_prerrequisito
+        """
+        return self.ejecutar_consulta(sql, (id_asignatura,))
+
+    def obtener_edges_por_carrera(self, id_carrera: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene los pares (prerequisito -> asignatura) de una carrera.
+
+        Returns:
+            List[Dict[str, Any]]: Lista con prereq_id y asig_id.
+        """
+        sql = """
+            SELECT
+                p.id_asignatura_prerrequisito AS prereq_id,
+                p.id_asignatura AS asig_id
+            FROM prerrequisito p
+            INNER JOIN asignatura a ON a.id_asignatura = p.id_asignatura
+            INNER JOIN asignatura ap ON ap.id_asignatura = p.id_asignatura_prerrequisito
+            WHERE a.id_carrera = ? AND ap.id_carrera = ?
+            ORDER BY prereq_id, asig_id
+        """
+        return self.ejecutar_consulta(sql, (id_carrera, id_carrera))

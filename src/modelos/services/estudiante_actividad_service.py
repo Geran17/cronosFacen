@@ -97,6 +97,14 @@ class EstudianteActividadService(EstudianteActividadDTO):
             logger.error(f"Error al verificar existencia de estudiante actividad: {e}")
             return False
 
+    def obtener_por_estudiante(self, id_estudiante: int) -> list:
+        """Obtiene registros de actividades para un estudiante."""
+        try:
+            return self.dao.obtener_por_estudiante(id_estudiante)
+        except Exception as e:
+            logger.error(f"Error al obtener actividades del estudiante: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos de la relación estudiante actividad sean correctos."""
         if self.id_estudiante is None:

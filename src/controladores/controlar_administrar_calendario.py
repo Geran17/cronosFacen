@@ -4,7 +4,6 @@ from tkinter.filedialog import askopenfilename
 from ttkbootstrap import Button, Entry, StringVar, IntVar, Label, Combobox, Checkbutton
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.calendario_evento_dao import CalendarioEventoDAO
 from modelos.services.calendario_evento_service import CalendarioEventoService
 from scripts.logging_config import obtener_logger_modulo
 import csv
@@ -134,10 +133,8 @@ class ControlarAdministrarCalendario:
         if self.lista_eventos:
             self.lista_eventos.clear()
 
-        dao = CalendarioEventoDAO(ruta_db=None)
-        sql = "SELECT * FROM calendario_evento ORDER BY fecha_inicio DESC"
-        params = ()
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+        servicio = CalendarioEventoService(ruta_db=None)
+        lista_aux = servicio.obtener_todos()
         if lista_aux:
             for data in lista_aux:
                 evento = CalendarioEventoService(ruta_db=None)

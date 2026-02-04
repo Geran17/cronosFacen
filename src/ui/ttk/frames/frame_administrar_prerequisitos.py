@@ -17,6 +17,8 @@ from tkinter import Listbox
 from typing import Dict, Any
 from scripts.logging_config import obtener_logger_modulo
 from ui.ttk.styles.icons import ICON_PREREQUISITO
+from ui.ttk.utils.layout import build_header
+from ui.ttk.styles.estilos import PADDING_MD, PADDING_SM
 from controladores.controlar_administrar_prerequisitos import ControlarAdministrarPrerequisitos
 
 logger = obtener_logger_modulo(__name__)
@@ -63,48 +65,47 @@ class FrameAdministrarPrerequisitos(Frame):
     def _crear_widgets(self):
         frame_superior = Frame(self, padding=(5, 5))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_filtro = Frame(self, padding=(5, 5))
         self._frame_filtro(frame=frame_filtro)
-        frame_filtro.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_filtro.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_central = Frame(self, padding=(5, 5))
         self._frame_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+        frame_central.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=True)
 
         frame_inferior = Frame(self, padding=(5, 5))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Superior
     # └────────────────────────────────────────────────────────────┘
     def _frame_superior(self, frame: Frame):
-        label_info = Label(
+        build_header(
             frame,
-            text=f"{ICON_PREREQUISITO} Administrador de Prerequisitos",
-            bootstyle="info",
-            font=("Helvetica", 16, "bold"),
+            titulo=f"{ICON_PREREQUISITO} Administrador de Prerequisitos",
+            subtitulo="Gestión de asociaciones y requisitos previos",
         )
-        label_info.pack(side=TOP, fill=X, padx=1, pady=1, expand=TRUE)
-
-        Separator(frame).pack(side=TOP, fill=X, expand=TRUE, padx=1, pady=1)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Filtro
     # └────────────────────────────────────────────────────────────┘
     def _frame_filtro(self, frame: Frame):
+        frame.columnconfigure(1, weight=1)
+
         lbl_filtro = Label(frame, text="Filtrar por Carrera:", anchor=W)
-        lbl_filtro.pack(side=LEFT, padx=5)
+        lbl_filtro.grid(row=0, column=0, sticky=W, padx=PADDING_SM, pady=PADDING_SM)
 
         self.cbx_carrera_filtro = Combobox(
             frame,
             textvariable=self.var_nombre_carrera_filtro,
             state=READONLY,
-            width=50,
         )
-        self.cbx_carrera_filtro.pack(side=LEFT, padx=5, fill=X, expand=True)
+        self.cbx_carrera_filtro.grid(
+            row=0, column=1, sticky=EW, padx=PADDING_SM, pady=PADDING_SM
+        )
         self.map_widgets['cbx_carrera_filtro'] = self.cbx_carrera_filtro
         ToolTip(
             self.cbx_carrera_filtro,
@@ -169,7 +170,6 @@ class FrameAdministrarPrerequisitos(Frame):
         self.listbox_asignaturas = Listbox(
             frame_lista,
             yscrollcommand=scrollbar.set,
-            font=("Courier", 10),
             selectmode=SINGLE,
         )
         self.listbox_asignaturas.pack(side=LEFT, fill=BOTH, expand=True)
@@ -191,7 +191,7 @@ class FrameAdministrarPrerequisitos(Frame):
         lbl_titulo = Label(
             frame_seleccionada,
             text="Asignatura Seleccionada:",
-            font=("Helvetica", 10, "bold"),
+            style="FormLabel.TLabel",
             anchor=W,
         )
         lbl_titulo.pack(side=TOP, fill=X)
@@ -199,14 +199,14 @@ class FrameAdministrarPrerequisitos(Frame):
         self.lbl_asignatura_seleccionada = Label(
             frame_seleccionada,
             textvariable=self.var_nombre_asignatura_seleccionada,
-            font=("Helvetica", 11),
+            style="Body.TLabel",
             foreground="blue",
             anchor=W,
         )
         self.lbl_asignatura_seleccionada.pack(side=TOP, fill=X, pady=(2, 0))
         self.map_widgets['lbl_asignatura_seleccionada'] = self.lbl_asignatura_seleccionada
 
-        Separator(frame, orient=HORIZONTAL).pack(fill=X, pady=10)
+        Separator(frame, orient=HORIZONTAL).pack(fill=X, pady=PADDING_MD)
 
         # Sección: Prerequisitos Actuales
         frame_actuales = Labelframe(
@@ -270,9 +270,7 @@ class FrameAdministrarPrerequisitos(Frame):
         self.btn_agregar_prerequisito = Button(
             frame_combo,
             text="✅ Agregar",
-            bootstyle="success",
-            width=15,
-        )
+            bootstyle="success")
         self.btn_agregar_prerequisito.pack(side=LEFT)
         self.map_widgets['btn_agregar_prerequisito'] = self.btn_agregar_prerequisito
 
@@ -280,6 +278,6 @@ class FrameAdministrarPrerequisitos(Frame):
     # │ Frame Inferior - Estadísticas
     # └────────────────────────────────────────────────────────────┘
     def _frame_inferior(self, frame: Frame):
-        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W)
-        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W, style="Small.TLabel")
+        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['lbl_estadisticas'] = self.lbl_estadisticas

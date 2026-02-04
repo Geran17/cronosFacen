@@ -144,3 +144,10 @@ class CalendarioEventoDAO(DAO):
         else:
             logger.warning("ID de evento no válido para verificar existencia")
             return False
+
+    def obtener_todos(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todos los eventos del calendario ordenados por fecha de inicio descendente.
+        """
+        sql = "SELECT * FROM calendario_evento ORDER BY fecha_inicio DESC"
+        return self.ejecutar_consulta(sql, ())

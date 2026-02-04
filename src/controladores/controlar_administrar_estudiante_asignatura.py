@@ -3,10 +3,9 @@ from tkinter.messagebox import showinfo, showwarning
 from ttkbootstrap import Button, Entry, StringVar, IntVar, DoubleVar, Label, Combobox, Spinbox
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.estudiante_asignatura_dao import EstudianteAsignaturaDAO
-from modelos.daos.estudiante_dao import EstudianteDAO
-from modelos.daos.asignatura_dao import AsignaturaDAO
 from modelos.services.estudiante_asignatura_service import EstudianteAsignaturaService
+from modelos.services.estudiante_service import EstudianteService
+from modelos.services.asignatura_service import AsignaturaService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -136,27 +135,8 @@ class ControlarAdministrarEstudianteAsignatura:
             self.dict_estudiantes.clear()
             self.dict_estudiantes_inv.clear()
 
-            dao = EstudianteDAO(ruta_db=None)
-
-            # ✅ CONSULTA: Une con estudiante_carrera para obtener TODAS las carreras
-            sql = """
-            SELECT 
-                e.id_estudiante, 
-                e.nombre, 
-                e.correo,
-                ec.id_carrera,
-                c.nombre as nombre_carrera,
-                ec.es_carrera_principal,
-                ec.estado as estado_carrera
-            FROM estudiante e
-            LEFT JOIN estudiante_carrera ec 
-                ON e.id_estudiante = ec.id_estudiante
-            LEFT JOIN carrera c 
-                ON ec.id_carrera = c.id_carrera
-            ORDER BY e.nombre, ec.es_carrera_principal DESC, c.nombre
-            """
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_estudiante = EstudianteService(ruta_db=None)
+            lista_aux = servicio_estudiante.obtener_estudiantes_con_carrera()
 
             if lista_aux:
                 labels_estudiantes = []
@@ -215,23 +195,14 @@ class ControlarAdministrarEstudianteAsignatura:
         try:
             self.dict_asignaturas.clear()
 
-            dao = AsignaturaDAO(ruta_db=None)
-
             if id_carrera:
                 # Cargar solo asignaturas de la carrera del estudiante
-                sql = """SELECT id_asignatura, codigo, nombre, creditos, id_carrera 
-                         FROM asignatura 
-                         WHERE id_carrera = ?
-                         ORDER BY codigo"""
-                params = (id_carrera,)
+                servicio_asignatura = AsignaturaService(ruta_db=None)
+                lista_aux = servicio_asignatura.obtener_basico_por_carrera(id_carrera)
             else:
                 # Cargar todas las asignaturas
-                sql = """SELECT id_asignatura, codigo, nombre, creditos, id_carrera 
-                         FROM asignatura 
-                         ORDER BY codigo"""
-                params = ()
-
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+                servicio_asignatura = AsignaturaService(ruta_db=None)
+                lista_aux = servicio_asignatura.obtener_basico()
 
             if lista_aux:
                 for data in lista_aux:
@@ -260,12 +231,8 @@ class ControlarAdministrarEstudianteAsignatura:
             if id_estudiante == 0:
                 return
 
-            dao = EstudianteAsignaturaDAO(ruta_db=None)
-            sql = """SELECT * FROM estudiante_asignatura 
-                     WHERE id_estudiante = ?
-                     ORDER BY id_asignatura"""
-            params = (id_estudiante,)
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio = EstudianteAsignaturaService(ruta_db=None)
+            lista_aux = servicio.obtener_por_estudiante(id_estudiante)
 
             if lista_aux:
                 for data in lista_aux:

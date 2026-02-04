@@ -16,7 +16,9 @@ from ttkbootstrap.tooltip import ToolTip
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.dialogs import Messagebox
 from typing import Dict, Any
+from ui.ttk.styles.estilos import PADDING_MD, PADDING_SM
 from scripts.logging_config import obtener_logger_modulo
+from ui.ttk.utils.layout import build_header
 from controladores.controlar_administrar_estudiante_carrera import (
     ControlarAdministrarEstudianteCarrera,
 )
@@ -84,33 +86,29 @@ class FrameAdministrarEstudianteCarrera(Frame):
     def _crear_widgets(self):
         frame_superior = Frame(self, padding=(5, 5))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_selector = Frame(self, padding=(5, 5))
         self._frame_selector_estudiante(frame=frame_selector)
-        frame_selector.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_selector.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_central = Frame(self, padding=(5, 5))
         self._frame_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+        frame_central.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=True)
 
         frame_inferior = Frame(self, padding=(5, 5))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Superior
     # └────────────────────────────────────────────────────────────┘
     def _frame_superior(self, frame: Frame):
-        label_info = Label(
+        build_header(
             frame,
-            text="🎓 Administrador de Inscripciones Estudiante-Carrera",
-            bootstyle="info",
-            font=("Helvetica", 16, "bold"),
+            titulo="🎓 Administrador de Inscripciones Estudiante-Carrera",
+            subtitulo="Gestión de inscripciones y estados de carrera",
         )
-        label_info.pack(side=TOP, fill=X, padx=1, pady=1, expand=TRUE)
-
-        Separator(frame).pack(side=TOP, fill=X, expand=TRUE, padx=1, pady=1)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Selector de Estudiante
@@ -123,7 +121,7 @@ class FrameAdministrarEstudianteCarrera(Frame):
             padding=10,
             bootstyle="primary",
         )
-        frame_contenedor.pack(fill=X, padx=5, pady=5)
+        frame_contenedor.pack(fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         # Layout horizontal
         frame_contenedor.columnconfigure(1, weight=1)
@@ -132,7 +130,7 @@ class FrameAdministrarEstudianteCarrera(Frame):
         Label(
             frame_contenedor,
             text="Estudiante:",
-            font=("Helvetica", 10, "bold"),
+            style="FormLabel.TLabel",
         ).grid(row=0, column=0, sticky=W, padx=(5, 10))
 
         # Combobox de estudiantes
@@ -142,7 +140,7 @@ class FrameAdministrarEstudianteCarrera(Frame):
             state=READONLY,
             bootstyle="primary",
         )
-        self.cbx_estudiante.grid(row=0, column=1, sticky=EW, padx=5)
+        self.cbx_estudiante.grid(row=0, column=1, sticky=EW, padx=PADDING_SM)
         self.map_widgets['cbx_estudiante'] = self.cbx_estudiante
         ToolTip(self.cbx_estudiante, text="Seleccione un estudiante para ver sus carreras")
 
@@ -150,10 +148,8 @@ class FrameAdministrarEstudianteCarrera(Frame):
         self.btn_refrescar_estudiante = Button(
             frame_contenedor,
             text="🔄",
-            bootstyle="info-outline",
-            width=5,
-        )
-        self.btn_refrescar_estudiante.grid(row=0, column=2, padx=(5, 0))
+            bootstyle="info-outline")
+        self.btn_refrescar_estudiante.grid(row=0, column=2, padx=PADDING_SM)
         self.map_widgets['btn_refrescar_estudiante'] = self.btn_refrescar_estudiante
         ToolTip(self.btn_refrescar_estudiante, text="Refrescar lista de estudiantes")
 
@@ -192,29 +188,31 @@ class FrameAdministrarEstudianteCarrera(Frame):
     def _frame_tabla(self, frame: Frame):
         # Frame superior con filtros y búsqueda
         frame_controles = Frame(frame)
-        frame_controles.pack(fill=X, pady=(0, 10))
+        frame_controles.pack(fill=X, pady=(0, PADDING_MD))
+        frame_controles.columnconfigure(1, weight=1)
 
         # Filtro por estado
-        Label(frame_controles, text="Filtrar:", font=("Helvetica", 9)).pack(side=LEFT, padx=5)
+        Label(frame_controles, text="Filtrar:", style="Small.TLabel").grid(
+            row=0, column=0, sticky=W, padx=PADDING_SM, pady=PADDING_SM
+        )
 
         self.cbx_filtro_estado = Combobox(
             frame_controles,
             textvariable=self.var_filtro_estado,
             values=["Todos", "activa", "inactiva", "suspendida", "completada", "abandonada"],
             state=READONLY,
-            width=15,
             bootstyle="secondary",
         )
-        self.cbx_filtro_estado.pack(side=LEFT, padx=5)
+        self.cbx_filtro_estado.grid(row=0, column=1, sticky=EW, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['cbx_filtro_estado'] = self.cbx_filtro_estado
 
         lbl_info = Label(
             frame_controles,
             text="💡 Doble clic para editar",
             bootstyle="secondary",
-            font=("Helvetica", 9, "italic"),
+            style="Hint.TLabel",
         )
-        lbl_info.pack(side=RIGHT, padx=5)
+        lbl_info.grid(row=1, column=0, columnspan=2, sticky=E, padx=PADDING_SM)
 
         # Tabla
         self.tabla_carreras = Tableview(
@@ -232,7 +230,7 @@ class FrameAdministrarEstudianteCarrera(Frame):
             ],
             bootstyle="primary",
         )
-        self.tabla_carreras.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
+        self.tabla_carreras.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=TRUE)
         self.map_widgets['tabla_carreras'] = self.tabla_carreras
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -247,9 +245,12 @@ class FrameAdministrarEstudianteCarrera(Frame):
         row = 0
 
         # ID Estudiante (readonly)
-        Label(frame_campos, text="ID Estudiante:", anchor=W, font=("Helvetica", 9)).grid(
-            column=0, row=row, sticky=W, padx=5, pady=(5, 2)
-        )
+        Label(
+            frame_campos,
+            text="ID Estudiante:",
+            anchor=W,
+            style="Small.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.entry_id_estudiante = Entry(
@@ -259,14 +260,17 @@ class FrameAdministrarEstudianteCarrera(Frame):
             justify=RIGHT,
             bootstyle="secondary",
         )
-        self.entry_id_estudiante.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_id_estudiante.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_id_estudiante'] = self.entry_id_estudiante
         row += 1
 
         # Selección de Carrera
-        Label(frame_campos, text="🎓 Carrera:", anchor=W, font=("Helvetica", 10, "bold")).grid(
-            column=0, row=row, sticky=W, padx=5, pady=(5, 2)
-        )
+        Label(
+            frame_campos,
+            text="🎓 Carrera:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.cbx_carrera = Combobox(
@@ -275,15 +279,18 @@ class FrameAdministrarEstudianteCarrera(Frame):
             state=READONLY,
             bootstyle="info",
         )
-        self.cbx_carrera.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.cbx_carrera.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['cbx_carrera'] = self.cbx_carrera
         ToolTip(self.cbx_carrera, text="Seleccione la carrera a inscribir")
         row += 1
 
         # Estado
-        Label(frame_campos, text="📊 Estado:", anchor=W, font=("Helvetica", 10, "bold")).grid(
-            column=0, row=row, sticky=W, padx=5, pady=(5, 2)
-        )
+        Label(
+            frame_campos,
+            text="📊 Estado:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.cbx_estado = Combobox(
@@ -293,14 +300,17 @@ class FrameAdministrarEstudianteCarrera(Frame):
             state=READONLY,
             bootstyle="info",
         )
-        self.cbx_estado.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.cbx_estado.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['cbx_estado'] = self.cbx_estado
         row += 1
 
         # Fecha de Inscripción
         Label(
-            frame_campos, text="📅 Fecha Inscripción:", anchor=W, font=("Helvetica", 10, "bold")
-        ).grid(column=0, row=row, sticky=W, padx=5, pady=(5, 2))
+            frame_campos,
+            text="📅 Fecha Inscripción:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.entry_fecha_inscripcion = Entry(
@@ -308,15 +318,18 @@ class FrameAdministrarEstudianteCarrera(Frame):
             textvariable=self.var_fecha_inscripcion,
             bootstyle="info",
         )
-        self.entry_fecha_inscripcion.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_fecha_inscripcion.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_fecha_inscripcion'] = self.entry_fecha_inscripcion
         ToolTip(self.entry_fecha_inscripcion, text="Formato: YYYY-MM-DD")
         row += 1
 
         # Fecha de Inicio (Opcional)
         Label(
-            frame_campos, text="📅 Fecha Inicio (opcional):", anchor=W, font=("Helvetica", 9)
-        ).grid(column=0, row=row, sticky=W, padx=5, pady=(5, 2))
+            frame_campos,
+            text="📅 Fecha Inicio (opcional):",
+            anchor=W,
+            style="Small.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.entry_fecha_inicio = Entry(
@@ -324,15 +337,18 @@ class FrameAdministrarEstudianteCarrera(Frame):
             textvariable=self.var_fecha_inicio,
             bootstyle="secondary",
         )
-        self.entry_fecha_inicio.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_fecha_inicio.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_fecha_inicio'] = self.entry_fecha_inicio
         ToolTip(self.entry_fecha_inicio, text="Formato: YYYY-MM-DD (opcional)")
         row += 1
 
         # Fecha de Fin (Opcional)
         Label(
-            frame_campos, text="📅 Fecha Fin (opcional):", anchor=W, font=("Helvetica", 9)
-        ).grid(column=0, row=row, sticky=W, padx=5, pady=(5, 2))
+            frame_campos,
+            text="📅 Fecha Fin (opcional):",
+            anchor=W,
+            style="Small.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.entry_fecha_fin = Entry(
@@ -340,22 +356,21 @@ class FrameAdministrarEstudianteCarrera(Frame):
             textvariable=self.var_fecha_fin,
             bootstyle="secondary",
         )
-        self.entry_fecha_fin.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_fecha_fin.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_fecha_fin'] = self.entry_fecha_fin
         ToolTip(self.entry_fecha_fin, text="Formato: YYYY-MM-DD (opcional)")
         row += 1
 
         # Es Carrera Principal
         frame_principal = Frame(frame_campos)
-        frame_principal.grid(column=0, row=row, padx=5, pady=(5, 8), sticky=EW)
+        frame_principal.grid(column=0, row=row, padx=PADDING_SM, pady=(5, 8), sticky=EW)
         row += 1
 
         self.chk_es_principal = Button(
             frame_principal,
             text="⭐ Es Carrera Principal",
             bootstyle="warning-outline",
-            command=self._toggle_principal,
-        )
+            command=self._toggle_principal)
         self.chk_es_principal.pack(fill=X)
         self.map_widgets['chk_es_principal'] = self.chk_es_principal
         ToolTip(
@@ -365,8 +380,11 @@ class FrameAdministrarEstudianteCarrera(Frame):
 
         # Periodo de Ingreso
         Label(
-            frame_campos, text="📆 Periodo Ingreso:", anchor=W, font=("Helvetica", 10, "bold")
-        ).grid(column=0, row=row, sticky=W, padx=5, pady=(5, 2))
+            frame_campos,
+            text="📆 Periodo Ingreso:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         self.entry_periodo = Entry(
@@ -374,26 +392,28 @@ class FrameAdministrarEstudianteCarrera(Frame):
             textvariable=self.var_periodo_ingreso,
             bootstyle="info",
         )
-        self.entry_periodo.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_periodo.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_periodo'] = self.entry_periodo
         ToolTip(self.entry_periodo, text="Ej: 2024-1, 2024-2")
         row += 1
 
         # Observaciones
         Label(
-            frame_campos, text="📝 Observaciones:", anchor=W, font=("Helvetica", 9)
-        ).grid(column=0, row=row, sticky=W, padx=5, pady=(5, 2))
+            frame_campos,
+            text="📝 Observaciones:",
+            anchor=W,
+            style="Small.TLabel",
+        ).grid(column=0, row=row, sticky=W, padx=PADDING_SM, pady=(5, 2))
         row += 1
 
         frame_text = Frame(frame_campos)
-        frame_text.grid(column=0, row=row, padx=5, pady=(0, 8), sticky=EW)
+        frame_text.grid(column=0, row=row, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         row += 1
 
         self.text_observaciones = Text(
             frame_text,
             height=3,
             wrap=WORD,
-            font=("Helvetica", 9),
         )
         self.text_observaciones.pack(side=LEFT, fill=BOTH, expand=True)
         self.map_widgets['text_observaciones'] = self.text_observaciones
@@ -404,57 +424,52 @@ class FrameAdministrarEstudianteCarrera(Frame):
 
         # Separador
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=row, sticky=EW, padx=5, pady=10
+            column=0, row=row, sticky=EW, padx=PADDING_SM, pady=PADDING_MD
         )
         row += 1
 
         # Botones de acción
         frame_acciones = Frame(frame_campos)
-        frame_acciones.grid(column=0, row=row, sticky=EW, padx=5, pady=(0, 5))
+        frame_acciones.grid(column=0, row=row, sticky=EW, padx=PADDING_SM, pady=(0, 5))
         row += 1
 
         self.btn_nuevo = Button(
             frame_acciones,
             text="➕ Nuevo",
-            bootstyle="success-outline",
-        )
+            bootstyle="success-outline")
         self.btn_nuevo.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_nuevo'] = self.btn_nuevo
 
         self.btn_aplicar = Button(
             frame_acciones,
             text="💾 Guardar",
-            bootstyle="primary",
-        )
+            bootstyle="primary")
         self.btn_aplicar.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_aplicar'] = self.btn_aplicar
 
         self.btn_eliminar = Button(
             frame_acciones,
             text="🗑️ Eliminar",
-            bootstyle="danger-outline",
-        )
+            bootstyle="danger-outline")
         self.btn_eliminar.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_eliminar'] = self.btn_eliminar
 
         # Botones adicionales
         frame_extras = Frame(frame_campos)
-        frame_extras.grid(column=0, row=row, sticky=EW, padx=5, pady=(5, 0))
+        frame_extras.grid(column=0, row=row, sticky=EW, padx=PADDING_SM, pady=(5, 0))
         row += 1
 
         self.btn_cambiar_estado = Button(
             frame_extras,
             text="🔄 Cambiar Estado",
-            bootstyle="warning-outline",
-        )
+            bootstyle="warning-outline")
         self.btn_cambiar_estado.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_cambiar_estado'] = self.btn_cambiar_estado
 
         self.btn_completar = Button(
             frame_extras,
             text="🎓 Completar",
-            bootstyle="success",
-        )
+            bootstyle="success")
         self.btn_completar.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_completar'] = self.btn_completar
 
@@ -462,8 +477,8 @@ class FrameAdministrarEstudianteCarrera(Frame):
     # │ Frame Inferior
     # └────────────────────────────────────────────────────────────┘
     def _frame_inferior(self, frame: Frame):
-        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W)
-        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W, style="Small.TLabel")
+        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['lbl_estadisticas'] = self.lbl_estadisticas
 
     # ┌────────────────────────────────────────────────────────────┐

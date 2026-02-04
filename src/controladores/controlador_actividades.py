@@ -1,18 +1,24 @@
 from ttkbootstrap import Combobox, StringVar, Frame, Label, Labelframe, Button
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.constants import *
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from tkinter.messagebox import showwarning
+from tkinter import Menu
 from datetime import datetime
-from modelos.daos.estudiante_dao import EstudianteDAO
-from modelos.daos.carrera_dao import CarreraDAO
-from modelos.daos.asignatura_dao import AsignaturaDAO
-from modelos.daos.actividad_dao import ActividadDAO
-from modelos.daos.tipo_actividad_dao import TipoActividadDAO
+from modelos.services.estudiante_service import EstudianteService
+from modelos.services.estudiante_carrera_service import EstudianteCarreraService
+from modelos.services.asignatura_service import AsignaturaService
+from modelos.services.actividad_service import ActividadService
+from modelos.services.tipo_actividad_service import TipoActividadService
 from modelos.services.estudiante_carrera_service import EstudianteCarreraService
 from modelos.services.estudiante_asignatura_service import EstudianteAsignaturaService
 from modelos.services.carrera_service import CarreraService
+from modelos.services.estudiante_actividad_service import EstudianteActividadService
 from scripts.logging_config import obtener_logger_modulo
+from ui.ttk.dialogos.dialogo_estado_actividad import DialogoEstadoActividad
+from ui.ttk.dialogos.dialogo_administrar_estudiante_actividad import (
+    DialogoAdministrarEstudianteActividad,
+)
 
 logger = obtener_logger_modulo(__name__)
 
@@ -134,37 +140,26 @@ class ControlarActividades:
                 logger.warning(f"Estudiante no encontrado: {nombre_estudiante}")
                 return
 
-            # Construir la consulta SQL dinámicamente
-            dao = ActividadDAO(ruta_db=None)
-            sql = "SELECT * FROM vw_estudiante_actividades_detalladas WHERE id_estudiante = ?"
-            params = [id_estudiante]
+            id_carrera = None
+            id_asignatura = None
+            id_tipo_actividad = None
 
-            # Agregar filtro por carrera si no es "Todos"
             if nombre_carrera and nombre_carrera != "Todos":
-                id_carrera = self.dict_carreras_inv.get(nombre_carrera, 0)
-                if id_carrera:
-                    sql += " AND carrera_id = ?"
-                    params.append(id_carrera)
+                id_carrera = self.dict_carreras_inv.get(nombre_carrera, 0) or None
 
-            # Agregar filtro por asignatura si está seleccionada
             if nombre_asignatura and nombre_asignatura != "Todos":
-                id_asignatura = self.dict_asignaturas_inv.get(nombre_asignatura, 0)
-                if id_asignatura:
-                    sql += " AND id_asignatura = ?"
-                    params.append(id_asignatura)
+                id_asignatura = self.dict_asignaturas_inv.get(nombre_asignatura, 0) or None
 
-            # Agregar filtro por tipo de actividad si no es "Todos"
             if nombre_tipo_actividad and nombre_tipo_actividad != "Todos":
-                id_tipo_actividad = self.dict_tipos_actividad_inv.get(nombre_tipo_actividad, 0)
-                if id_tipo_actividad:
-                    sql += " AND tipo_actividad_id = ?"
-                    params.append(id_tipo_actividad)
+                id_tipo_actividad = self.dict_tipos_actividad_inv.get(nombre_tipo_actividad, 0) or None
 
-            # Agregar orden
-            sql += " ORDER BY fecha_fin DESC, titulo"
-
-            # Ejecutar consulta
-            resultado = dao.ejecutar_consulta(sql=sql, params=tuple(params))
+            servicio_actividad = ActividadService(ruta_db=None)
+            resultado = servicio_actividad.obtener_detalladas_filtradas(
+                id_estudiante=id_estudiante,
+                id_carrera=id_carrera,
+                id_asignatura=id_asignatura,
+                id_tipo_actividad=id_tipo_actividad,
+            )
 
             if resultado:
                 self.lista_actividades_detalladas = resultado
@@ -237,6 +232,7 @@ class ControlarActividades:
                 bootstyle="info",
             )
             card_frame.pack(fill=X, padx=3, pady=2)
+
 
             # Línea 1: Tipo + Descripción resumida en una sola línea
             header_frame = Frame(card_frame)
@@ -318,8 +314,133 @@ class ControlarActividades:
             )
             label_entrega.pack(side=LEFT, padx=5)
 
+            menu = self._crear_menu_contextual(card_frame, actividad)
+            self._vincular_menu_contextual(card_frame, menu)
+            self._vincular_hover(card_frame)
+
         except Exception as e:
             logger.error(f"Error al crear tarjeta de actividad: {e}", exc_info=True)
+
+    def _vincular_hover(self, widget):
+        def _enter(_event):
+            try:
+                widget.configure(bootstyle="primary")
+            except Exception:
+                pass
+
+        def _leave(_event):
+            try:
+                widget.configure(bootstyle="info")
+            except Exception:
+                pass
+
+        widget.bind("<Enter>", _enter)
+        widget.bind("<Leave>", _leave)
+
+    def _crear_menu_contextual(self, parent, actividad: Dict[str, Any]) -> Menu:
+        menu = Menu(parent, tearoff=0)
+        estado_actual = actividad.get("actividad_estado", "pendiente")
+        menu.add_command(
+            label=f"Estado actual: {estado_actual}",
+            state="disabled",
+        )
+        menu.add_separator()
+        menu.add_command(
+            label="Cambiar estado…", command=lambda: self._abrir_dialogo_estado(actividad)
+        )
+        menu.add_separator()
+        menu.add_command(
+            label="Marcar como Pendiente",
+            command=lambda: self._actualizar_estado_actividad(actividad, "pendiente"),
+        )
+        menu.add_command(
+            label="Marcar como En progreso",
+            command=lambda: self._actualizar_estado_actividad(actividad, "en_progreso"),
+        )
+        menu.add_command(
+            label="Marcar como Entregada",
+            command=lambda: self._actualizar_estado_actividad(actividad, "entregada"),
+        )
+        menu.add_command(
+            label="Marcar como Vencida",
+            command=lambda: self._actualizar_estado_actividad(actividad, "vencida"),
+        )
+        menu.add_separator()
+        menu.add_command(
+            label="Abrir administrador completo",
+            command=lambda act=actividad: self._abrir_admin_estudiante_actividad(act),
+        )
+        return menu
+
+    def _vincular_menu_contextual(self, widget, menu: Menu):
+        def _show_menu(event):
+            try:
+                menu.tk_popup(event.x_root, event.y_root)
+            finally:
+                menu.grab_release()
+
+        def _bind_recursively(w):
+            w.bind("<Button-3>", _show_menu)
+            for child in w.winfo_children():
+                _bind_recursively(child)
+
+        _bind_recursively(widget)
+
+    def _abrir_dialogo_estado(self, actividad: Dict[str, Any]):
+        try:
+            DialogoEstadoActividad(
+                parent=self.scrolled_frame.winfo_toplevel(),
+                actividad=actividad,
+                on_save=self._actualizar_estado_actividad,
+            )
+        except Exception as e:
+            logger.error(f"Error al abrir diálogo de estado: {e}", exc_info=True)
+
+    def _abrir_admin_estudiante_actividad(self, actividad: Dict[str, Any]):
+        try:
+            preselect = {
+                "id_estudiante": actividad.get("id_estudiante"),
+                "actividad_id": actividad.get("actividad_id"),
+                "carrera_id": actividad.get("carrera_id"),
+            }
+            DialogoAdministrarEstudianteActividad(
+                parent=self.scrolled_frame.winfo_toplevel(),
+                preselect=preselect,
+            )
+        except Exception as e:
+            logger.error(
+                f"Error al abrir administrador de estudiante-actividad: {e}", exc_info=True
+            )
+
+    def _actualizar_estado_actividad(
+        self, actividad: Dict[str, Any], nuevo_estado: str, fecha_entrega: Optional[str] = None
+    ):
+        try:
+            id_estudiante = actividad.get('id_estudiante')
+            id_actividad = actividad.get('actividad_id')
+            if not id_estudiante or not id_actividad:
+                logger.warning("Actividad sin IDs válidos para actualizar estado")
+                return
+
+            if nuevo_estado == "entregada" and not fecha_entrega:
+                fecha_entrega = datetime.now().date().isoformat()
+
+            servicio = EstudianteActividadService(
+                ruta_db=None,
+                id_estudiante=id_estudiante,
+                id_actividad=id_actividad,
+                estado=nuevo_estado,
+                fecha_entrega=fecha_entrega,
+            )
+            if servicio.actualizar():
+                logger.info(
+                    f"Estado actualizado: estudiante={id_estudiante}, actividad={id_actividad}, "
+                    f"estado={nuevo_estado}"
+                )
+                self._filtrar_actividades_detalladas()
+                self._mostrar_actividades_filtradas()
+        except Exception as e:
+            logger.error(f"Error al actualizar estado de actividad: {e}", exc_info=True)
 
     @staticmethod
     def _obtener_color_estado(estado: str) -> str:
@@ -366,10 +487,8 @@ class ControlarActividades:
         El formato mostrado es: "Nombre - Correo"
         """
         try:
-            estudiante_dao = EstudianteDAO(ruta_db=None)
-            sql = "SELECT id_estudiante, nombre, correo FROM estudiante ORDER BY nombre"
-            params = ()
-            lista_estudiantes = estudiante_dao.ejecutar_consulta(sql=sql, params=params)
+            estudiante_service = EstudianteService(ruta_db=None)
+            lista_estudiantes = estudiante_service.obtener_id_nombre_correo()
 
             # Limpiar diccionarios
             self.dict_estudiantes.clear()
@@ -434,19 +553,13 @@ class ControlarActividades:
                 return
 
             # Consultar carreras del estudiante
-            sql = """SELECT ec.id_carrera, ec.estado, c.nombre 
-                     FROM estudiante_carrera ec
-                     JOIN carrera c ON ec.id_carrera = c.id_carrera
-                     WHERE ec.id_estudiante = ?
-                     ORDER BY ec.es_carrera_principal DESC, c.nombre"""
-            params = (id_estudiante,)
-            dao_carrera = CarreraDAO(ruta_db=None)
-            consulta = dao_carrera.ejecutar_consulta(sql=sql, params=params)
+            servicio_ec = EstudianteCarreraService(ruta_db=None)
+            consulta = servicio_ec.obtener_carreras_estudiante(id_estudiante)
 
             if consulta:
                 for dato in consulta:
                     id_carrera = dato['id_carrera']
-                    nombre_carrera = dato['nombre']
+                    nombre_carrera = dato.get('nombre_carrera') or dato.get('nombre')
                     estado = dato['estado']
 
                     # Obtener ícono del estado
@@ -572,21 +685,9 @@ class ControlarActividades:
                 self.cbx_asignaturas.config(values=lista_aux)
                 return
 
-            asignatura_dao = AsignaturaDAO(ruta_db=None)
-
             if nombre_carrera == "Todos":
-                # Mostrar todas las asignaturas de todas las carreras
-                sql = """
-                SELECT DISTINCT 
-                    id_asignatura,
-                    nombre_asignatura,
-                    nombre_carrera,
-                    id_carrera,
-                    estado
-                FROM vw_estudiante_asignatura_carrera
-                ORDER BY nombre_carrera, nombre_asignatura
-                """
-                params = ()
+                asignatura_service = AsignaturaService(ruta_db=None)
+                consulta = asignatura_service.obtener_estudiante_asignatura_carrera()
             else:
                 # Obtener id_carrera del nombre
                 id_carrera = self.dict_carreras_inv.get(nombre_carrera)
@@ -595,21 +696,8 @@ class ControlarActividades:
                     self.cbx_asignaturas.config(values=lista_aux)
                     return
 
-                # Mostrar solo asignaturas de la carrera seleccionada
-                sql = """
-                SELECT DISTINCT 
-                    id_asignatura,
-                    nombre_asignatura,
-                    nombre_carrera,
-                    id_carrera,
-                    estado
-                FROM vw_estudiante_asignatura_carrera
-                WHERE id_carrera = ?
-                ORDER BY nombre_asignatura
-                """
-                params = (id_carrera,)
-
-            consulta = asignatura_dao.ejecutar_consulta(sql=sql, params=params)
+                asignatura_service = AsignaturaService(ruta_db=None)
+                consulta = asignatura_service.obtener_estudiante_asignatura_carrera(id_carrera)
 
             if consulta:
                 for dato in consulta:
@@ -663,12 +751,8 @@ class ControlarActividades:
             self.dict_tipos_actividad_inv.clear()
             lista = ["Todos"]
 
-            tipo_actividad_dao = TipoActividadDAO(ruta_db=None)
-            sql = """SELECT id_tipo_actividad, nombre, siglas, prioridad 
-                     FROM tipo_actividad 
-                     ORDER BY prioridad DESC, nombre"""
-            params = ()
-            consulta = tipo_actividad_dao.ejecutar_consulta(sql=sql, params=params)
+            tipo_service = TipoActividadService(ruta_db=None)
+            consulta = tipo_service.obtener_todos_por_prioridad()
 
             if consulta:
                 for dato in consulta:

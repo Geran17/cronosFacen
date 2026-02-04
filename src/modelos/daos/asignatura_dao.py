@@ -169,3 +169,129 @@ class AsignaturaDAO(DAO):
         if self.instanciar(dto):
             return dto
         return None
+
+    def obtener_todas(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todas las asignaturas.
+        """
+        sql = "SELECT * FROM asignatura"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_id_nombre_codigo(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id, nombre y código de asignaturas para listados.
+        """
+        sql = "SELECT id_asignatura, nombre, codigo FROM asignatura ORDER BY nombre"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_id_codigo_nombre_carrera(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id, código, nombre e id_carrera para filtros.
+        """
+        sql = """
+            SELECT id_asignatura, codigo, nombre, id_carrera
+            FROM asignatura
+            ORDER BY codigo
+        """
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_por_carrera(self, id_carrera: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene asignaturas de una carrera (id, nombre, código).
+        """
+        sql = """
+            SELECT id_asignatura, nombre, codigo
+            FROM asignatura
+            WHERE id_carrera = ?
+            ORDER BY nombre
+        """
+        return self.ejecutar_consulta(sql, (id_carrera,))
+
+    def obtener_basico_por_carrera(self, id_carrera: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene asignaturas básicas de una carrera (id, código, nombre, créditos, id_carrera).
+        """
+        sql = """
+            SELECT id_asignatura, codigo, nombre, creditos, id_carrera, semestre
+            FROM asignatura
+            WHERE id_carrera = ?
+            ORDER BY codigo
+        """
+        return self.ejecutar_consulta(sql, (id_carrera,))
+
+    def obtener_basico(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene asignaturas básicas (id, código, nombre, créditos, id_carrera).
+        """
+        sql = """
+            SELECT id_asignatura, codigo, nombre, creditos, id_carrera, semestre
+            FROM asignatura
+            ORDER BY codigo
+        """
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_plan_carrera(self, id_carrera: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene el plan completo de la carrera con prerequisitos.
+        """
+        sql = """
+            SELECT 
+                a.id_asignatura,
+                a.nombre,
+                a.codigo,
+                a.semestre,
+                a.tipo,
+                a.creditos,
+                COALESCE(aprereq.prerequisitos, '-') AS prerequisitos
+            FROM asignatura a
+            LEFT JOIN vw_asignatura_prerequisitos aprereq ON a.id_asignatura = aprereq.id_asignatura
+            WHERE a.id_carrera = ?
+            ORDER BY a.semestre, a.nombre
+        """
+        return self.ejecutar_consulta(sql, (id_carrera,))
+
+    def obtener_asignaturas_estudiante_completo(
+        self, id_estudiante: int, id_carrera: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtiene asignaturas del estudiante con datos completos desde la VIEW.
+        """
+        sql = """
+            SELECT * FROM vw_asignaturas_estudiante_completo
+            WHERE id_estudiante = ? AND id_carrera = ?
+            ORDER BY semestre, nombre_asignatura
+        """
+        return self.ejecutar_consulta(sql, (id_estudiante, id_carrera))
+
+    def obtener_estudiante_asignatura_carrera(
+        self, id_carrera: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtiene asignaturas desde la VIEW vw_estudiante_asignatura_carrera.
+        """
+        if id_carrera:
+            sql = """
+                SELECT DISTINCT 
+                    id_asignatura,
+                    nombre_asignatura,
+                    nombre_carrera,
+                    id_carrera,
+                    estado
+                FROM vw_estudiante_asignatura_carrera
+                WHERE id_carrera = ?
+                ORDER BY nombre_asignatura
+            """
+            params = (id_carrera,)
+        else:
+            sql = """
+                SELECT DISTINCT 
+                    id_asignatura,
+                    nombre_asignatura,
+                    nombre_carrera,
+                    id_carrera,
+                    estado
+                FROM vw_estudiante_asignatura_carrera
+                ORDER BY nombre_carrera, nombre_asignatura
+            """
+            params = ()
+        return self.ejecutar_consulta(sql, params)

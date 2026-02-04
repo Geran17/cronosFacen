@@ -10,6 +10,7 @@ Uso:
 
 import sys
 import os
+from typing import List
 
 # Agregar src al path para las importaciones
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -381,6 +382,33 @@ def verificar_views(ruta_db: str = RUTA_DB) -> dict:
             con.close()
 
 
+def obtener_nombres_views() -> List[str]:
+    """
+    Retorna los nombres de VIEWS definidas en este módulo.
+    """
+    return [nombre for nombre, _ in VIEWS]
+
+
+def views_faltantes(ruta_db: str = RUTA_DB) -> List[str]:
+    """
+    Retorna la lista de VIEWS definidas que no existen en la BD.
+    """
+    try:
+        existentes = set(verificar_views(ruta_db).keys())
+        esperadas = obtener_nombres_views()
+        return [nombre for nombre in esperadas if nombre not in existentes]
+    except Exception as ex:
+        logger.error(f"Error verificando VIEWS faltantes: {ex}")
+        return obtener_nombres_views()
+
+
+def hay_views_faltantes(ruta_db: str = RUTA_DB) -> bool:
+    """
+    Indica si faltan VIEWS definidas en la BD.
+    """
+    return len(views_faltantes(ruta_db)) > 0
+
+
 def listar_columnas_view(nombre_view: str, ruta_db: str = RUTA_DB) -> list:
     """
     Obtiene las columnas de una VIEW específica.
@@ -412,27 +440,27 @@ if __name__ == "__main__":
     """Ejecutable: python -m src.scripts.crear_views"""
     inicializar_directorios()
 
-    print("\n" + "=" * 70)
-    print("📊 CREADOR DE VIEWS - MVP ORGANIZACIÓN ACADÉMICA")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("📊 CREADOR DE VIEWS - MVP ORGANIZACIÓN ACADÉMICA")
+    logger.info("=" * 70)
 
-    print(f"\n📋 VIEWS a crear: {len(VIEWS)}")
+    logger.info(f"📋 VIEWS a crear: {len(VIEWS)}")
 
     if crear_todas_las_views():
-        print("\n✅ Proceso completado exitosamente\n")
+        logger.info("✅ Proceso completado exitosamente")
 
         # Mostrar VIEWS creadas
-        print("📊 VIEWS en la base de datos:")
-        print("-" * 70)
+        logger.info("📊 VIEWS en la base de datos:")
+        logger.info("-" * 70)
         views = verificar_views()
         for nombre_view, tipo in sorted(views.items()):
             columnas = listar_columnas_view(nombre_view)
-            print(f"\n  📌 {nombre_view} ({len(columnas)} columnas)")
+            logger.info(f"📌 {nombre_view} ({len(columnas)} columnas)")
             for col_nombre, col_tipo in columnas[:3]:  # Mostrar primeras 3
-                print(f"     • {col_nombre} ({col_tipo})")
+                logger.info(f"  • {col_nombre} ({col_tipo})")
             if len(columnas) > 3:
-                print(f"     ... + {len(columnas) - 3} más")
+                logger.info(f"  ... + {len(columnas) - 3} más")
 
-        print("\n" + "=" * 70 + "\n")
+        logger.info("=" * 70)
     else:
-        print("\n❌ Error durante la creación de VIEWS\n")
+        logger.error("❌ Error durante la creación de VIEWS")

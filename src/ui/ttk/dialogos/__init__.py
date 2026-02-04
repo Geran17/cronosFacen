@@ -13,6 +13,8 @@ from .dialogo_administrar_tipo_actividad import DialogoAdministrarTipoActividad
 from .dialogo_administrar_actividad import DialogoAdministrarActividad
 from .dialogo_administrar_calendario import DialogoAdministrarCalendario
 from .dialogo_acerca_de import DialogoAcercaDe
+from .dialogo_tema import DialogoTema
+from .dialogo_pin import DialogoPin
 
 __all__ = [
     "DialogoAdministrarCarrera",
@@ -24,4 +26,6 @@ __all__ = [
     "DialogoAdministrarActividad",
     "DialogoAdministrarCalendario",
     "DialogoAcercaDe",
+    "DialogoTema",
+    "DialogoPin",
 ]

@@ -16,6 +16,9 @@ from ttkbootstrap.tableview import Tableview
 from typing import Dict, Any
 from scripts.logging_config import obtener_logger_modulo
 from ui.ttk.styles.icons import ICON_ESTUDIANTE
+from ui.ttk.utils.layout import build_header
+from ui.ttk.utils.validation import bind_required
+from ui.ttk.styles.estilos import PADDING_MD, PADDING_SM
 from controladores.controlar_administrar_estudiante import ControlarAdministrarEstudiante
 
 logger = obtener_logger_modulo(__name__)
@@ -54,29 +57,25 @@ class FrameAdministrarEstudiante(Frame):
     def _crear_widgets(self):
         frame_superior = Frame(self, padding=(5, 5))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_central = Frame(self, padding=(5, 5))
         self._frame_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+        frame_central.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=True)
 
         frame_inferior = Frame(self, padding=(5, 5))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Superior
     # └────────────────────────────────────────────────────────────┘
     def _frame_superior(self, frame: Frame):
-        label_info = Label(
+        build_header(
             frame,
-            text=f"👤 Administrador de Estudiantes",
-            bootstyle="info",
-            font=("Helvetica", 16, "bold"),
+            titulo="👤 Administrador de Estudiantes",
+            subtitulo="Gestión de estudiantes y datos personales",
         )
-        label_info.pack(side=TOP, fill=X, padx=1, pady=1, expand=TRUE)
-
-        Separator(frame).pack(side=TOP, fill=X, expand=TRUE, padx=1, pady=1)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Central
@@ -87,7 +86,7 @@ class FrameAdministrarEstudiante(Frame):
 
         # Crear Notebook (tabs)
         self.notebook = Notebook(frame)
-        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
+        self.notebook.grid(row=0, column=0, sticky=NSEW, padx=PADDING_SM, pady=PADDING_SM)
 
         # Tab 1: Tabla
         frame_tabla_tab = Frame(self.notebook, padding=10)
@@ -111,9 +110,9 @@ class FrameAdministrarEstudiante(Frame):
             frame_busqueda,
             text="💡 Haz doble clic en una fila para editar",
             bootstyle="secondary",
-            font=("Helvetica", 9, "italic"),
+            style="Hint.TLabel",
         )
-        lbl_info.pack(side=LEFT, padx=5)
+        lbl_info.pack(side=LEFT, padx=PADDING_SM)
 
         self.tabla_estudiante = Tableview(
             frame,
@@ -127,7 +126,7 @@ class FrameAdministrarEstudiante(Frame):
             ],
             bootstyle="primary",
         )
-        self.tabla_estudiante.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
+        self.tabla_estudiante.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=TRUE)
         self.map_widgets['tabla_estudiante'] = self.tabla_estudiante
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -142,8 +141,8 @@ class FrameAdministrarEstudiante(Frame):
         frame_campos.columnconfigure(0, weight=1)
 
         # Id
-        lbl_id = Label(frame_campos, text="ID:", anchor=W, font=("Helvetica", 9))
-        lbl_id.grid(column=0, row=0, sticky=W, padx=5, pady=(5, 2))
+        lbl_id = Label(frame_campos, text="ID:", anchor=W, style="Small.TLabel")
+        lbl_id.grid(column=0, row=0, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         self.entry_id = Entry(
             frame_campos,
@@ -152,56 +151,58 @@ class FrameAdministrarEstudiante(Frame):
             justify=RIGHT,
             bootstyle="secondary",
         )
-        self.entry_id.grid(column=0, row=1, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_id.grid(column=0, row=1, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_id'] = self.entry_id
 
         # Nombre
         lbl_nombre = Label(
-            frame_campos, text="👤 Nombre Completo:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="👤 Nombre Completo:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_nombre.grid(column=0, row=2, sticky=W, padx=5, pady=(5, 2))
+        lbl_nombre.grid(column=0, row=2, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         self.entry_nombre = Entry(
             frame_campos,
             textvariable=self.var_nombre,
             bootstyle="info",
         )
-        self.entry_nombre.grid(column=0, row=3, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_nombre.grid(column=0, row=3, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_nombre'] = self.entry_nombre
+        bind_required(self.entry_nombre, "info")
 
         # Correo
         lbl_correo = Label(
-            frame_campos, text="📧 Correo Electrónico:", anchor=W, font=("Helvetica", 10, "bold")
+            frame_campos, text="📧 Correo Electrónico:", anchor=W, style="FormLabel.TLabel"
         )
-        lbl_correo.grid(column=0, row=4, sticky=W, padx=5, pady=(5, 2))
+        lbl_correo.grid(column=0, row=4, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         self.entry_correo = Entry(
             frame_campos,
             textvariable=self.var_correo,
             bootstyle="info",
         )
-        self.entry_correo.grid(column=0, row=5, padx=5, pady=(0, 8), sticky=EW)
+        self.entry_correo.grid(column=0, row=5, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         self.map_widgets['entry_correo'] = self.entry_correo
+        bind_required(self.entry_correo, "info")
 
         # Sección de Carreras
         lbl_carreras = Label(
             frame_campos,
             text="🎓 Carreras del Estudiante:",
             anchor=W,
-            font=("Helvetica", 10, "bold"),
+            style="FormLabel.TLabel",
         )
-        lbl_carreras.grid(column=0, row=6, sticky=W, padx=5, pady=(5, 2))
+        lbl_carreras.grid(column=0, row=6, sticky=W, padx=PADDING_SM, pady=(5, 2))
 
         # Frame para mostrar carreras y botón
         frame_carreras = Frame(frame_campos)
-        frame_carreras.grid(column=0, row=7, padx=5, pady=(0, 8), sticky=EW)
+        frame_carreras.grid(column=0, row=7, padx=PADDING_SM, pady=(0, 8), sticky=EW)
         frame_carreras.columnconfigure(0, weight=1)
 
         self.lbl_info_carreras = Label(
             frame_carreras,
             text="Seleccione un estudiante para ver sus carreras",
             bootstyle="secondary",
-            font=("Helvetica", 9, "italic"),
+            style="Hint.TLabel",
             anchor=W,
         )
         self.lbl_info_carreras.grid(column=0, row=0, sticky=EW, pady=(0, 5))
@@ -211,77 +212,72 @@ class FrameAdministrarEstudiante(Frame):
             frame_carreras,
             text="🎓 Gestionar Carreras",
             bootstyle="info-outline",
-            state=DISABLED,
-        )
+            state=DISABLED)
         self.btn_gestionar_carreras.grid(column=0, row=1, sticky=EW)
         self.map_widgets['btn_gestionar_carreras'] = self.btn_gestionar_carreras
         ToolTip(self.btn_gestionar_carreras, text="Administrar las carreras del estudiante")
 
         # Separador
         Separator(frame_campos, bootstyle="secondary").grid(
-            column=0, row=8, sticky=EW, padx=5, pady=10
+            column=0, row=8, sticky=EW, padx=PADDING_SM, pady=PADDING_MD
         )
 
         # Botones de acción principales
         frame_acciones = Frame(frame_campos)
-        frame_acciones.grid(column=0, row=9, sticky=EW, padx=5, pady=(0, 5))
+        frame_acciones.grid(column=0, row=9, sticky=EW, padx=PADDING_SM, pady=(0, 5))
 
         self.btn_nuevo = Button(
             frame_acciones,
             text="➕ Nuevo",
-            bootstyle="success-outline",
-        )
+            bootstyle="success-outline")
         self.btn_nuevo.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_nuevo'] = self.btn_nuevo
 
         self.btn_aplicar = Button(
             frame_acciones,
             text="💾 Guardar",
-            bootstyle="primary",
-        )
+            bootstyle="primary")
         self.btn_aplicar.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_aplicar'] = self.btn_aplicar
 
         self.btn_eliminar = Button(
             frame_acciones,
             text="🗑️ Eliminar",
-            bootstyle="danger-outline",
-        )
+            bootstyle="danger-outline")
         self.btn_eliminar.pack(side=LEFT, padx=2, fill=X, expand=True)
         self.map_widgets['btn_eliminar'] = self.btn_eliminar
 
         # Botones de navegación
         frame_navegacion = Frame(frame_campos)
-        frame_navegacion.grid(column=0, row=10, sticky=EW, padx=5, pady=(5, 0))
+        frame_navegacion.grid(column=0, row=10, sticky=EW, padx=PADDING_SM, pady=(5, 0))
 
-        Label(frame_navegacion, text="Navegación:", font=("Helvetica", 9)).pack(side=LEFT, padx=5)
+        Label(frame_navegacion, text="Navegación:", style="Small.TLabel").pack(
+            side=LEFT, padx=PADDING_SM
+        )
 
         self.btn_primero = Button(
-            frame_navegacion, text="⏮️", bootstyle="secondary-outline", width=5
-        )
-        self.btn_primero.pack(side=LEFT, padx=1)
+            frame_navegacion, text="⏮️", bootstyle="secondary-outline")
+        self.btn_primero.pack(side=LEFT, padx=PADDING_SM)
         self.map_widgets['btn_primero'] = self.btn_primero
 
         self.btn_anterior = Button(
-            frame_navegacion, text="◀️", bootstyle="secondary-outline", width=5
-        )
-        self.btn_anterior.pack(side=LEFT, padx=1)
+            frame_navegacion, text="◀️", bootstyle="secondary-outline")
+        self.btn_anterior.pack(side=LEFT, padx=PADDING_SM)
         self.map_widgets['btn_anterior'] = self.btn_anterior
 
         self.btn_siguiente = Button(
-            frame_navegacion, text="▶️", bootstyle="secondary-outline", width=5
-        )
-        self.btn_siguiente.pack(side=LEFT, padx=1)
+            frame_navegacion, text="▶️", bootstyle="secondary-outline")
+        self.btn_siguiente.pack(side=LEFT, padx=PADDING_SM)
         self.map_widgets['btn_siguiente'] = self.btn_siguiente
 
-        self.btn_ultimo = Button(frame_navegacion, text="⏭️", bootstyle="secondary-outline", width=5)
-        self.btn_ultimo.pack(side=LEFT, padx=1)
+        self.btn_ultimo = Button(frame_navegacion, text="⏭️", bootstyle="secondary-outline")
+        self.btn_ultimo.pack(side=LEFT, padx=PADDING_SM)
         self.map_widgets['btn_ultimo'] = self.btn_ultimo
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Frame Inferior
     # └────────────────────────────────────────────────────────────┘
     def _frame_inferior(self, frame: Frame):
-        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W)
-        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.lbl_estadisticas = Label(frame, text="", bootstyle="secondary", anchor=W, style="Small.TLabel")
+        self.lbl_estadisticas.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['lbl_estadisticas'] = self.lbl_estadisticas

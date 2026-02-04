@@ -8,6 +8,8 @@ from ttkbootstrap import (
     Labelframe,
     StringVar,
     IntVar,
+    Style,
+    Panedwindow,
 )
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
@@ -16,6 +18,7 @@ from ttkbootstrap.dialogs import DatePickerDialog
 from typing import Dict, Any
 from scripts.logging_config import obtener_logger_modulo
 from ui.ttk.styles.icons import ICON_ACTIVIDAD
+from ui.ttk.styles.estilos import PADDING_MD, PADDING_SM, FONT_SMALL
 from controladores.controlar_administrar_estudiante_actividad import (
     ControlarAdministrarEstudianteActividad,
 )
@@ -24,8 +27,10 @@ logger = obtener_logger_modulo(__name__)
 
 
 class FrameAdministrarEstudianteActividad(Frame):
-    def __init__(self, master=None, **kwargs):
+    def __init__(self, master=None, preselect=None, **kwargs):
         super().__init__(master=master, **kwargs)
+
+        self.preselect = preselect or {}
 
         self.map_widgets: Dict[str, Any] = {}
         self.map_vars: Dict[str, Any] = {}
@@ -49,6 +54,9 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.var_fecha_entrega = StringVar()
         self.map_vars['var_fecha_entrega'] = self.var_fecha_entrega
 
+        self.var_nota = StringVar(value="0")
+        self.map_vars['var_nota'] = self.var_nota
+
         self.var_filtro_estado = StringVar(value="Todos")
         self.map_vars['var_filtro_estado'] = self.var_filtro_estado
 
@@ -69,6 +77,7 @@ class FrameAdministrarEstudianteActividad(Frame):
             master=self,
             map_vars=self.map_vars,
             map_widgets=self.map_widgets,
+            preselect=self.preselect,
         )
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -77,21 +86,21 @@ class FrameAdministrarEstudianteActividad(Frame):
     def _crear_widgets(self):
         frame_superior = Frame(self, padding=(5, 5))
         self._frame_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_selector = Frame(self, padding=(5, 5))
         self._frame_selector_estudiante(frame=frame_selector)
-        frame_selector.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_selector.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
-        Separator(self, orient=HORIZONTAL).pack(fill=X, pady=5)
+        Separator(self, orient=HORIZONTAL).pack(fill=X, pady=PADDING_SM)
 
         frame_contenido = Frame(self, padding=(5, 5))
         self._frame_contenido(frame=frame_contenido)
-        frame_contenido.pack(side=TOP, fill=BOTH, expand=TRUE, padx=1, pady=1)
+        frame_contenido.pack(side=TOP, fill=BOTH, expand=TRUE, padx=PADDING_SM, pady=PADDING_SM)
 
         frame_inferior = Frame(self, padding=(5, 5))
         self._frame_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=BOTTOM, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=BOTTOM, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     def _frame_superior(self, frame: Frame):
         """Frame superior con título e ícono"""
@@ -104,14 +113,14 @@ class FrameAdministrarEstudianteActividad(Frame):
         lbl_titulo = Label(
             frame_texto,
             text="Administrar Actividades por Estudiante",
-            font=("Segoe UI", 14, "bold"),
+            style="Title.TLabel",
         )
         lbl_titulo.pack(anchor=W)
 
         lbl_subtitulo = Label(
             frame_texto,
             text="Gestiona el estado de entrega de actividades para cada estudiante",
-            font=("Segoe UI", 9),
+            style="Subtitle.TLabel",
             bootstyle="secondary",
         )
         lbl_subtitulo.pack(anchor=W)
@@ -123,14 +132,15 @@ class FrameAdministrarEstudianteActividad(Frame):
             text="📚 Seleccionar Estudiante",
             padding=10,
         )
-        lf_selector.pack(fill=X, pady=5)
+        lf_selector.pack(fill=X, pady=PADDING_SM)
 
         frame_row = Frame(lf_selector)
         frame_row.pack(fill=X)
+        frame_row.columnconfigure(1, weight=1)
 
         # Label
-        lbl_estudiante = Label(frame_row, text="Estudiante:", width=15, anchor=W)
-        lbl_estudiante.pack(side=LEFT, padx=(0, 5))
+        lbl_estudiante = Label(frame_row, text="Estudiante:", anchor=W)
+        lbl_estudiante.grid(row=0, column=0, sticky=W, padx=PADDING_SM, pady=PADDING_SM)
 
         # Combobox
         self.cbx_estudiante = Combobox(
@@ -138,7 +148,7 @@ class FrameAdministrarEstudianteActividad(Frame):
             textvariable=self.var_nombre_estudiante,
             state=READONLY,
         )
-        self.cbx_estudiante.pack(side=LEFT, fill=X, expand=TRUE, padx=(0, 10))
+        self.cbx_estudiante.grid(row=0, column=1, sticky=EW, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['cbx_estudiante'] = self.cbx_estudiante
         ToolTip(self.cbx_estudiante, "Selecciona un estudiante")
 
@@ -146,113 +156,133 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.btn_cargar_estudiante = Button(
             frame_row,
             text="Cargar",
-            bootstyle="primary",
-            width=12,
+            bootstyle="primary")
+        self.btn_cargar_estudiante.grid(
+            row=0, column=2, sticky=E, padx=PADDING_SM, pady=PADDING_SM
         )
-        self.btn_cargar_estudiante.pack(side=LEFT)
         self.map_widgets['btn_cargar_estudiante'] = self.btn_cargar_estudiante
         ToolTip(self.btn_cargar_estudiante, "Cargar actividades del estudiante")
 
     def _frame_contenido(self, frame: Frame):
         """Frame principal de contenido con tabla y formulario"""
-        # Frame izquierdo: Tabla
-        frame_izquierdo = Frame(frame)
-        frame_izquierdo.pack(side=LEFT, fill=BOTH, expand=TRUE, padx=(0, 5))
+        # Separador ajustable entre tabla y formulario
+        paned = Panedwindow(frame, orient=HORIZONTAL)
+        paned.pack(fill=BOTH, expand=TRUE)
 
+        frame_izquierdo = Frame(paned)
         self._frame_tabla(frame=frame_izquierdo)
+        paned.add(frame_izquierdo, weight=3)
 
-        # Frame derecho: Formulario
-        frame_derecho = Frame(frame, width=350)
-        frame_derecho.pack(side=RIGHT, fill=BOTH, padx=(5, 0))
+        frame_derecho = Frame(paned, width=360)
         frame_derecho.pack_propagate(False)
-
         self._frame_formulario(frame=frame_derecho)
+        paned.add(frame_derecho, weight=1)
 
     def _frame_tabla(self, frame: Frame):
         """Frame con filtros y tabla de actividades"""
         lf_tabla = Labelframe(
             frame,
             text="📋 Actividades del Estudiante",
-            padding=10,
+            padding=8,
         )
         lf_tabla.pack(fill=BOTH, expand=TRUE)
 
         # Filtros
         frame_filtros = Frame(lf_tabla)
-        frame_filtros.pack(fill=X, pady=(0, 10))
+        frame_filtros.pack(fill=X, pady=(0, PADDING_SM))
+        frame_filtros.columnconfigure(1, weight=2)
+        frame_filtros.columnconfigure(3, weight=1)
+        frame_filtros.columnconfigure(5, weight=1)
 
         # Búsqueda
         lbl_buscar = Label(
-            frame_filtros, text="🔎 Buscar por título:", anchor=W, font=("Helvetica", 9, "bold")
+            frame_filtros,
+            text="🔎 Buscar por título:",
+            anchor=W,
+            style="FormLabel.TLabel",
         )
-        lbl_buscar.pack(side=LEFT, padx=(0, 5))
+        lbl_buscar.grid(row=0, column=0, sticky=W, padx=PADDING_SM, pady=(PADDING_SM, 2))
 
-        self.entry_buscar_actividad = Entry(frame_filtros, width=25)
-        self.entry_buscar_actividad.pack(side=LEFT, padx=(0, 10), fill=X, expand=True)
+        self.entry_buscar_actividad = Entry(frame_filtros)
+        self.entry_buscar_actividad.grid(
+            row=0, column=1, columnspan=3, sticky=EW, padx=PADDING_SM, pady=(PADDING_SM, 2)
+        )
         self.map_widgets['entry_buscar_actividad'] = self.entry_buscar_actividad
         ToolTip(self.entry_buscar_actividad, "Busca por título de la actividad en tiempo real")
 
-        # Separador visual
-        Separator(frame_filtros, orient=VERTICAL).pack(side=LEFT, fill=Y, padx=5)
+        # Botón para limpiar filtros
+        self.btn_limpiar_filtros = Button(
+            frame_filtros,
+            text="🔄 Limpiar",
+            bootstyle="secondary-outline")
+        self.btn_limpiar_filtros.grid(row=0, column=4, sticky=E, padx=PADDING_SM, pady=(PADDING_SM, 2))
+        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
+        ToolTip(self.btn_limpiar_filtros, "Limpiar todos los filtros")
 
         # Filtro por asignatura
         lbl_asignatura = Label(
-            frame_filtros, text="Asignatura:", anchor=W, font=("Helvetica", 9, "bold")
+            frame_filtros,
+            text="Asignatura:",
+            anchor=W,
+            style="FormLabel.TLabel",
         )
-        lbl_asignatura.pack(side=LEFT, padx=(5, 5))
+        lbl_asignatura.grid(row=1, column=0, sticky=W, padx=PADDING_SM, pady=(2, PADDING_SM))
 
         self.cbx_filtro_asignatura = Combobox(
             frame_filtros,
             textvariable=self.var_filtro_asignatura,
             state=READONLY,
-            width=18,
         )
-        self.cbx_filtro_asignatura.pack(side=LEFT, padx=(0, 10))
+        self.cbx_filtro_asignatura.grid(
+            row=1, column=1, sticky=EW, padx=PADDING_SM, pady=(2, PADDING_SM)
+        )
         self.map_widgets['cbx_filtro_asignatura'] = self.cbx_filtro_asignatura
         ToolTip(self.cbx_filtro_asignatura, "Filtrar actividades por asignatura")
 
         # Filtro por estado
-        lbl_estado = Label(frame_filtros, text="Estado:", anchor=W, font=("Helvetica", 9, "bold"))
-        lbl_estado.pack(side=LEFT, padx=(0, 5))
+        lbl_estado = Label(
+            frame_filtros,
+            text="Estado:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        )
+        lbl_estado.grid(row=1, column=2, sticky=W, padx=PADDING_SM, pady=(2, PADDING_SM))
 
         self.cbx_filtro_estado = Combobox(
             frame_filtros,
             textvariable=self.var_filtro_estado,
             values=["Todos", "⏳ Pendiente", "🔄 En progreso", "✅ Entregada", "❌ Vencida"],
             state=READONLY,
-            width=15,
         )
-        self.cbx_filtro_estado.pack(side=LEFT, padx=(0, 10))
+        self.cbx_filtro_estado.grid(
+            row=1, column=3, sticky=EW, padx=PADDING_SM, pady=(2, PADDING_SM)
+        )
         self.map_widgets['cbx_filtro_estado'] = self.cbx_filtro_estado
         ToolTip(self.cbx_filtro_estado, "Filtrar actividades por estado")
 
         # Filtro por tipo de actividad
-        lbl_tipo = Label(frame_filtros, text="Tipo:", anchor=W, font=("Helvetica", 9, "bold"))
-        lbl_tipo.pack(side=LEFT, padx=(0, 5))
+        lbl_tipo = Label(
+            frame_filtros,
+            text="Tipo:",
+            anchor=W,
+            style="FormLabel.TLabel",
+        )
+        lbl_tipo.grid(row=1, column=4, sticky=W, padx=PADDING_SM, pady=(2, PADDING_SM))
 
         self.cbx_filtro_tipo = Combobox(
             frame_filtros,
             textvariable=self.var_filtro_tipo,
             state=READONLY,
-            width=15,
         )
-        self.cbx_filtro_tipo.pack(side=LEFT, padx=(0, 10))
+        self.cbx_filtro_tipo.grid(
+            row=1, column=5, sticky=EW, padx=PADDING_SM, pady=(2, PADDING_SM)
+        )
         self.map_widgets['cbx_filtro_tipo'] = self.cbx_filtro_tipo
         ToolTip(self.cbx_filtro_tipo, "Filtrar por tipo de actividad")
 
-        # Botón para limpiar filtros
-        self.btn_limpiar_filtros = Button(
-            frame_filtros,
-            text="🔄 Limpiar",
-            bootstyle="secondary-outline",
-            width=12,
-        )
-        self.btn_limpiar_filtros.pack(side=LEFT, padx=(5, 0))
-        self.map_widgets['btn_limpiar_filtros'] = self.btn_limpiar_filtros
-        ToolTip(self.btn_limpiar_filtros, "Limpiar todos los filtros")
-
         # Tabla
         columnas = [
+            {"text": "ID", "stretch": False, "anchor": "center", "width": 0},
             {"text": "Título", "stretch": True, "anchor": "w", "minwidth": 200},
             {"text": "Asignatura", "stretch": False, "anchor": "w", "width": 130},
             {"text": "Tipo", "stretch": False, "anchor": "center", "width": 70},
@@ -260,6 +290,7 @@ class FrameAdministrarEstudianteActividad(Frame):
             {"text": "F. Fin", "stretch": False, "anchor": "center", "width": 90},
             {"text": "Días", "stretch": False, "anchor": "center", "width": 50},
             {"text": "Estado", "stretch": False, "anchor": "center", "width": 110},
+            {"text": "Nota", "stretch": False, "anchor": "center", "width": 70},
             {"text": "F. Entrega", "stretch": False, "anchor": "center", "width": 100},
         ]
 
@@ -271,33 +302,46 @@ class FrameAdministrarEstudianteActividad(Frame):
             paginated=False,
             height=15,
         )
+        style = Style()
+        style.configure("Actividad.Treeview", rowheight=24, font=FONT_SMALL)
+        self.tabla_actividades.view.configure(style="Actividad.Treeview")
+        # Ocultar columna ID (solo para lógica interna)
+        try:
+            self.tabla_actividades.view.column("#1", width=0, stretch=False)
+        except Exception:
+            pass
         self.tabla_actividades.pack(fill=BOTH, expand=TRUE)
         self.map_widgets['tabla_actividades'] = self.tabla_actividades
 
         # Resumen estadístico
         frame_resumen = Frame(lf_tabla)
-        frame_resumen.pack(fill=X, pady=(10, 0))
+        frame_resumen.pack(fill=X, pady=(8, 0))
+        frame_resumen.columnconfigure(0, weight=1)
+        frame_resumen.columnconfigure(1, weight=1)
+        frame_resumen.columnconfigure(2, weight=1)
+        frame_resumen.columnconfigure(3, weight=1)
+        frame_resumen.columnconfigure(4, weight=1)
 
         self.lbl_total_actividades = Label(
-            frame_resumen, text="Total Actividades: 0", bootstyle="info"
+            frame_resumen, text="Total: 0", bootstyle="info"
         )
-        self.lbl_total_actividades.pack(side=LEFT, padx=5)
+        self.lbl_total_actividades.grid(row=0, column=0, sticky=W, padx=PADDING_SM)
         self.map_widgets['lbl_total_actividades'] = self.lbl_total_actividades
 
-        self.lbl_pendientes = Label(frame_resumen, text="⏳ Pendientes: 0")
-        self.lbl_pendientes.pack(side=LEFT, padx=5)
+        self.lbl_pendientes = Label(frame_resumen, text="⏳ Pend: 0")
+        self.lbl_pendientes.grid(row=0, column=1, sticky=W, padx=PADDING_SM)
         self.map_widgets['lbl_pendientes'] = self.lbl_pendientes
 
-        self.lbl_en_progreso = Label(frame_resumen, text="🔄 En progreso: 0")
-        self.lbl_en_progreso.pack(side=LEFT, padx=5)
+        self.lbl_en_progreso = Label(frame_resumen, text="🔄 Prog: 0")
+        self.lbl_en_progreso.grid(row=0, column=2, sticky=W, padx=PADDING_SM)
         self.map_widgets['lbl_en_progreso'] = self.lbl_en_progreso
 
-        self.lbl_entregadas = Label(frame_resumen, text="✅ Entregadas: 0")
-        self.lbl_entregadas.pack(side=LEFT, padx=5)
+        self.lbl_entregadas = Label(frame_resumen, text="✅ Ent: 0")
+        self.lbl_entregadas.grid(row=0, column=3, sticky=W, padx=PADDING_SM)
         self.map_widgets['lbl_entregadas'] = self.lbl_entregadas
 
-        self.lbl_vencidas = Label(frame_resumen, text="❌ Vencidas: 0")
-        self.lbl_vencidas.pack(side=LEFT, padx=5)
+        self.lbl_vencidas = Label(frame_resumen, text="❌ Venc: 0")
+        self.lbl_vencidas.grid(row=0, column=4, sticky=W, padx=PADDING_SM)
         self.map_widgets['lbl_vencidas'] = self.lbl_vencidas
 
     def _frame_formulario(self, frame: Frame):
@@ -353,13 +397,25 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.btn_calendario = Button(
             frame_fecha,
             text="📅",
-            width=4,
+            bootstyle="info-outline",
         )
         self.btn_calendario.pack(side=LEFT)
         self.map_widgets['btn_calendario'] = self.btn_calendario
         ToolTip(self.btn_calendario, "Abrir calendario")
 
-        Separator(lf_form, orient=HORIZONTAL).pack(fill=X, pady=10)
+        # Nota (opcional)
+        lbl_nota = Label(lf_form, text="Nota (opcional):", anchor=W)
+        lbl_nota.pack(fill=X, pady=(0, 3))
+
+        entry_nota = Entry(
+            lf_form,
+            textvariable=self.var_nota,
+        )
+        entry_nota.pack(fill=X, pady=(0, 10))
+        self.map_widgets['entry_nota'] = entry_nota
+        ToolTip(entry_nota, "Ingrese la nota obtenida (0 por defecto)")
+
+        Separator(lf_form, orient=HORIZONTAL).pack(fill=X, pady=PADDING_MD)
 
         # Botones
         frame_botones = Frame(lf_form)
@@ -368,8 +424,7 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.btn_aplicar = Button(
             frame_botones,
             text="💾 Aplicar",
-            bootstyle="success",
-        )
+            bootstyle="success")
         self.btn_aplicar.pack(side=LEFT, fill=X, expand=TRUE, padx=(0, 5))
         self.map_widgets['btn_aplicar'] = self.btn_aplicar
         ToolTip(self.btn_aplicar, "Guardar cambios")
@@ -377,7 +432,7 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.btn_limpiar = Button(
             frame_botones,
             text="🧹 Limpiar",
-            bootstyle="secondary",
+            bootstyle="secondary-outline",
         )
         self.btn_limpiar.pack(side=LEFT, fill=X, expand=TRUE)
         self.map_widgets['btn_limpiar'] = self.btn_limpiar
@@ -390,6 +445,7 @@ class FrameAdministrarEstudianteActividad(Frame):
             text="Seleccione un estudiante para comenzar",
             bootstyle="secondary",
             anchor=W,
+            style="Small.TLabel",
         )
-        self.lbl_estadisticas.pack(fill=X)
+        self.lbl_estadisticas.pack(fill=X, padx=PADDING_SM, pady=PADDING_SM)
         self.map_widgets['lbl_estadisticas'] = self.lbl_estadisticas

@@ -154,3 +154,14 @@ class EstudianteActividadDAO(DAO):
         )
 
         return self.ejecutar_actualizacion(sql, params)
+
+    def obtener_por_estudiante(self, id_estudiante: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene los registros de estudiante_actividad de un estudiante.
+        """
+        sql = """
+            SELECT id_estudiante, id_actividad, estado, fecha_entrega
+            FROM estudiante_actividad
+            WHERE id_estudiante = ?
+        """
+        return self.ejecutar_consulta(sql, (id_estudiante,))

@@ -5,16 +5,17 @@ Este módulo contiene la clase Dialog que integra el FrameAcercaDe
 en una ventana modal independiente para mostrar información de la aplicación.
 """
 
-from ttkbootstrap import Toplevel, Frame, Button, Separator
+from ttkbootstrap import Frame, Button, Separator
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
 from ui.ttk.frames.frame_acerca_de import FrameAcercaDe
 from scripts.logging_config import obtener_logger_modulo
+from ui.ttk.dialogos.base_dialog import BaseDialog
 
 logger = obtener_logger_modulo(__name__)
 
 
-class DialogoAcercaDe(Toplevel):
+class DialogoAcercaDe(BaseDialog):
     """
     Diálogo Modal para Información sobre la Aplicación.
 
@@ -45,18 +46,16 @@ class DialogoAcercaDe(Toplevel):
             dialogo = DialogoAcercaDe(parent=ventana_principal)
             dialogo.wait_window()
         """
-        super().__init__(parent, **kwargs)
+        super().__init__(
+            parent,
+            title="Acerca de CronosFacen",
+            geometry="800x600",
+            minsize=(800, 600),
+            modal=True,
+            **kwargs,
+        )
 
-        # Configuración básica de la ventana
-        self.title("ℹ️ Acerca de CronosFacen")
-        self.geometry("700x800+100+100")
         self.resizable(True, True)
-
-        # Hacer la ventana modal
-        self.transient(parent)
-        self.grab_set()
-
-        # Atributos de control
         self.parent = parent
 
         # Inicializar logging
@@ -65,11 +64,7 @@ class DialogoAcercaDe(Toplevel):
         # Crear estructura de widgets
         self._crear_widgets()
 
-        # Centrar ventana respecto al padre si existe
-        if parent:
-            self._centrar_ventana()
-
-        # Enlazar evento de cierre
+        # Enlazar evento de cierre (BaseDialog ya maneja cierre seguro)
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
 
     def _crear_widgets(self):
@@ -107,38 +102,12 @@ class DialogoAcercaDe(Toplevel):
         btn_cerrar = Button(
             frame_botones,
             text="✅ Cerrar",
-            width=15,
             bootstyle="primary",
             command=self._on_closing,
         )
         btn_cerrar.pack(side=RIGHT, padx=5)
 
         ToolTip(btn_cerrar, "Cierra la ventana de información")
-
-    def _centrar_ventana(self):
-        """Centra la ventana del diálogo respecto a la ventana padre"""
-
-        try:
-            self.update_idletasks()
-
-            # Obtener dimensiones de la ventana padre
-            parent_x = self.parent.winfo_x()
-            parent_y = self.parent.winfo_y()
-            parent_width = self.parent.winfo_width()
-            parent_height = self.parent.winfo_height()
-
-            # Obtener dimensiones del diálogo
-            dialog_width = self.winfo_width()
-            dialog_height = self.winfo_height()
-
-            # Calcular posición centrada
-            x = parent_x + (parent_width - dialog_width) // 2
-            y = parent_y + (parent_height - dialog_height) // 2
-
-            self.geometry(f"+{x}+{y}")
-
-        except Exception as e:
-            logger.warning(f"No se pudo centrar la ventana: {e}")
 
     def _on_closing(self):
         """

@@ -147,3 +147,56 @@ class EjeTematicoDAO(DAO):
         if self.instanciar(dto):
             return dto
         return None
+
+    def obtener_todos(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todos los ejes temáticos ordenados por asignatura y orden.
+        """
+        sql = "SELECT * FROM eje_tematico ORDER BY id_asignatura, orden"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_filtrados(
+        self, id_carrera: Optional[int] = None, id_asignatura: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtiene ejes temáticos filtrados por carrera y/o asignatura.
+        """
+        sql = """
+            SELECT DISTINCT et.* 
+            FROM eje_tematico et
+            INNER JOIN asignatura a ON et.id_asignatura = a.id_asignatura
+        """
+        params: List[Any] = []
+
+        if id_carrera and id_carrera > 0:
+            sql += " WHERE a.id_carrera = ?"
+            params.append(id_carrera)
+            if id_asignatura and id_asignatura > 0:
+                sql += " AND et.id_asignatura = ?"
+                params.append(id_asignatura)
+        else:
+            if id_asignatura and id_asignatura > 0:
+                sql += " WHERE et.id_asignatura = ?"
+                params.append(id_asignatura)
+
+        sql += " ORDER BY a.id_carrera, et.id_asignatura, et.orden"
+        return self.ejecutar_consulta(sql, tuple(params))
+
+    def obtener_id_nombre(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id y nombre de ejes temáticos.
+        """
+        sql = "SELECT id_eje, nombre FROM eje_tematico ORDER BY orden, nombre"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_por_asignatura(self, id_asignatura: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene id y nombre de ejes temáticos por asignatura.
+        """
+        sql = """
+            SELECT id_eje, nombre
+            FROM eje_tematico
+            WHERE id_asignatura = ?
+            ORDER BY orden, nombre
+        """
+        return self.ejecutar_consulta(sql, (id_asignatura,))

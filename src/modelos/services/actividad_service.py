@@ -91,6 +91,51 @@ class ActividadService(ActividadDTO):
             logger.error(f"Error al verificar existencia de actividad: {e}")
             return False
 
+    def obtener_todas(self) -> list:
+        """Obtiene todas las actividades."""
+        try:
+            return self.dao.obtener_todas()
+        except Exception as e:
+            logger.error(f"Error al obtener actividades: {e}")
+            return []
+
+    def obtener_detalladas_filtradas(
+        self,
+        id_estudiante: int,
+        id_carrera: Optional[int] = None,
+        id_asignatura: Optional[int] = None,
+        id_tipo_actividad: Optional[int] = None,
+    ) -> list:
+        """Obtiene actividades detalladas desde la VIEW con filtros opcionales."""
+        try:
+            return self.dao.obtener_detalladas_filtradas(
+                id_estudiante=id_estudiante,
+                id_carrera=id_carrera,
+                id_asignatura=id_asignatura,
+                id_tipo_actividad=id_tipo_actividad,
+            )
+        except Exception as e:
+            logger.error(f"Error al obtener actividades detalladas: {e}")
+            return []
+
+    def obtener_con_detalle(self, id_carrera: Optional[int] = None) -> list:
+        """Obtiene actividades con detalles de eje, asignatura y tipo."""
+        try:
+            return self.dao.obtener_con_detalle(id_carrera=id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener actividades con detalle: {e}")
+            return []
+
+    def obtener_por_filtros(
+        self, id_carrera: Optional[int] = None, id_asignatura: Optional[int] = None
+    ) -> list:
+        """Obtiene actividades aplicando filtros de carrera y/o asignatura."""
+        try:
+            return self.dao.obtener_por_filtros(id_carrera=id_carrera, id_asignatura=id_asignatura)
+        except Exception as e:
+            logger.error(f"Error al obtener actividades por filtros: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos de la actividad sean correctos."""
         if not self.titulo or len(str(self.titulo).strip()) == 0:

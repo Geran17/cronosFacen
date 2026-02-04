@@ -91,6 +91,14 @@ class CalendarioEventoService(CalendarioEventoDTO):
             logger.error(f"Error al verificar existencia de evento de calendario: {e}")
             return False
 
+    def obtener_todos(self) -> list:
+        """Obtiene todos los eventos del calendario."""
+        try:
+            return self.dao.obtener_todos()
+        except Exception as e:
+            logger.error(f"Error al obtener eventos de calendario: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos del evento de calendario sean correctos."""
         if not self.titulo or len(str(self.titulo).strip()) == 0:

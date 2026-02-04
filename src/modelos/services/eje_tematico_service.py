@@ -91,6 +91,40 @@ class EjeTematicoService(EjeTematicoDTO):
             logger.error(f"Error al verificar existencia de eje temático: {e}")
             return False
 
+    def obtener_todos(self) -> list:
+        """Obtiene todos los ejes temáticos ordenados."""
+        try:
+            return self.dao.obtener_todos()
+        except Exception as e:
+            logger.error(f"Error al obtener ejes temáticos: {e}")
+            return []
+
+    def obtener_filtrados(
+        self, id_carrera: Optional[int] = None, id_asignatura: Optional[int] = None
+    ) -> list:
+        """Obtiene ejes temáticos filtrados por carrera y/o asignatura."""
+        try:
+            return self.dao.obtener_filtrados(id_carrera=id_carrera, id_asignatura=id_asignatura)
+        except Exception as e:
+            logger.error(f"Error al obtener ejes temáticos filtrados: {e}")
+            return []
+
+    def obtener_id_nombre(self) -> list:
+        """Obtiene id y nombre de ejes temáticos."""
+        try:
+            return self.dao.obtener_id_nombre()
+        except Exception as e:
+            logger.error(f"Error al obtener ejes temáticos (id/nombre): {e}")
+            return []
+
+    def obtener_por_asignatura(self, id_asignatura: int) -> list:
+        """Obtiene ejes temáticos por asignatura."""
+        try:
+            return self.dao.obtener_por_asignatura(id_asignatura)
+        except Exception as e:
+            logger.error(f"Error al obtener ejes temáticos por asignatura: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos del eje temático sean correctos."""
         if not self.nombre or len(str(self.nombre).strip()) == 0:

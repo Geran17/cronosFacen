@@ -3,7 +3,6 @@ from tkinter.messagebox import askyesno, showinfo
 from ttkbootstrap import Button, StringVar, IntVar, Label, Text, Combobox
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.tipo_actividad_dao import TipoActividadDAO
 from modelos.services.tipo_actividad_service import TipoActividadService
 from scripts.logging_config import obtener_logger_modulo
 
@@ -143,15 +142,12 @@ class ControlarAdministrarTipoActividad:
         if self.lista_tipos_actividad:
             self.lista_tipos_actividad.clear()
 
-        dao = TipoActividadDAO(ruta_db=None)
-        sql = "SELECT * FROM tipo_actividad ORDER BY nombre"
-        params = ()
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
-        if lista_aux:
-            for data in lista_aux:
-                tipo_actividad = TipoActividadService(ruta_db=None)
-                tipo_actividad.set_data(data=data)
-                self.lista_tipos_actividad.append(tipo_actividad)
+        servicio = TipoActividadService(ruta_db=None)
+        lista_aux = servicio.obtener_todos()
+        for data in lista_aux:
+            tipo_actividad = TipoActividadService(ruta_db=None)
+            tipo_actividad.set_data(data=data)
+            self.lista_tipos_actividad.append(tipo_actividad)
 
     def _cargar_vars(self):
         self.var_id_tipo_actividad: IntVar = self.map_vars['var_id_tipo_actividad']

@@ -9,6 +9,14 @@ from ttkbootstrap import Frame, Label, Button, Separator, Scrollbar, Text
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
 from scripts.logging_config import obtener_logger_modulo
+from ui.ttk.styles.estilos import (
+    PADDING_SM,
+    PADDING_MD,
+    PADDING_LG,
+    PADDING_XL,
+    PADDING_XXL,
+    PADDING_XS,  # Agregado para evitar el error de variable no definida
+)
 
 logger = obtener_logger_modulo(__name__)
 
@@ -37,12 +45,12 @@ class FrameAcercaDe(Frame):
         # Encabezado
         self._crear_encabezado()
 
-        Separator(self, orient=HORIZONTAL).pack(fill=X, pady=15)
+        Separator(self, orient=HORIZONTAL).pack(fill=X, pady=PADDING_LG)
 
         # Contenido principal
         self._crear_contenido()
 
-        Separator(self, orient=HORIZONTAL).pack(fill=X, pady=15)
+        Separator(self, orient=HORIZONTAL).pack(fill=X, pady=PADDING_LG)
 
         # Footer
         self._crear_footer()
@@ -50,14 +58,14 @@ class FrameAcercaDe(Frame):
     def _crear_encabezado(self):
         """Crea el encabezado con logo e información principal"""
         frame_header = Frame(self)
-        frame_header.pack(fill=X, pady=10)
+        frame_header.pack(fill=X, pady=PADDING_MD)
 
         # Logo/Icono
         Label(
             frame_header,
             text="🎓",
-            font=("Helvetica", 48),
-        ).pack(side=LEFT, padx=20)
+            style="Hero.TLabel",
+        ).pack(side=LEFT, padx=PADDING_XL)
 
         # Información principal
         frame_info = Frame(frame_header)
@@ -66,22 +74,22 @@ class FrameAcercaDe(Frame):
         Label(
             frame_info,
             text="CronosFacen",
-            font=("Helvetica", 24, "bold"),
+            style="Display.TLabel",
         ).pack(anchor=W)
 
         Label(
             frame_info,
             text="Sistema de Gestión de Cronograma Académico",
-            font=("Helvetica", 12),
+            style="Subtitle.TLabel",
             foreground="gray",
         ).pack(anchor=W)
 
         Label(
             frame_info,
             text="Versión 1.0.0",
-            font=("Helvetica", 10),
+            style="Small.TLabel",
             foreground="darkblue",
-        ).pack(anchor=W, pady=(5, 0))
+        ).pack(anchor=W, pady=(PADDING_SM, 0))
 
     def _crear_contenido(self):
         """Crea el contenido principal con información de la aplicación"""
@@ -92,8 +100,8 @@ class FrameAcercaDe(Frame):
         Label(
             frame_content,
             text="Descripción",
-            font=("Helvetica", 12, "bold"),
-        ).pack(anchor=W, pady=(10, 5))
+            style="Section.TLabel",
+        ).pack(anchor=W, pady=(PADDING_MD, PADDING_SM))
 
         texto_descripcion = """CronosFacen es una aplicación de gestión académica diseñada para
 facilitar la administración de cronogramas, estudiantes, asignaturas y
@@ -103,17 +111,17 @@ un control centralizado de las entidades académicas y los eventos del calendari
         Label(
             frame_content,
             text=texto_descripcion,
-            font=("Helvetica", 10),
+            style="Body.TLabel",
             justify=LEFT,
             wraplength=500,
-        ).pack(anchor=W, pady=10, padx=20)
+        ).pack(anchor=W, pady=PADDING_MD, padx=PADDING_XXL)
 
         # Características
         Label(
             frame_content,
             text="Características Principales",
-            font=("Helvetica", 12, "bold"),
-        ).pack(anchor=W, pady=(15, 5))
+            style="Section.TLabel",
+        ).pack(anchor=W, pady=(PADDING_LG, PADDING_SM))
 
         caracteristicas = [
             "✓ Gestión completa de carreras académicas",
@@ -128,16 +136,16 @@ un control centralizado de las entidades académicas y los eventos del calendari
             Label(
                 frame_content,
                 text=caracteristica,
-                font=("Helvetica", 10),
+                style="Body.TLabel",
                 justify=LEFT,
-            ).pack(anchor=W, padx=40, pady=2)
+            ).pack(anchor=W, padx=PADDING_XXL, pady=PADDING_XS)
 
         # Información técnica
         Label(
             frame_content,
             text="Información Técnica",
-            font=("Helvetica", 12, "bold"),
-        ).pack(anchor=W, pady=(15, 5))
+            style="Section.TLabel",
+        ).pack(anchor=W, pady=(PADDING_LG, PADDING_SM))
 
         info_tecnica = [
             "Framework: ttkbootstrap (Tkinter)",
@@ -151,44 +159,44 @@ un control centralizado de las entidades académicas y los eventos del calendari
             Label(
                 frame_content,
                 text=info,
-                font=("Helvetica", 10),
+                style="Body.TLabel",
                 justify=LEFT,
-            ).pack(anchor=W, padx=40, pady=2)
+            ).pack(anchor=W, padx=PADDING_XXL, pady=PADDING_XS)
 
         # Autor
         Label(
             frame_content,
             text="Autor",
-            font=("Helvetica", 12, "bold"),
-        ).pack(anchor=W, pady=(15, 5))
+            style="Section.TLabel",
+        ).pack(anchor=W, pady=(PADDING_LG, PADDING_SM))
 
         Label(
             frame_content,
             text="German Cespedes",
-            font=("Helvetica", 10),
+            style="Body.TLabel",
             foreground="gray",
-        ).pack(anchor=W, padx=40)
+        ).pack(anchor=W, padx=PADDING_XXL)
 
         Label(
             frame_content,
             text="Correo: gapurzel@gmail.com",
-            font=("Helvetica", 10),
+            style="Body.TLabel",
             foreground="gray",
-        ).pack(anchor=W, padx=40)
+        ).pack(anchor=W, padx=PADDING_XXL)
 
         # Licencia
         Label(
             frame_content,
             text="Licencia",
-            font=("Helvetica", 12, "bold"),
-        ).pack(anchor=W, pady=(15, 5))
+            style="Section.TLabel",
+        ).pack(anchor=W, pady=(PADDING_LG, PADDING_SM))
 
         Label(
             frame_content,
             text="Este software es proporcionado bajo licencia académica.",
-            font=("Helvetica", 10),
+            style="Body.TLabel",
             foreground="gray",
-        ).pack(anchor=W, padx=40)
+        ).pack(anchor=W, padx=PADDING_XXL)
 
     def _crear_footer(self):
         """Crea el footer con información de copyright"""
@@ -198,13 +206,13 @@ un control centralizado de las entidades académicas y los eventos del calendari
         Label(
             frame_footer,
             text="© 2025-2026 CronosFacen. Todos los derechos reservados.",
-            font=("Helvetica", 9),
+            style="Small.TLabel",
             foreground="gray",
         ).pack(anchor=CENTER)
 
         Label(
             frame_footer,
             text="Gracias por usar CronosFacen",
-            font=("Helvetica", 9, "italic"),
+            style="Hint.TLabel",
             foreground="darkgray",
-        ).pack(anchor=CENTER, pady=(5, 0))
+        ).pack(anchor=CENTER, pady=(PADDING_SM, 0))

@@ -91,6 +91,84 @@ class AsignaturaService(AsignaturaDTO):
             logger.error(f"Error al verificar existencia de asignatura: {e}")
             return False
 
+    def obtener_todas(self) -> list:
+        """Obtiene todas las asignaturas como lista de servicios."""
+        asignaturas = []
+        try:
+            for data in self.dao.obtener_todas():
+                asignatura = AsignaturaService(ruta_db=self.dao.ruta_db)
+                asignatura.set_data(data=data)
+                asignaturas.append(asignatura)
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas: {e}")
+        return asignaturas
+
+    def obtener_id_nombre_codigo(self) -> list:
+        """Obtiene id, nombre y código de asignaturas."""
+        try:
+            return self.dao.obtener_id_nombre_codigo()
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas (nombre/código): {e}")
+            return []
+
+    def obtener_id_codigo_nombre_carrera(self) -> list:
+        """Obtiene id, código, nombre e id_carrera de asignaturas."""
+        try:
+            return self.dao.obtener_id_codigo_nombre_carrera()
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas (código/nombre/carrera): {e}")
+            return []
+
+    def obtener_por_carrera(self, id_carrera: int) -> list:
+        """Obtiene asignaturas de una carrera (id, nombre, código)."""
+        try:
+            return self.dao.obtener_por_carrera(id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas por carrera: {e}")
+            return []
+
+    def obtener_basico_por_carrera(self, id_carrera: int) -> list:
+        """Obtiene asignaturas básicas por carrera."""
+        try:
+            return self.dao.obtener_basico_por_carrera(id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas básicas por carrera: {e}")
+            return []
+
+    def obtener_basico(self) -> list:
+        """Obtiene asignaturas básicas."""
+        try:
+            return self.dao.obtener_basico()
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas básicas: {e}")
+            return []
+
+    def obtener_plan_carrera(self, id_carrera: int) -> list:
+        """Obtiene plan de estudios completo de la carrera."""
+        try:
+            return self.dao.obtener_plan_carrera(id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener plan de carrera: {e}")
+            return []
+
+    def obtener_asignaturas_estudiante_completo(
+        self, id_estudiante: int, id_carrera: int
+    ) -> list:
+        """Obtiene asignaturas del estudiante con datos completos desde VIEW."""
+        try:
+            return self.dao.obtener_asignaturas_estudiante_completo(id_estudiante, id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas del estudiante: {e}")
+            return []
+
+    def obtener_estudiante_asignatura_carrera(self, id_carrera: Optional[int] = None) -> list:
+        """Obtiene asignaturas desde la VIEW vw_estudiante_asignatura_carrera."""
+        try:
+            return self.dao.obtener_estudiante_asignatura_carrera(id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener asignaturas de view estudiante-carrera: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos de la asignatura sean correctos."""
         if not self.nombre or len(str(self.nombre).strip()) == 0:

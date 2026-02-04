@@ -53,6 +53,9 @@ class LoggerConfig:
     # Número de backups a mantener
     BACKUP_COUNT = 5
 
+    # Control de logging en consola (por defecto deshabilitado)
+    ENABLE_CONSOLE = os.getenv("CRONOS_LOG_CONSOLE", "0") in ("1", "true", "True", "yes", "YES")
+
 
 def obtener_logger(nombre: str, nivel: int = None) -> logging.Logger:
     """
@@ -104,11 +107,12 @@ def obtener_logger(nombre: str, nivel: int = None) -> logging.Logger:
     error_handler.setFormatter(LoggerConfig.FORMATTER)
     logger.addHandler(error_handler)
 
-    # Handler para consola
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(LoggerConfig.CONSOLE_FORMATTER)
-    logger.addHandler(console_handler)
+    # Handler para consola (opcional)
+    if LoggerConfig.ENABLE_CONSOLE:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(LoggerConfig.CONSOLE_FORMATTER)
+        logger.addHandler(console_handler)
 
     return logger
 

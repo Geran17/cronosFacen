@@ -1,9 +1,9 @@
 from ttkbootstrap import Combobox, StringVar
 from typing import Dict, Any, List
 from tkinter.messagebox import showwarning
-from modelos.daos.estudiante_dao import EstudianteDAO
-from modelos.daos.carrera_dao import CarreraDAO
-from modelos.daos.asignatura_dao import AsignaturaDAO
+from modelos.services.estudiante_service import EstudianteService
+from modelos.services.estudiante_carrera_service import EstudianteCarreraService
+from modelos.services.asignatura_service import AsignaturaService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -71,10 +71,8 @@ class ControladorCarreras:
         El formato mostrado es: "Nombre - Correo"
         """
         try:
-            estudiante_dao = EstudianteDAO(ruta_db=None)
-            sql = "SELECT id_estudiante, nombre, correo FROM estudiante ORDER BY nombre"
-            params = ()
-            lista_estudiantes = estudiante_dao.ejecutar_consulta(sql=sql, params=params)
+            estudiante_service = EstudianteService(ruta_db=None)
+            lista_estudiantes = estudiante_service.obtener_id_nombre_correo()
 
             # Limpiar diccionarios
             self.dict_estudiantes.clear()
@@ -133,19 +131,13 @@ class ControladorCarreras:
                 return
 
             # Consultar carreras del estudiante
-            sql = """SELECT ec.id_carrera, ec.estado, c.nombre, c.plan
-                     FROM estudiante_carrera ec
-                     JOIN carrera c ON ec.id_carrera = c.id_carrera
-                     WHERE ec.id_estudiante = ?
-                     ORDER BY ec.es_carrera_principal DESC, c.nombre"""
-            params = (id_estudiante,)
-            dao_carrera = CarreraDAO(ruta_db=None)
-            consulta = dao_carrera.ejecutar_consulta(sql=sql, params=params)
+            servicio_ec = EstudianteCarreraService(ruta_db=None)
+            consulta = servicio_ec.obtener_carreras_estudiante(id_estudiante)
 
             if consulta:
                 for dato in consulta:
                     id_carrera = dato['id_carrera']
-                    nombre_carrera = dato['nombre']
+                    nombre_carrera = dato.get('nombre_carrera') or dato.get('nombre')
                     plan = dato['plan']
                     estado = dato['estado']
 
@@ -259,33 +251,13 @@ class ControladorCarreras:
                 logger.warning("ID de estudiante o carrera no definido")
                 return
 
-            asignatura_dao = AsignaturaDAO(ruta_db=None)
-
             # 1. Obtener TODAS las asignaturas de la carrera con sus prerequisitos
-            sql_todas_asignaturas = """SELECT 
-                a.id_asignatura,
-                a.nombre,
-                a.codigo,
-                a.semestre,
-                a.tipo,
-                a.creditos,
-                COALESCE(aprereq.prerequisitos, '-') AS prerequisitos
-            FROM asignatura a
-            LEFT JOIN vw_asignatura_prerequisitos aprereq ON a.id_asignatura = aprereq.id_asignatura
-            WHERE a.id_carrera = ?
-            ORDER BY a.semestre, a.nombre"""
-            params_asignaturas = (self.id_carrera_actual,)
-            todas_asignaturas = asignatura_dao.ejecutar_consulta(
-                sql=sql_todas_asignaturas, params=params_asignaturas
-            )
+            asignatura_service = AsignaturaService(ruta_db=None)
+            todas_asignaturas = asignatura_service.obtener_plan_carrera(self.id_carrera_actual)
 
             # 2. Obtener asignaturas cursadas por el estudiante con datos completos
-            sql_estudiante = """SELECT * FROM vw_asignaturas_estudiante_completo
-                     WHERE id_estudiante = ? AND id_carrera = ?
-                     ORDER BY semestre, nombre_asignatura"""
-            params_estudiante = (self.id_estudiante_actual, self.id_carrera_actual)
-            asignaturas_cursadas = asignatura_dao.ejecutar_consulta(
-                sql=sql_estudiante, params=params_estudiante
+            asignaturas_cursadas = asignatura_service.obtener_asignaturas_estudiante_completo(
+                self.id_estudiante_actual, self.id_carrera_actual
             )
 
             # 3. Crear diccionarios para acceso rápido

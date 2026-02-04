@@ -5,11 +5,23 @@ Este módulo contiene la estructura principal de la interfaz gráfica,
 incluyendo menú superior, panel lateral con tabs y área central de contenido.
 """
 
-from ttkbootstrap import Frame, Button, Separator, Panedwindow, Notebook, Label, Style
+from ttkbootstrap import (
+    Frame,
+    Button,
+    Separator,
+    Panedwindow,
+    Notebook,
+    Label,
+    Style,
+    BooleanVar,
+    Checkbutton,
+    Labelframe,
+)
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
 from typing import Dict, Any
 
+from ui.ttk.styles.estilos import PADDING_SM
 from ui.ttk.styles.icons import (
     ICON_MENU,
     ICON_CARRERA,
@@ -28,11 +40,17 @@ from ui.ttk.styles.icons import (
     ICON_TEMA,
     ICON_CASA,
     ICON_ESTADISTICAS,
+    ICON_ALERTA,
+    ICON_CUELLOS,
 )
+from configuracion.config_app import get_tabs_visibility, set_tabs_visibility, get_pin_hash
 from ui.ttk.frames.frame_bienvenidad import FrameBienvenidad
 from ui.ttk.frames.frame_calendario import FrameCalendario
 from ui.ttk.frames.frame_actividades import FrameActividades
 from ui.ttk.frames.frame_carreras import FrameCarreras
+from ui.ttk.frames.frame_alertas import FrameAlertas
+from ui.ttk.frames.frame_dashboard import FrameDashboard
+from ui.ttk.frames.frame_cuellos import FrameCuellos
 from scripts.logging_config import obtener_logger_modulo
 from controladores.controlar_frame_principal import ControlarFramePrincipal
 
@@ -52,6 +70,17 @@ class FramePrincipal(Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master=master, **kwargs)
 
+        self.auto_menu = True
+        self.tab_vars = {
+            "dashboard": BooleanVar(value=True),
+            "bienvenida": BooleanVar(value=True),
+            "calendario": BooleanVar(value=True),
+            "actividades": BooleanVar(value=True),
+            "alertas": BooleanVar(value=True),
+            "carreras": BooleanVar(value=True),
+            "cuellos": BooleanVar(value=True),
+        }
+
         # Configurar estilo del notebook lateral
         style = Style()
         style.configure('custom.TNotebook', tabposition=SW)
@@ -70,6 +99,9 @@ class FramePrincipal(Frame):
             'btn_tipo_actividad': self.btn_tipo_actividad,
             'btn_actividad': self.btn_actividad,
             'btn_calendario': self.btn_calendario,
+            'btn_dashboard': self.btn_dashboard,
+            'btn_alertas': self.btn_alertas,
+            'btn_cuellos': self.btn_cuellos,
             'btn_salir': self.btn_salir,
             'btn_acerca_de': self.btn_acerca_de,
             # Botones del panel lateral - Datos
@@ -87,14 +119,37 @@ class FramePrincipal(Frame):
             'btn_estudiante_carrera': self.btn_estudiante_carrera,
             # Botones del panel lateral - Configuraciones
             'btn_tema': self.btn_tema,
+            'btn_pin_config': self.btn_pin_config,
+            'btn_pin_clear': self.btn_pin_clear,
             # Frames del Notebook central
             'frame_bienvenidad': self.frame_bienvenidad,
+            'frame_dashboard': self.frame_dashboard,
             'frame_calendario': self.frame_calendario,
             'frame_carreras': self.frame_carreras,
+            'frame_alertas': self.frame_alertas,
+            'frame_cuellos': self.frame_cuellos,
+            'notebook_central': self.notebook_central,
         }
 
         # Controlador del Frame Principal
         ControlarFramePrincipal(master=self, map_widgets=self.map_widgets)
+
+        # Aplicar visibilidad de pestañas desde config
+        # Ajuste automático de menú lateral según tamaño
+        self.bind("<Configure>", self._auto_adjust_layout)
+
+    def _auto_adjust_layout(self, _event=None):
+        if not self.auto_menu:
+            return
+        try:
+            width = self.winfo_width()
+            # Ocultar menú en pantallas pequeñas
+            if width < 1000 and str(self.frame_lateral) in self.paned_window.panes():
+                self.paned_window.remove(self.frame_lateral)
+            elif width >= 1100 and str(self.frame_lateral) not in self.paned_window.panes():
+                self.paned_window.insert(0, self.frame_lateral, weight=0)
+        except Exception:
+            pass
 
     def _crear_widgets(self):
         """Crea la estructura principal de widgets"""
@@ -110,9 +165,9 @@ class FramePrincipal(Frame):
         self.frame_central.pack(side=TOP, fill=BOTH, padx=0, pady=0, expand=TRUE)
 
         # Frame Inferior - Barra de estado (opcional)
-        self.frame_inferior = Frame(self, padding=(1, 1))
+        self.frame_inferior = Frame(self, padding=(PADDING_SM, PADDING_SM))
         self._frame_inferior(frame=self.frame_inferior)
-        self.frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.frame_inferior.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
     def _frame_superior(self, frame: Frame):
         """Construye el menú superior con botones de navegación"""
@@ -126,7 +181,7 @@ class FramePrincipal(Frame):
         self.paned_window.pack(side=TOP, fill=BOTH, expand=TRUE)
 
         # Panel Lateral - Navegación y opciones
-        self.frame_lateral = Frame(self.paned_window, width=200, padding=(1, 1))
+        self.frame_lateral = Frame(self.paned_window, padding=(PADDING_SM, PADDING_SM))
         self._frame_lateral(frame=self.frame_lateral)
         self.paned_window.add(self.frame_lateral, weight=0)
 
@@ -161,43 +216,50 @@ class FramePrincipal(Frame):
 
         # ========== BOTONES DE NAVEGACIÓN RÁPIDA ==========
 
-        self.btn_carrera = Button(frame, text=f"{ICON_CARRERA} Carrera", bootstyle="primary")
-        self.btn_carrera.pack(side=LEFT)
-        ToolTip(self.btn_carrera, "Abre el administrador de carreras")
+        # Orden Académico: Dashboard → Carreras → Actividades → Calendario → Alertas
+        self.btn_dashboard = Button(frame, text=ICON_ESTADISTICAS, bootstyle="primary")
+        self.btn_dashboard.pack(side=LEFT)
+        ToolTip(self.btn_dashboard, "Abre la vista de dashboard")
 
-        self.btn_estudiante = Button(
-            frame, text=f"{ICON_ESTUDIANTE} Estudiante", bootstyle="primary"
-        )
+        self.btn_cuellos = Button(frame, text=ICON_CUELLOS, bootstyle="primary")
+        self.btn_cuellos.pack(side=LEFT)
+        ToolTip(self.btn_cuellos, "Abre la vista de cuellos de botella")
+
+        self.btn_carrera = Button(frame, text=ICON_CARRERA, bootstyle="primary")
+        self.btn_carrera.pack(side=LEFT)
+        ToolTip(self.btn_carrera, "Abre la vista de carreras")
+
+        self.btn_actividad = Button(frame, text=ICON_ACTIVIDAD, bootstyle="primary")
+        self.btn_actividad.pack(side=LEFT)
+        ToolTip(self.btn_actividad, "Abre la vista de actividades")
+
+        self.btn_calendario = Button(frame, text=ICON_CALENDARIO, bootstyle="primary")
+        self.btn_calendario.pack(side=LEFT)
+        ToolTip(self.btn_calendario, "Abre la vista de calendario")
+
+        self.btn_alertas = Button(frame, text=ICON_ALERTA, bootstyle="primary")
+        self.btn_alertas.pack(side=LEFT)
+        ToolTip(self.btn_alertas, "Abre la vista de alertas de actividades")
+
+        Separator(frame, orient=VERTICAL).pack(side=LEFT, padx=2)
+
+        self.btn_estudiante = Button(frame, text=ICON_ESTUDIANTE, bootstyle="primary")
         self.btn_estudiante.pack(side=LEFT)
         ToolTip(self.btn_estudiante, "Abre el administrador de estudiantes")
 
-        self.btn_asignatura = Button(
-            frame, text=f"{ICON_ASIGNATURA} Asignatura", bootstyle="primary"
-        )
+        self.btn_asignatura = Button(frame, text=ICON_ASIGNATURA, bootstyle="primary")
         self.btn_asignatura.pack(side=LEFT)
         ToolTip(self.btn_asignatura, "Abre el administrador de asignaturas")
 
         self.btn_eje_tematico = Button(
-            frame, text=f"{ICON_EJE_TEMATICO} Eje temático", bootstyle="primary"
-        )
+            frame, text=ICON_EJE_TEMATICO, bootstyle="primary")
         self.btn_eje_tematico.pack(side=LEFT)
         ToolTip(self.btn_eje_tematico, "Abre el administrador de ejes temáticos o unidades")
 
         self.btn_tipo_actividad = Button(
-            frame, text=f"{ICON_TIPO_ACTIVIDAD} Tipo actividad", bootstyle="primary"
-        )
+            frame, text=ICON_TIPO_ACTIVIDAD, bootstyle="primary")
         self.btn_tipo_actividad.pack(side=LEFT)
         ToolTip(self.btn_tipo_actividad, "Abre el administrador de tipos de actividades")
-
-        self.btn_actividad = Button(frame, text=f"{ICON_ACTIVIDAD} Actividad", bootstyle="primary")
-        self.btn_actividad.pack(side=LEFT)
-        ToolTip(self.btn_actividad, "Abre el administrador de actividades")
-
-        self.btn_calendario = Button(
-            frame, text=f"{ICON_CALENDARIO} Calendario", bootstyle="primary"
-        )
-        self.btn_calendario.pack(side=LEFT)
-        ToolTip(self.btn_calendario, "Abre el administrador de eventos en el calendario")
 
         # ========== BOTONES DE UTILIDAD (lado derecho) ==========
 
@@ -207,7 +269,8 @@ class FramePrincipal(Frame):
 
         Separator(frame, orient=VERTICAL).pack(side=RIGHT)
 
-        self.btn_acerca_de = Button(frame, text=f"Acerca de {ICON_ACERCA_DE}", bootstyle="primary")
+        self.btn_acerca_de = Button(
+            frame, text=ICON_ACERCA_DE, bootstyle="primary")
         self.btn_acerca_de.pack(side=RIGHT)
         ToolTip(self.btn_acerca_de, "Muestra información sobre la aplicación")
 
@@ -220,15 +283,17 @@ class FramePrincipal(Frame):
 
         # Notebook Lateral con tabs
         notebook_lateral = Notebook(frame, bootstyle="primary")
-        notebook_lateral.pack(side=TOP, fill=BOTH, expand=TRUE, padx=1, pady=1)
+        notebook_lateral.pack(
+            side=TOP, fill=BOTH, expand=TRUE, padx=PADDING_SM, pady=PADDING_SM
+        )
 
         # Tab 1: Administración de Datos
-        frame_datos = Frame(notebook_lateral, padding=(1, 1))
+        frame_datos = Frame(notebook_lateral, padding=(PADDING_SM, PADDING_SM))
         self._frame_datos(frame=frame_datos)
         notebook_lateral.add(frame_datos, text=f"{ICON_DATOS} Datos")
 
         # Tab 2: Configuraciones
-        frame_configuraciones = Frame(notebook_lateral, padding=(1, 1))
+        frame_configuraciones = Frame(notebook_lateral, padding=(PADDING_SM, PADDING_SM))
         self._frame_configuraciones(frame=frame_configuraciones)
         notebook_lateral.add(frame_configuraciones, text=f"{ICON_CONFIGURACIONES} Config.")
 
@@ -244,7 +309,7 @@ class FramePrincipal(Frame):
         lbl_configuracion = Label(
             frame, text=f"{ICON_CONFIGURACIONES} Configuraciones", bootstyle="info"
         )
-        lbl_configuracion.pack(side=TOP, fill=X, padx=5, pady=5)
+        lbl_configuracion.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
 
         Separator(frame, orient=HORIZONTAL).pack(side=TOP, fill=X, padx=2, pady=2)
 
@@ -252,10 +317,86 @@ class FramePrincipal(Frame):
         self.btn_tema = Button(
             frame,
             text=f"{ICON_TEMA} Seleccione el tema",
-            style='primary.success-link',
-        )
-        self.btn_tema.pack(side=TOP, fill=X, padx=1, pady=1)
+            style='primary.success-link')
+        self.btn_tema.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
         ToolTip(self.btn_tema, "Abre el diálogo para seleccionar el tema de la aplicación")
+
+        # Configuración de PIN
+        lf_pin = Labelframe(frame, text="Seguridad", padding=(PADDING_SM, PADDING_SM))
+        lf_pin.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
+
+        self.btn_pin_config = Button(
+            lf_pin,
+            text="Configurar PIN",
+            bootstyle="secondary",
+        )
+        self.btn_pin_config.pack(fill=X, pady=(0, PADDING_SM))
+        ToolTip(self.btn_pin_config, "Define un PIN para abrir la aplicación")
+
+        self.btn_pin_clear = Button(
+            lf_pin,
+            text="Quitar PIN",
+            bootstyle="warning",
+        )
+        self.btn_pin_clear.pack(fill=X)
+        ToolTip(self.btn_pin_clear, "Elimina el PIN guardado")
+        if not get_pin_hash():
+            self.btn_pin_clear.config(state=DISABLED)
+
+        self.lbl_pin_estado = Label(
+            lf_pin,
+            text="🔒 PIN activo" if get_pin_hash() else "🔓 PIN no configurado",
+            bootstyle="secondary",
+            style="Small.TLabel",
+        )
+        self.lbl_pin_estado.pack(anchor=W, pady=(PADDING_SM, 0))
+
+        # Configuración de pestañas
+        lf_tabs = Labelframe(frame, text="Pestañas visibles", padding=(PADDING_SM, PADDING_SM))
+        lf_tabs.pack(side=TOP, fill=X, padx=PADDING_SM, pady=PADDING_SM)
+
+        self.chk_bienvenida = Checkbutton(
+            lf_tabs, text="Bienvenida", variable=self.tab_vars["bienvenida"]
+        )
+        self.chk_bienvenida.pack(anchor=W, pady=2)
+
+        self.chk_dashboard = Checkbutton(
+            lf_tabs, text="Dashboard", variable=self.tab_vars["dashboard"]
+        )
+        self.chk_dashboard.pack(anchor=W, pady=2)
+
+        self.chk_calendario = Checkbutton(
+            lf_tabs, text="Calendario", variable=self.tab_vars["calendario"]
+        )
+        self.chk_calendario.pack(anchor=W, pady=2)
+
+        self.chk_actividades = Checkbutton(
+            lf_tabs, text="Actividades", variable=self.tab_vars["actividades"]
+        )
+        self.chk_actividades.pack(anchor=W, pady=2)
+
+        self.chk_alertas = Checkbutton(
+            lf_tabs, text="Alertas", variable=self.tab_vars["alertas"]
+        )
+        self.chk_alertas.pack(anchor=W, pady=2)
+
+        self.chk_carreras = Checkbutton(
+            lf_tabs, text="Carreras", variable=self.tab_vars["carreras"]
+        )
+        self.chk_carreras.pack(anchor=W, pady=2)
+
+        self.chk_cuellos = Checkbutton(
+            lf_tabs, text="Cuellos", variable=self.tab_vars["cuellos"]
+        )
+        self.chk_cuellos.pack(anchor=W, pady=2)
+
+        btn_guardar_tabs = Button(
+            lf_tabs,
+            text="Guardar pestañas",
+            bootstyle="info",
+            command=self._guardar_config_tabs,
+        )
+        btn_guardar_tabs.pack(fill=X, pady=(PADDING_SM, 0))
 
     def _frame_datos(self, frame: Frame):
         """
@@ -269,71 +410,62 @@ class FramePrincipal(Frame):
         # ========== SECCIÓN 1: ADMINISTRAR DATOS ==========
 
         lbl_datos = Label(frame, text=f"{ICON_DATOS} Administrar Datos", bootstyle="info")
-        lbl_datos.pack(side=TOP, fill=X, padx=5, pady=5)
+        lbl_datos.pack(side=TOP, fill=X, padx=PADDING_SM, pady=(PADDING_SM, 2))
 
         Separator(frame, orient=HORIZONTAL).pack(side=TOP, fill=X, padx=2, pady=2)
 
-        # Botón Administrar Carreras
+        grid_datos = Frame(frame, padding=(2, 2))
+        grid_datos.pack(side=TOP, fill=X, padx=PADDING_SM, pady=(2, PADDING_SM))
+        for col in range(2):
+            grid_datos.columnconfigure(col, weight=1)
+
         self.btn_admin_carrera = Button(
-            frame,
-            text=f"{ICON_CARRERA} Administrar Carreras",
-            style='primary.success-link',
-        )
-        self.btn_admin_carrera.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_CARRERA} Carreras",
+            style='primary.success-link')
+        self.btn_admin_carrera.grid(row=0, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_carrera, "Abre el administrador de carreras")
 
-        # Botón Administrar Estudiantes
         self.btn_admin_estudiante = Button(
-            frame,
-            text=f"{ICON_ESTUDIANTE} Administrar Estudiantes",
-            style='primary.success-link',
-        )
-        self.btn_admin_estudiante.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_ESTUDIANTE} Estudiantes",
+            style='primary.success-link')
+        self.btn_admin_estudiante.grid(row=0, column=1, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_estudiante, "Abre el administrador de estudiantes")
 
-        # Botón Administrar Asignaturas
         self.btn_admin_asignatura = Button(
-            frame,
-            text=f"{ICON_ASIGNATURA} Administrar Asignaturas",
-            style='primary.success-link',
-        )
-        self.btn_admin_asignatura.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_ASIGNATURA} Asignaturas",
+            style='primary.success-link')
+        self.btn_admin_asignatura.grid(row=1, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_asignatura, "Abre el administrador de asignaturas")
 
-        # Botón Administrar Eje Temático
         self.btn_admin_eje_tematico = Button(
-            frame,
-            text=f"{ICON_EJE_TEMATICO} Administrar Eje temático",
-            style='primary.success-link',
-        )
-        self.btn_admin_eje_tematico.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_EJE_TEMATICO} Ejes temáticos",
+            style='primary.success-link')
+        self.btn_admin_eje_tematico.grid(row=1, column=1, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_eje_tematico, "Abre el administrador de ejes temáticos o unidades")
 
-        # Botón Administrar Tipo de Actividad
         self.btn_admin_tipo_actividad = Button(
-            frame,
-            text=f"{ICON_TIPO_ACTIVIDAD} Administrar Tipo Actividad",
-            style='primary.success-link',
-        )
-        self.btn_admin_tipo_actividad.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_TIPO_ACTIVIDAD} Tipos actividad",
+            style='primary.success-link')
+        self.btn_admin_tipo_actividad.grid(row=2, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_tipo_actividad, "Abre el administrador de tipos de actividades")
 
-        # Botón Administrar Actividad
         self.btn_admin_actividad = Button(
-            frame,
-            text=f"{ICON_ACTIVIDAD} Administrar Actividad",
-            style='primary.success-link',
-        )
-        self.btn_admin_actividad.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_ACTIVIDAD} Actividades",
+            style='primary.success-link')
+        self.btn_admin_actividad.grid(row=2, column=1, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_actividad, "Abre el administrador de actividades")
 
-        # Botón Administrar Calendario
         self.btn_admin_calendario = Button(
-            frame,
-            text=f"{ICON_CALENDARIO} Administrar Calendario",
-            style='primary.success-link',
-        )
-        self.btn_admin_calendario.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_datos,
+            text=f"{ICON_CALENDARIO} Calendario",
+            style='primary.success-link')
+        self.btn_admin_calendario.grid(row=3, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_admin_calendario, "Abre el administrador de eventos")
 
         # ========== SECCIÓN 2: ASOCIACIONES DE DATOS ==========
@@ -341,50 +473,47 @@ class FramePrincipal(Frame):
         lbl_asociacion_datos = Label(
             frame, text=f"{ICON_ASOCIACIONES} Asociaciones de Datos", bootstyle="info"
         )
-        lbl_asociacion_datos.pack(side=TOP, fill=X, padx=5, pady=5)
+        lbl_asociacion_datos.pack(side=TOP, fill=X, padx=PADDING_SM, pady=(PADDING_SM, 2))
 
         Separator(frame, orient=HORIZONTAL).pack(side=TOP, fill=X, padx=2, pady=2)
 
-        # Botón Asociar Prerrequisitos
+        grid_assoc = Frame(frame, padding=(2, 2))
+        grid_assoc.pack(side=TOP, fill=X, padx=PADDING_SM, pady=(2, PADDING_SM))
+        for col in range(1):
+            grid_assoc.columnconfigure(col, weight=1)
+
         self.btn_prerequisito = Button(
-            frame,
-            text=f"{ICON_PREREQUISITO} Asociar Prerrequisitos",
-            style='primary.success-link',
-        )
-        self.btn_prerequisito.pack(side=TOP, fill=X, padx=1, pady=1)
+            grid_assoc,
+            text=f"{ICON_PREREQUISITO} Prerrequisitos",
+            style='primary.success-link')
+        self.btn_prerequisito.grid(row=0, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(self.btn_prerequisito, "Abre el administrador de asociaciones de prerrequisitos")
 
-        # Botón Estudiante-Asignatura
         self.btn_estudiante_asignatura = Button(
-            frame,
+            grid_assoc,
             text=f"{ICON_ESTUDIANTE} ↔ {ICON_ASIGNATURA} Estudiante-Asignatura",
-            style='primary.success-link',
-        )
-        self.btn_estudiante_asignatura.pack(side=TOP, fill=X, padx=1, pady=1)
+            style='primary.success-link')
+        self.btn_estudiante_asignatura.grid(row=1, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(
             self.btn_estudiante_asignatura,
             "Abre el administrador de asociaciones entre estudiantes y asignaturas",
         )
 
-        # Botón Estudiante-Actividad
         self.btn_estudiante_actividad = Button(
-            frame,
+            grid_assoc,
             text=f"{ICON_ESTUDIANTE} ↔ {ICON_ACTIVIDAD} Estudiante-Actividad",
-            style='primary.success-link',
-        )
-        self.btn_estudiante_actividad.pack(side=TOP, fill=X, padx=1, pady=1)
+            style='primary.success-link')
+        self.btn_estudiante_actividad.grid(row=2, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(
             self.btn_estudiante_actividad,
             "Abre el administrador de asociaciones entre estudiantes y actividades",
         )
 
-        # Botón Estudiante-Carrera
         self.btn_estudiante_carrera = Button(
-            frame,
+            grid_assoc,
             text=f"{ICON_ESTUDIANTE} ↔ {ICON_CARRERA} Estudiante-Carrera",
-            style='primary.success-link',
-        )
-        self.btn_estudiante_carrera.pack(side=TOP, fill=X, padx=1, pady=1)
+            style='primary.success-link')
+        self.btn_estudiante_carrera.grid(row=3, column=0, sticky=EW, padx=2, pady=2)
         ToolTip(
             self.btn_estudiante_carrera,
             "Abre el administrador de inscripciones de estudiantes en carreras",
@@ -403,11 +532,17 @@ class FramePrincipal(Frame):
 
         # Notebook Central para tabs de contenido
         self.notebook_central = Notebook(frame, bootstyle="primary")
-        self.notebook_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
+        self.notebook_central.pack(
+            side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=True
+        )
 
         # Tab Bienvenida
         self.frame_bienvenidad = FrameBienvenidad(master=self.notebook_central)
         self.notebook_central.add(self.frame_bienvenidad, text=f"{ICON_CASA} Bienvenida")
+
+        # Tab Dashboard
+        self.frame_dashboard = FrameDashboard(master=self.notebook_central)
+        self.notebook_central.add(self.frame_dashboard, text=f"{ICON_ESTADISTICAS} Dashboard")
 
         # Tab Calendario
         self.frame_calendario = FrameCalendario(master=self.notebook_central)
@@ -417,6 +552,52 @@ class FramePrincipal(Frame):
         self.frame_actividades = FrameActividades(master=self.notebook_central)
         self.notebook_central.add(self.frame_actividades, text=f"{ICON_ACTIVIDAD} Actividades")
 
+        # Tab Alertas
+        self.frame_alertas = FrameAlertas(master=self.notebook_central)
+        self.notebook_central.add(self.frame_alertas, text=f"{ICON_ALERTA} Alertas")
+
         # Tab Carreras
         self.frame_carreras = FrameCarreras(master=self.notebook_central)
         self.notebook_central.add(self.frame_carreras, text=f"{ICON_CARRERA} Carreras")
+
+        # Tab Cuellos de botella
+        self.frame_cuellos = FrameCuellos(master=self.notebook_central)
+        self.notebook_central.add(self.frame_cuellos, text=f"{ICON_CUELLOS} Cuellos")
+
+        self.tab_defs = {
+            "dashboard": (self.frame_dashboard, f"{ICON_ESTADISTICAS} Dashboard"),
+            "bienvenida": (self.frame_bienvenidad, f"{ICON_CASA} Bienvenida"),
+            "calendario": (self.frame_calendario, f"{ICON_CALENDARIO} Calendario"),
+            "actividades": (self.frame_actividades, f"{ICON_ACTIVIDAD} Actividades"),
+            "alertas": (self.frame_alertas, f"{ICON_ALERTA} Alertas"),
+            "carreras": (self.frame_carreras, f"{ICON_CARRERA} Carreras"),
+            "cuellos": (self.frame_cuellos, f"{ICON_CUELLOS} Cuellos"),
+        }
+
+        self._cargar_config_tabs()
+
+    def _cargar_config_tabs(self):
+        vis = get_tabs_visibility()
+        for key, var in self.tab_vars.items():
+            var.set(vis.get(key, True))
+        self._aplicar_visibilidad_tabs()
+
+    def _guardar_config_tabs(self):
+        vis = {k: v.get() for k, v in self.tab_vars.items()}
+        if not any(vis.values()):
+            vis["bienvenida"] = True
+            self.tab_vars["bienvenida"].set(True)
+        set_tabs_visibility(vis)
+        self._aplicar_visibilidad_tabs()
+
+    def _aplicar_visibilidad_tabs(self):
+        if not hasattr(self, "notebook_central"):
+            return
+        actuales = set(self.notebook_central.tabs())
+        for key, (frame, text) in getattr(self, "tab_defs", {}).items():
+            visible = self.tab_vars.get(key).get()
+            frame_id = str(frame)
+            if visible and frame_id not in actuales:
+                self.notebook_central.add(frame, text=text)
+            elif not visible and frame_id in actuales:
+                self.notebook_central.hide(frame)

@@ -6,8 +6,8 @@ from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
 from modelos.services.estudiante_carrera_service import EstudianteCarreraService
 from modelos.dtos.estudiante_carrera_dto import EstudianteCarreraDTO
-from modelos.daos.estudiante_dao import EstudianteDAO
-from modelos.daos.carrera_dao import CarreraDAO
+from modelos.services.estudiante_service import EstudianteService
+from modelos.services.carrera_service import CarreraService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -124,9 +124,8 @@ class ControlarAdministrarEstudianteCarrera:
             self.dict_estudiantes.clear()
             self.dict_estudiantes_inv.clear()
 
-            dao = EstudianteDAO()
-            sql = "SELECT id_estudiante, nombre, correo FROM estudiante ORDER BY nombre"
-            estudiantes = dao.ejecutar_consulta(sql, ())
+            servicio_estudiante = EstudianteService(ruta_db=None)
+            estudiantes = servicio_estudiante.obtener_id_nombre_correo()
 
             if estudiantes:
                 lista_labels = []
@@ -156,9 +155,8 @@ class ControlarAdministrarEstudianteCarrera:
             self.dict_carreras.clear()
             self.dict_carreras_inv.clear()
 
-            dao = CarreraDAO()
-            sql = "SELECT id_carrera, nombre, plan FROM carrera ORDER BY nombre"
-            carreras = dao.ejecutar_consulta(sql, ())
+            servicio_carrera = CarreraService(ruta_db=None)
+            carreras = servicio_carrera.obtener_id_nombre_plan()
 
             if carreras:
                 lista_labels = []

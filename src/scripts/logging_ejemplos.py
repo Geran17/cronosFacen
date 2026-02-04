@@ -17,6 +17,8 @@ from scripts.logging_config import (
 )
 import logging
 
+logger = obtener_logger_modulo(__name__)
+
 
 # ============================================================================
 # EJEMPLO 1: Logging básico en un módulo
@@ -120,25 +122,25 @@ def ejemplo_configuracion_global():
 
 
 if __name__ == "__main__":
-    print("=== Ejecutando ejemplos de logging ===\n")
+    logger.info("=== Ejecutando ejemplos de logging ===")
 
-    print("1. Uso básico:")
+    logger.info("1. Uso básico:")
     ejemplo_uso_basico()
 
-    print("\n2. Evento importante:")
+    logger.info("2. Evento importante:")
     ejemplo_evento_importante()
 
-    print("\n3. Error crítico:")
+    logger.info("3. Error crítico:")
     ejemplo_error_critico()
 
-    print("\n4. Logger personalizado:")
+    logger.info("4. Logger personalizado:")
     ejemplo_logger_personalizado()
 
-    print("\n5. Procesamiento con logging:")
+    logger.info("5. Procesamiento con logging:")
     resultado = procesar_datos_estudiante(42)
-    print(f"Resultado: {resultado}")
+    logger.info(f"Resultado: {resultado}")
 
-    print("\n6. Configuración global:")
+    logger.info("6. Configuración global:")
     ejemplo_configuracion_global()
 
-    print("\n✅ Revisa los archivos en la carpeta 'logs/' para ver los registros")
+    logger.info("✅ Revisa los archivos en la carpeta 'logs/' para ver los registros")

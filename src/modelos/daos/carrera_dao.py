@@ -153,3 +153,34 @@ class CarreraDAO(DAO):
         if self.instanciar(dto):
             return dto
         return None
+
+    def obtener_todas(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todas las carreras.
+
+        Returns:
+            List[Dict[str, Any]]: Lista de carreras.
+        """
+        sql = "SELECT * FROM carrera"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_id_nombre_plan(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id, nombre y plan de todas las carreras para listados.
+        """
+        sql = "SELECT id_carrera, nombre, plan FROM carrera ORDER BY nombre"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_id_nombre(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id y nombre de todas las carreras para listados.
+        """
+        sql = "SELECT id_carrera, nombre FROM carrera ORDER BY nombre"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_id_codigo_nombre(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id, código y nombre de todas las carreras para filtros.
+        """
+        sql = "SELECT id_carrera, codigo, nombre FROM carrera ORDER BY codigo"
+        return self.ejecutar_consulta(sql, ())

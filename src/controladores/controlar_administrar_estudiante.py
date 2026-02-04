@@ -3,7 +3,6 @@ from tkinter.messagebox import askyesno, showinfo, showwarning
 from ttkbootstrap import Button, Entry, StringVar, IntVar, Label
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.estudiante_dao import EstudianteDAO
 from modelos.services.estudiante_service import EstudianteService
 from modelos.services.estudiante_carrera_service import EstudianteCarreraService
 from scripts.logging_config import obtener_logger_modulo
@@ -138,15 +137,8 @@ class ControlarAdministrarEstudiante:
         if self.lista_estudiantes:
             self.lista_estudiantes.clear()
 
-        dao = EstudianteDAO(ruta_db=None)
-        sql = "SELECT * FROM Estudiante"
-        params = ()
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
-        if lista_aux:
-            for data in lista_aux:
-                estudiante = EstudianteService(ruta_db=None)
-                estudiante.set_data(data=data)
-                self.lista_estudiantes.append(estudiante)
+        servicio = EstudianteService(ruta_db=None)
+        self.lista_estudiantes.extend(servicio.obtener_todos())
 
     def _cargar_vars(self):
         self.var_id: IntVar = self.map_vars['var_id']

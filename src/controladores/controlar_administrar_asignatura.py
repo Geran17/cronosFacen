@@ -3,9 +3,8 @@ from tkinter.messagebox import askyesno, showinfo
 from ttkbootstrap import Button, Entry, StringVar, Combobox, IntVar, Label
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.asignatura_dao import AsignaturaDAO
-from modelos.daos.carrera_dao import CarreraDAO
 from modelos.services.asignatura_service import AsignaturaService
+from modelos.services.carrera_service import CarreraService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -155,15 +154,8 @@ class ControlarAdministrarAsignatura:
         if self.lista_asignaturas:
             self.lista_asignaturas.clear()
 
-        dao = AsignaturaDAO(ruta_db=None)
-        sql = "SELECT * FROM Asignatura"
-        params = ()
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
-        if lista_aux:
-            for data in lista_aux:
-                asignatura = AsignaturaService(ruta_db=None)
-                asignatura.set_data(data=data)
-                self.lista_asignaturas.append(asignatura)
+        servicio = AsignaturaService(ruta_db=None)
+        self.lista_asignaturas.extend(servicio.obtener_todas())
 
     def _cargar_vars(self):
         self.var_id: IntVar = self.map_vars['var_id']
@@ -212,10 +204,8 @@ class ControlarAdministrarAsignatura:
             self.dict_carreras_inv.clear()
 
             # Obtener carreras de la BD con nombre y plan
-            dao = CarreraDAO(ruta_db=None)
-            sql = "SELECT id_carrera, nombre, plan FROM Carrera ORDER BY nombre"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_carrera = CarreraService(ruta_db=None)
+            lista_aux = servicio_carrera.obtener_id_nombre_plan()
 
             if lista_aux:
                 # Construir diccionarios y lista de nombres para el combobox

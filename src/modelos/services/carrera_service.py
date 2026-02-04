@@ -121,6 +121,42 @@ class CarreraService(CarreraDTO):
             logger.error(f"Error al verificar existencia de carrera: {e}")
             return False
 
+    def obtener_todas(self) -> list:
+        """Obtiene todas las carreras como lista de servicios."""
+        carreras = []
+        try:
+            for data in self.dao.obtener_todas():
+                carrera = CarreraService(ruta_db=self.dao.ruta_db)
+                carrera.set_data(data=data)
+                carreras.append(carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener carreras: {e}")
+        return carreras
+
+    def obtener_id_nombre_plan(self) -> list:
+        """Obtiene id, nombre y plan de todas las carreras."""
+        try:
+            return self.dao.obtener_id_nombre_plan()
+        except Exception as e:
+            logger.error(f"Error al obtener carreras (nombre/plan): {e}")
+            return []
+
+    def obtener_id_nombre(self) -> list:
+        """Obtiene id y nombre de todas las carreras."""
+        try:
+            return self.dao.obtener_id_nombre()
+        except Exception as e:
+            logger.error(f"Error al obtener carreras (nombre): {e}")
+            return []
+
+    def obtener_id_codigo_nombre(self) -> list:
+        """Obtiene id, código y nombre de todas las carreras."""
+        try:
+            return self.dao.obtener_id_codigo_nombre()
+        except Exception as e:
+            logger.error(f"Error al obtener carreras (código/nombre): {e}")
+            return []
+
     def es_valida(self) -> bool:
         """
         Valida que los datos de la carrera sean correctos.

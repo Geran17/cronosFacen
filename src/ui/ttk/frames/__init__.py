@@ -15,6 +15,9 @@ from .frame_administrar_actividad import FrameAdministrarActividad
 from .frame_administrar_calendario import FrameAdministrarCalendario
 from .frame_acerca_de import FrameAcercaDe
 from .frame_bienvenidad import FrameBienvenidad
+from .frame_alertas import FrameAlertas
+from .frame_dashboard import FrameDashboard
+from .frame_cuellos import FrameCuellos
 
 __all__ = [
     "FramePrincipal",
@@ -27,5 +30,7 @@ __all__ = [
     "FrameAdministrarCalendario",
     "FrameAcercaDe",
     "FrameAlertas",
+    "FrameDashboard",
+    "FrameCuellos",
     "FrameBienvenidad",
 ]

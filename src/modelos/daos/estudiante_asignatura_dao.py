@@ -182,3 +182,14 @@ class EstudianteAsignaturaDAO(DAO):
         logger.info(f"DAO actualizar - Resultado: {resultado}")
 
         return resultado
+
+    def obtener_por_estudiante(self, id_estudiante: int) -> List[Dict[str, Any]]:
+        """
+        Obtiene los registros de asignaturas de un estudiante.
+        """
+        sql = """
+            SELECT * FROM estudiante_asignatura
+            WHERE id_estudiante = ?
+            ORDER BY id_asignatura
+        """
+        return self.ejecutar_consulta(sql, (id_estudiante,))

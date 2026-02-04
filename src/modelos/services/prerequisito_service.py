@@ -84,6 +84,22 @@ class PrerrequisitoService(PrerrequisitoDTO):
             logger.error(f"Error al verificar existencia de prerrequisito: {e}")
             return False
 
+    def obtener_por_asignatura(self, id_asignatura: int) -> list:
+        """Obtiene los prerequisitos (ids) de una asignatura."""
+        try:
+            return self.dao.obtener_por_asignatura(id_asignatura)
+        except Exception as e:
+            logger.error(f"Error al obtener prerequisitos: {e}")
+            return []
+
+    def obtener_edges_por_carrera(self, id_carrera: int) -> list:
+        """Obtiene los pares prerequisito->asignatura para una carrera."""
+        try:
+            return self.dao.obtener_edges_por_carrera(id_carrera)
+        except Exception as e:
+            logger.error(f"Error al obtener edges de prerequisitos: {e}")
+            return []
+
     def es_valida(self) -> bool:
         """Valida que los datos del prerrequisito sean correctos."""
         if self.id_asignatura is None:

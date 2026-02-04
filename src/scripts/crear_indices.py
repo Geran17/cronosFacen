@@ -12,6 +12,8 @@ Uso:
 
 import sys
 import os
+import re
+from typing import List
 
 # Agregar src al path para las importaciones
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -55,6 +57,42 @@ INDICES = [
     "CREATE INDEX IF NOT EXISTS idx_eact_estudiante_estado ON estudiante_actividad (id_estudiante, estado);",
     "CREATE INDEX IF NOT EXISTS idx_actividad_tipo_fecha ON actividad (id_tipo_actividad, fecha_fin);",
 ]
+
+
+def obtener_nombres_indices() -> List[str]:
+    """
+    Extrae los nombres de índices definidos en INDICES.
+    """
+    nombres = []
+    patron = re.compile(r"CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+(\S+)", re.IGNORECASE)
+    for sql in INDICES:
+        match = patron.search(sql)
+        if match:
+            nombres.append(match.group(1))
+    return nombres
+
+
+def indices_faltantes(ruta_db: str = RUTA_DB) -> List[str]:
+    """
+    Retorna la lista de índices definidos que no existen en la BD.
+    """
+    try:
+        existentes = set()
+        indices_por_tabla = verificar_indices(ruta_db)
+        for lista in indices_por_tabla.values():
+            existentes.update(lista)
+        esperados = obtener_nombres_indices()
+        return [nombre for nombre in esperados if nombre not in existentes]
+    except Exception as ex:
+        logger.error(f"Error verificando índices faltantes: {ex}")
+        return obtener_nombres_indices()
+
+
+def hay_indices_faltantes(ruta_db: str = RUTA_DB) -> bool:
+    """
+    Indica si faltan índices definidos en la BD.
+    """
+    return len(indices_faltantes(ruta_db)) > 0
 
 
 def crear_todos_los_indices(ruta_db: str = RUTA_DB) -> bool:
@@ -186,23 +224,23 @@ if __name__ == "__main__":
     """Ejecutable: python -m src.scripts.crear_indices"""
     inicializar_directorios()
 
-    print("\n" + "=" * 60)
-    print("🗄️  CREADOR DE ÍNDICES - MVP ORGANIZACIÓN ACADÉMICA")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("🗄️  CREADOR DE ÍNDICES - MVP ORGANIZACIÓN ACADÉMICA")
+    logger.info("=" * 60)
 
-    print("\n📋 Índices a crear:", len(INDICES))
+    logger.info(f"📋 Índices a crear: {len(INDICES)}")
 
     if crear_todos_los_indices():
-        print("\n✅ Proceso completado exitosamente\n")
+        logger.info("✅ Proceso completado exitosamente")
 
         # Mostrar índices creados
-        print("📊 Índices en la base de datos:")
-        print("-" * 60)
+        logger.info("📊 Índices en la base de datos:")
+        logger.info("-" * 60)
         indices = verificar_indices()
         for tabla, lista_indices in sorted(indices.items()):
-            print(f"\n  {tabla}:")
+            logger.info(f"{tabla}:")
             for idx in lista_indices:
-                print(f"    • {idx}")
-        print("\n" + "=" * 60 + "\n")
+                logger.info(f"  • {idx}")
+        logger.info("=" * 60)
     else:
-        print("\n❌ Error durante la creación de índices\n")
+        logger.error("❌ Error durante la creación de índices")

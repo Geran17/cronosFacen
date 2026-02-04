@@ -135,3 +135,39 @@ class EstudianteDAO(DAO):
         else:
             logger.warning("ID de estudiante no válido para verificar existencia")
             return False
+
+    def obtener_todos(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todos los estudiantes.
+        """
+        sql = "SELECT * FROM estudiante"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_id_nombre_correo(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene id, nombre y correo de todos los estudiantes.
+        """
+        sql = "SELECT id_estudiante, nombre, correo FROM estudiante ORDER BY nombre"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_estudiantes_con_carrera(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene estudiantes con información de carrera (activa/inactiva y principal).
+        """
+        sql = """
+            SELECT 
+                e.id_estudiante, 
+                e.nombre, 
+                e.correo,
+                ec.id_carrera,
+                c.nombre as nombre_carrera,
+                ec.es_carrera_principal,
+                ec.estado as estado_carrera
+            FROM estudiante e
+            LEFT JOIN estudiante_carrera ec 
+                ON e.id_estudiante = ec.id_estudiante
+            LEFT JOIN carrera c 
+                ON ec.id_carrera = c.id_carrera
+            ORDER BY e.nombre, ec.es_carrera_principal DESC, c.nombre
+        """
+        return self.ejecutar_consulta(sql, ())

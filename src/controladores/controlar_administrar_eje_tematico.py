@@ -3,10 +3,9 @@ from tkinter.messagebox import askyesno, showinfo
 from ttkbootstrap import Button, Entry, StringVar, Combobox, IntVar, Label
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.eje_tematico_dao import EjeTematicoDAO
-from modelos.daos.asignatura_dao import AsignaturaDAO
-from modelos.daos.carrera_dao import CarreraDAO
 from modelos.services.eje_tematico_service import EjeTematicoService
+from modelos.services.asignatura_service import AsignaturaService
+from modelos.services.carrera_service import CarreraService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -165,10 +164,8 @@ class ControlarAdministrarEjeTematico:
         if self.lista_ejes_tematicos:
             self.lista_ejes_tematicos.clear()
 
-        dao = EjeTematicoDAO(ruta_db=None)
-        sql = "SELECT * FROM eje_tematico ORDER BY id_asignatura, orden"
-        params = ()
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+        servicio = EjeTematicoService(ruta_db=None)
+        lista_aux = servicio.obtener_todos()
         if lista_aux:
             for data in lista_aux:
                 eje_tematico = EjeTematicoService(ruta_db=None)
@@ -182,34 +179,11 @@ class ControlarAdministrarEjeTematico:
         if self.lista_ejes_tematicos:
             self.lista_ejes_tematicos.clear()
 
-        dao = EjeTematicoDAO(ruta_db=None)
-
-        # Construir la consulta con filtros
-        sql = """
-            SELECT DISTINCT et.* 
-            FROM eje_tematico et
-            INNER JOIN asignatura a ON et.id_asignatura = a.id_asignatura
-        """
-        params = []
-
-        # Agregar filtro de carrera si está seleccionada
-        if self.id_carrera_filtro_actual > 0:
-            sql += " WHERE a.id_carrera = ?"
-            params.append(self.id_carrera_filtro_actual)
-
-            # Agregar filtro de asignatura si está seleccionada
-            if self.id_asignatura_filtro_actual > 0:
-                sql += " AND et.id_asignatura = ?"
-                params.append(self.id_asignatura_filtro_actual)
-        else:
-            # Solo filtro de asignatura (sin carrera)
-            if self.id_asignatura_filtro_actual > 0:
-                sql += " WHERE et.id_asignatura = ?"
-                params.append(self.id_asignatura_filtro_actual)
-
-        sql += " ORDER BY a.id_carrera, et.id_asignatura, et.orden"
-
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=tuple(params))
+        servicio = EjeTematicoService(ruta_db=None)
+        lista_aux = servicio.obtener_filtrados(
+            id_carrera=self.id_carrera_filtro_actual,
+            id_asignatura=self.id_asignatura_filtro_actual,
+        )
         if lista_aux:
             for data in lista_aux:
                 eje_tematico = EjeTematicoService(ruta_db=None)
@@ -265,10 +239,8 @@ class ControlarAdministrarEjeTematico:
             self.dict_asignaturas_inv.clear()
 
             # Obtener asignaturas de la BD con nombre y código
-            dao = AsignaturaDAO(ruta_db=None)
-            sql = "SELECT id_asignatura, nombre, codigo FROM Asignatura ORDER BY nombre"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_asignatura = AsignaturaService(ruta_db=None)
+            lista_aux = servicio_asignatura.obtener_id_nombre_codigo()
 
             if lista_aux:
                 # Construir diccionarios y lista de nombres para el combobox
@@ -306,10 +278,8 @@ class ControlarAdministrarEjeTematico:
             self.dict_carreras_inv.clear()
 
             # Obtener carreras de la BD
-            dao = CarreraDAO(ruta_db=None)
-            sql = "SELECT id_carrera, nombre FROM carrera ORDER BY nombre"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_carrera = CarreraService(ruta_db=None)
+            lista_aux = servicio_carrera.obtener_id_nombre()
 
             if lista_aux:
                 nombres_carreras = []
@@ -461,10 +431,8 @@ class ControlarAdministrarEjeTematico:
                 return
 
             # Obtener asignaturas de la carrera
-            dao = AsignaturaDAO(ruta_db=None)
-            sql = "SELECT id_asignatura, nombre, codigo FROM asignatura WHERE id_carrera = ? ORDER BY nombre"
-            params = (id_carrera,)
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_asignatura = AsignaturaService(ruta_db=None)
+            lista_aux = servicio_asignatura.obtener_por_carrera(id_carrera)
 
             nombres_asignaturas = []
             if lista_aux:
@@ -499,10 +467,8 @@ class ControlarAdministrarEjeTematico:
                 return
 
             # Obtener asignaturas de la carrera
-            dao = AsignaturaDAO(ruta_db=None)
-            sql = "SELECT id_asignatura, nombre, codigo FROM asignatura WHERE id_carrera = ? ORDER BY nombre"
-            params = (id_carrera,)
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_asignatura = AsignaturaService(ruta_db=None)
+            lista_aux = servicio_asignatura.obtener_por_carrera(id_carrera)
 
             # Limpiar diccionarios y reconstruir solo con asignaturas de esta carrera
             self.dict_asignaturas.clear()

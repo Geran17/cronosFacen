@@ -3,10 +3,11 @@ from tkinter.messagebox import askyesno, showinfo
 from ttkbootstrap import Button, Entry, StringVar, IntVar, Label, Text, Combobox
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.actividad_dao import ActividadDAO
-from modelos.daos.eje_tematico_dao import EjeTematicoDAO
-from modelos.daos.tipo_actividad_dao import TipoActividadDAO
 from modelos.services.actividad_service import ActividadService
+from modelos.services.eje_tematico_service import EjeTematicoService
+from modelos.services.tipo_actividad_service import TipoActividadService
+from modelos.services.carrera_service import CarreraService
+from modelos.services.asignatura_service import AsignaturaService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -191,33 +192,29 @@ class ControlarAdministrarActividad:
         Eje -> Asignatura -> Carrera
         """
         try:
-            from modelos.daos.eje_tematico_dao import EjeTematicoDAO
-            from modelos.daos.asignatura_dao import AsignaturaDAO
-            from modelos.daos.carrera_dao import CarreraDAO
-
             # Obtener asignatura del eje
-            dao_eje = EjeTematicoDAO(ruta_db=None)
-            eje = dao_eje.obtener_por_id(id_eje)
-            if not eje:
+            service_eje = EjeTematicoService(ruta_db=None)
+            service_eje.id_eje = id_eje
+            if not service_eje.instanciar():
                 return "N/A"
 
-            id_asignatura = eje.id_asignatura
+            id_asignatura = service_eje.id_asignatura
 
             # Obtener carrera de la asignatura
-            dao_asig = AsignaturaDAO(ruta_db=None)
-            asignatura = dao_asig.obtener_por_id(id_asignatura)
-            if not asignatura:
+            service_asig = AsignaturaService(ruta_db=None)
+            service_asig.id_asignatura = id_asignatura
+            if not service_asig.instanciar():
                 return "N/A"
 
-            id_carrera = asignatura.id_carrera
+            id_carrera = service_asig.id_carrera
 
             # Obtener nombre de la carrera
-            dao_carrera = CarreraDAO(ruta_db=None)
-            carrera = dao_carrera.obtener_por_id(id_carrera)
-            if not carrera:
+            service_carrera = CarreraService(ruta_db=None)
+            service_carrera.id_carrera = id_carrera
+            if not service_carrera.instanciar():
                 return "N/A"
 
-            return carrera.nombre
+            return service_carrera.nombre
 
         except Exception as e:
             logger.error(f"Error al obtener nombre de carrera: {e}")
@@ -242,53 +239,15 @@ class ControlarAdministrarActividad:
         if self.lista_actividades:
             self.lista_actividades.clear()
 
-        dao = ActividadDAO(ruta_db=None)
-
         # Obtener IDs de filtros
         id_carrera_filtro = self.map_vars.get('var_id_carrera_filtro', IntVar(value=0)).get()
         id_asignatura_filtro = self.map_vars.get('var_id_asignatura_filtro', IntVar(value=0)).get()
 
-        # Construir consulta SQL según filtros
-        if id_carrera_filtro and id_carrera_filtro > 0:
-            if id_asignatura_filtro and id_asignatura_filtro > 0:
-                # Filtrar por carrera Y asignatura específicas
-                sql = """
-                SELECT a.* 
-                FROM actividad a
-                INNER JOIN eje_tematico et ON a.id_eje = et.id_eje
-                INNER JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
-                WHERE asig.id_carrera = ? AND asig.id_asignatura = ?
-                ORDER BY a.fecha_inicio DESC
-                """
-                params = (id_carrera_filtro, id_asignatura_filtro)
-            else:
-                # Filtrar por carrera específica
-                sql = """
-                SELECT a.* 
-                FROM actividad a
-                INNER JOIN eje_tematico et ON a.id_eje = et.id_eje
-                INNER JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
-                WHERE asig.id_carrera = ?
-                ORDER BY a.fecha_inicio DESC
-                """
-                params = (id_carrera_filtro,)
-        elif id_asignatura_filtro and id_asignatura_filtro > 0:
-            # Filtrar por asignatura específica sin carrera
-            sql = """
-            SELECT a.* 
-            FROM actividad a
-            INNER JOIN eje_tematico et ON a.id_eje = et.id_eje
-            INNER JOIN asignatura asig ON et.id_asignatura = asig.id_asignatura
-            WHERE asig.id_asignatura = ?
-            ORDER BY a.fecha_inicio DESC
-            """
-            params = (id_asignatura_filtro,)
-        else:
-            # Sin filtro: todas las actividades
-            sql = "SELECT * FROM actividad ORDER BY fecha_inicio DESC"
-            params = ()
-
-        lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+        servicio = ActividadService(ruta_db=None)
+        lista_aux = servicio.obtener_por_filtros(
+            id_carrera=id_carrera_filtro if id_carrera_filtro > 0 else None,
+            id_asignatura=id_asignatura_filtro if id_asignatura_filtro > 0 else None,
+        )
         if lista_aux:
             for data in lista_aux:
                 actividad = ActividadService(ruta_db=None)
@@ -350,10 +309,8 @@ class ControlarAdministrarActividad:
             self.dict_ejes_inv.clear()
 
             # Obtener ejes temáticos de la BD
-            dao = EjeTematicoDAO(ruta_db=None)
-            sql = "SELECT id_eje, nombre FROM eje_tematico ORDER BY orden, nombre"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_eje = EjeTematicoService(ruta_db=None)
+            lista_aux = servicio_eje.obtener_todos()
 
             if lista_aux:
                 # Construir diccionarios y lista de nombres para el combobox
@@ -390,25 +347,16 @@ class ControlarAdministrarActividad:
             self.dict_ejes.clear()
             self.dict_ejes_inv.clear()
 
-            dao = EjeTematicoDAO(ruta_db=None)
-
             if id_asignatura and id_asignatura > 0:
                 # Cargar ejes temáticos de la asignatura específica
-                sql = """
-                SELECT DISTINCT et.id_eje, et.nombre 
-                FROM eje_tematico et
-                WHERE et.id_asignatura = ?
-                ORDER BY et.orden, et.nombre
-                """
-                params = (id_asignatura,)
+                servicio_eje = EjeTematicoService(ruta_db=None)
+                lista_aux = servicio_eje.obtener_por_asignatura(id_asignatura)
                 logger.debug(f"Cargando ejes temáticos para asignatura ID: {id_asignatura}")
             else:
                 # Sin filtro: todas los ejes temáticos
-                sql = "SELECT id_eje, nombre FROM eje_tematico ORDER BY orden, nombre"
-                params = ()
+                servicio_eje = EjeTematicoService(ruta_db=None)
+                lista_aux = servicio_eje.obtener_id_nombre()
                 logger.debug("Cargando todos los ejes temáticos")
-
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
 
             if lista_aux:
                 # Construir diccionarios y lista de nombres para el combobox
@@ -449,10 +397,8 @@ class ControlarAdministrarActividad:
             self.dict_tipos_inv.clear()
 
             # Obtener tipos de actividad de la BD
-            dao = TipoActividadDAO(ruta_db=None)
-            sql = "SELECT id_tipo_actividad, nombre, siglas FROM tipo_actividad ORDER BY nombre"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_tipo = TipoActividadService(ruta_db=None)
+            lista_aux = servicio_tipo.obtener_todos()
 
             if lista_aux:
                 # Construir diccionarios y lista de labels para el combobox
@@ -490,17 +436,13 @@ class ControlarAdministrarActividad:
         Incluye opción "Todas las carreras" para mostrar sin filtrar.
         """
         try:
-            from modelos.daos.carrera_dao import CarreraDAO
-
             # Limpiar diccionarios previos
             self.dict_carreras.clear()
             self.dict_carreras_inv.clear()
 
             # Obtener carreras de la BD
-            dao = CarreraDAO(ruta_db=None)
-            sql = "SELECT id_carrera, nombre FROM carrera ORDER BY nombre"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_carrera = CarreraService(ruta_db=None)
+            lista_aux = servicio_carrera.obtener_id_nombre()
 
             if lista_aux:
                 # Construir diccionarios y lista de labels
@@ -542,8 +484,6 @@ class ControlarAdministrarActividad:
         Si hay una carrera seleccionada, carga solo las asignaturas de esa carrera.
         """
         try:
-            from modelos.daos.asignatura_dao import AsignaturaDAO
-
             # Limpiar diccionarios previos
             self.dict_asignaturas.clear()
             self.dict_asignaturas_inv.clear()
@@ -551,19 +491,14 @@ class ControlarAdministrarActividad:
             # Obtener ID de carrera del filtro
             id_carrera_filtro = self.map_vars.get('var_id_carrera_filtro', IntVar(value=0)).get()
 
-            # Obtener asignaturas de la BD
-            dao = AsignaturaDAO(ruta_db=None)
-
             if id_carrera_filtro and id_carrera_filtro > 0:
                 # Si hay carrera seleccionada, traer solo asignaturas de esa carrera
-                sql = "SELECT id_asignatura, nombre FROM asignatura WHERE id_carrera = ? ORDER BY nombre"
-                params = (id_carrera_filtro,)
+                servicio_asignatura = AsignaturaService(ruta_db=None)
+                lista_aux = servicio_asignatura.obtener_por_carrera(id_carrera_filtro)
             else:
                 # Sin filtro de carrera: todas las asignaturas
-                sql = "SELECT id_asignatura, nombre FROM asignatura ORDER BY nombre"
-                params = ()
-
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+                servicio_asignatura = AsignaturaService(ruta_db=None)
+                lista_aux = servicio_asignatura.obtener_id_nombre_codigo()
 
             if lista_aux:
                 # Construir diccionarios y lista de labels

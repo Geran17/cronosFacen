@@ -130,3 +130,21 @@ class TipoActividadDAO(DAO):
         else:
             logger.warning("ID de tipo de actividad no válido para verificar existencia")
             return False
+
+    def obtener_todos(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todos los tipos de actividad ordenados por nombre.
+        """
+        sql = "SELECT * FROM tipo_actividad ORDER BY nombre"
+        return self.ejecutar_consulta(sql, ())
+
+    def obtener_todos_por_prioridad(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene tipos de actividad ordenados por prioridad descendente y nombre.
+        """
+        sql = """
+            SELECT id_tipo_actividad, nombre, siglas, prioridad
+            FROM tipo_actividad
+            ORDER BY prioridad DESC, nombre
+        """
+        return self.ejecutar_consulta(sql, ())

@@ -1,9 +1,10 @@
 from tkinter.messagebox import showinfo, showwarning
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from scripts.logging_config import obtener_logger_modulo
-from modelos.daos.estudiante_dao import EstudianteDAO
-from modelos.daos.actividad_dao import ActividadDAO
 from modelos.services.estudiante_actividad_service import EstudianteActividadService
+from modelos.services.estudiante_service import EstudianteService
+from modelos.services.actividad_service import ActividadService
+from modelos.services.estudiante_carrera_service import EstudianteCarreraService
 from ttkbootstrap.dialogs import DatePickerDialog
 from datetime import datetime
 
@@ -11,10 +12,18 @@ logger = obtener_logger_modulo(__name__)
 
 
 class ControlarAdministrarEstudianteActividad:
-    def __init__(self, master, map_vars: Dict[str, Any], map_widgets: Dict[str, Any]):
+    def __init__(
+        self,
+        master,
+        map_vars: Dict[str, Any],
+        map_widgets: Dict[str, Any],
+        preselect: Optional[Dict[str, Any]] = None,
+    ):
         self.master = master
         self.map_widgets = map_widgets
         self.map_vars = map_vars
+        self.preselect = preselect or {}
+        self.label_estudiante_actual: str = ""
 
         # Diccionarios para estudiantes
         self.dict_estudiantes: Dict[str, Dict[str, Any]] = (
@@ -79,6 +88,7 @@ class ControlarAdministrarEstudianteActividad:
         )
         self.var_estado = self.map_vars.get('var_estado')
         self.var_fecha_entrega = self.map_vars.get('var_fecha_entrega')
+        self.var_nota = self.map_vars.get('var_nota')
         self.var_filtro_estado = self.map_vars.get('var_filtro_estado')
         self.var_filtro_tipo = self.map_vars.get('var_filtro_tipo')
         self.var_filtro_asignatura = self.map_vars.get('var_filtro_asignatura')
@@ -100,6 +110,103 @@ class ControlarAdministrarEstudianteActividad:
 
         # vincular eventos
         self._vincular_eventos()
+
+        # aplicar preselección si viene desde un contexto externo
+        self._aplicar_preseleccion()
+
+    def _aplicar_preseleccion(self):
+        try:
+            if not self.preselect:
+                self._auto_cargar_estudiante()
+                return
+
+            id_estudiante = self.preselect.get("id_estudiante")
+            id_carrera = self.preselect.get("carrera_id")
+            id_actividad = self.preselect.get("actividad_id")
+
+            if not id_estudiante:
+                return
+
+            # Buscar label por id_estudiante y opcionalmente id_carrera
+            label_objetivo = None
+            for clave, info in self.dict_estudiantes.items():
+                if info.get("id_estudiante") != id_estudiante:
+                    continue
+                if id_carrera and info.get("id_carrera") != id_carrera:
+                    continue
+                label_objetivo = info.get("label")
+                break
+
+            # Si no encontró por carrera, toma el primero que coincida
+            if not label_objetivo:
+                for info in self.dict_estudiantes.values():
+                    if info.get("id_estudiante") == id_estudiante:
+                        label_objetivo = info.get("label")
+                        break
+
+            if not label_objetivo:
+                # Fallback: cargar directamente por IDs
+                self._cargar_registros_estudiante(id_estudiante)
+                self.id_estudiante_actual = id_estudiante
+                self.id_carrera_estudiante = id_carrera or 0
+                self.var_id_estudiante.set(id_estudiante)
+                self.label_estudiante_actual = ""
+
+                if id_carrera:
+                    self._cargar_actividades(id_carrera=id_carrera)
+                else:
+                    self._cargar_actividades()
+
+                self._cargar_filtros_iniciales()
+                self._actualizar_tabla_actividades()
+                self._limpiar_formulario()
+                self._actualizar_estadisticas()
+
+                if id_actividad:
+                    self._seleccionar_actividad_por_id(id_actividad)
+                return
+
+            self.var_nombre_estudiante.set(label_objetivo)
+            self.label_estudiante_actual = label_objetivo
+            self._on_cargar_estudiante()
+
+            if id_actividad:
+                self._seleccionar_actividad_por_id(id_actividad)
+        except Exception as e:
+            logger.error(f"Error al aplicar preselección: {e}", exc_info=True)
+
+    def _auto_cargar_estudiante(self):
+        try:
+            valores = self.cbx_estudiante['values'] if self.cbx_estudiante else []
+            if not valores:
+                return
+            if not self.var_nombre_estudiante.get():
+                self.var_nombre_estudiante.set(valores[0])
+                self.label_estudiante_actual = valores[0]
+            self._on_cargar_estudiante()
+        except Exception as e:
+            logger.error(f"Error al auto cargar estudiante: {e}", exc_info=True)
+
+    def _seleccionar_actividad_por_id(self, id_actividad: int):
+        try:
+            datos = self.dict_actividades.get(id_actividad)
+            if not datos:
+                return
+
+            titulo = datos.get("titulo")
+            if not titulo:
+                return
+
+            for item_id in self.tabla_actividades.view.get_children():
+                item = self.tabla_actividades.view.item(item_id)
+                valores = item.get("values") or []
+                if valores and valores[0] == titulo:
+                    self.tabla_actividades.view.selection_set(item_id)
+                    self.tabla_actividades.view.see(item_id)
+                    self._cargar_formulario(id_actividad)
+                    break
+        except Exception as e:
+            logger.error(f"Error al seleccionar actividad por ID: {e}", exc_info=True)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Métodos Privados
@@ -136,26 +243,8 @@ class ControlarAdministrarEstudianteActividad:
             self.dict_estudiantes.clear()
             self.dict_estudiantes_inv.clear()
 
-            dao = EstudianteDAO(ruta_db=None)
-
-            # ✅ CONSULTA: Une con estudiante_carrera para obtener todas las carreras activas
-            sql = """
-            SELECT 
-                e.id_estudiante, 
-                e.nombre, 
-                e.correo,
-                ec.id_carrera,
-                c.nombre as nombre_carrera,
-                ec.es_carrera_principal
-            FROM estudiante e
-            LEFT JOIN estudiante_carrera ec 
-                ON e.id_estudiante = ec.id_estudiante 
-            LEFT JOIN carrera c 
-                ON ec.id_carrera = c.id_carrera
-            ORDER BY e.nombre, ec.es_carrera_principal DESC, c.nombre
-            """
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_estudiante = EstudianteService(ruta_db=None)
+            lista_aux = servicio_estudiante.obtener_estudiantes_con_carrera()
 
             if lista_aux:
                 labels_estudiantes = []
@@ -206,36 +295,12 @@ class ControlarAdministrarEstudianteActividad:
         try:
             self.dict_actividades.clear()
 
-            dao = ActividadDAO(ruta_db=None)
-
             if id_carrera:
-                # Cargar solo actividades de la carrera del estudiante
-                # Relación: actividad -> eje_tematico -> asignatura -> carrera
-                sql = """SELECT a.id_actividad, a.titulo, a.descripcion, 
-                                a.fecha_inicio, a.fecha_fin, a.id_eje, a.id_tipo_actividad,
-                                e.nombre as nombre_eje, asig.nombre as nombre_asignatura,
-                                ta.siglas as sigla_tipo
-                         FROM actividad a
-                         INNER JOIN eje_tematico e ON a.id_eje = e.id_eje
-                         INNER JOIN asignatura asig ON e.id_asignatura = asig.id_asignatura
-                         LEFT JOIN tipo_actividad ta ON a.id_tipo_actividad = ta.id_tipo_actividad
-                         WHERE asig.id_carrera = ?
-                         ORDER BY a.fecha_fin DESC, a.titulo"""
-                params = (id_carrera,)
+                servicio_actividad = ActividadService(ruta_db=None)
+                lista_aux = servicio_actividad.obtener_con_detalle(id_carrera=id_carrera)
             else:
-                # Cargar todas las actividades
-                sql = """SELECT a.id_actividad, a.titulo, a.descripcion, 
-                                a.fecha_inicio, a.fecha_fin, a.id_eje, a.id_tipo_actividad,
-                                e.nombre as nombre_eje, asig.nombre as nombre_asignatura,
-                                ta.siglas as sigla_tipo
-                         FROM actividad a
-                         INNER JOIN eje_tematico e ON a.id_eje = e.id_eje
-                         INNER JOIN asignatura asig ON e.id_asignatura = asig.id_asignatura
-                         LEFT JOIN tipo_actividad ta ON a.id_tipo_actividad = ta.id_tipo_actividad
-                         ORDER BY a.fecha_fin DESC, a.titulo"""
-                params = ()
-
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+                servicio_actividad = ActividadService(ruta_db=None)
+                lista_aux = servicio_actividad.obtener_con_detalle()
 
             if lista_aux:
                 for data in lista_aux:
@@ -247,6 +312,7 @@ class ControlarAdministrarEstudianteActividad:
                         'fecha_fin': data.get('fecha_fin'),
                         'id_eje': data.get('id_eje'),
                         'id_tipo_actividad': data.get('id_tipo_actividad'),
+                        'nota': data.get('nota', 0),
                         'nombre_eje': data.get('nombre_eje'),
                         'nombre_asignatura': data.get('nombre_asignatura'),
                         'sigla_tipo': data.get('sigla_tipo') or '',
@@ -257,6 +323,29 @@ class ControlarAdministrarEstudianteActividad:
                 )
             else:
                 logger.warning("No se encontraron actividades")
+
+            # Asegurar que estén todas las actividades con registro del estudiante
+            ids_registros = {r.id_actividad for r in self.lista_registros_estudiante}
+            faltantes = [i for i in ids_registros if i not in self.dict_actividades]
+            if faltantes:
+                servicio_all = ActividadService(ruta_db=None)
+                lista_all = servicio_all.obtener_con_detalle()
+                for data in lista_all:
+                    id_actividad = data.get('id_actividad')
+                    if id_actividad in faltantes:
+                        self.dict_actividades[id_actividad] = {
+                            'titulo': data.get('titulo'),
+                            'descripcion': data.get('descripcion'),
+                            'fecha_inicio': data.get('fecha_inicio'),
+                            'fecha_fin': data.get('fecha_fin'),
+                            'id_eje': data.get('id_eje'),
+                            'id_tipo_actividad': data.get('id_tipo_actividad'),
+                            'nota': data.get('nota', 0),
+                            'nombre_eje': data.get('nombre_eje'),
+                            'nombre_asignatura': data.get('nombre_asignatura'),
+                            'sigla_tipo': data.get('sigla_tipo') or '',
+                        }
+                logger.info(f"Se añadieron {len(faltantes)} actividades faltantes por registros")
 
         except Exception as e:
             logger.error(f"Error al cargar actividades: {e}")
@@ -291,15 +380,7 @@ class ControlarAdministrarEstudianteActividad:
             self.lista_registros_estudiante.clear()
 
             service = EstudianteActividadService(ruta_db=None)
-            service.id_estudiante = id_estudiante
-
-            # Obtener todos los registros del estudiante
-            dao = service.dao
-            sql = """SELECT id_estudiante, id_actividad, estado, fecha_entrega 
-                     FROM estudiante_actividad 
-                     WHERE id_estudiante = ?"""
-            params = (id_estudiante,)
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            lista_aux = service.obtener_por_estudiante(id_estudiante)
 
             if lista_aux:
                 for data in lista_aux:
@@ -323,23 +404,14 @@ class ControlarAdministrarEstudianteActividad:
             self.dict_carreras_estudiante.clear()
             self.dict_carreras_estudiante_inv.clear()
 
-            dao = EstudianteDAO(ruta_db=None)
-
-            sql = """
-            SELECT DISTINCT ec.id_carrera, c.nombre, ec.estado
-            FROM estudiante_carrera ec
-            INNER JOIN carrera c ON ec.id_carrera = c.id_carrera
-            WHERE ec.id_estudiante = ?
-            ORDER BY ec.es_carrera_principal DESC, c.nombre
-            """
-            params = (id_estudiante,)
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_ec = EstudianteCarreraService(ruta_db=None)
+            lista_aux = servicio_ec.obtener_carreras_estudiante(id_estudiante)
 
             if lista_aux:
                 carreras_labels = []
                 for data in lista_aux:
                     id_carrera = data.get('id_carrera')
-                    nombre_carrera = data.get('nombre')
+                    nombre_carrera = data.get('nombre_carrera') or data.get('nombre')
                     estado = data.get('estado')
 
                     # Agregar indicador de estado
@@ -467,9 +539,16 @@ class ControlarAdministrarEstudianteActividad:
                     except:
                         dias_restantes = '-'
 
+                nota_val = datos.get('nota', 0)
+                try:
+                    nota_fmt = f"{float(nota_val):.2f}"
+                except Exception:
+                    nota_fmt = "0.00"
+
                 self.tabla_actividades.insert_row(
                     index="end",
                     values=(
+                        id_act,
                         datos['titulo'],
                         nombre_asignatura,
                         sigla_tipo,
@@ -477,11 +556,17 @@ class ControlarAdministrarEstudianteActividad:
                         fecha_fin or '-',
                         dias_restantes,
                         estado_display,
+                        nota_fmt,
                         fecha_entrega,
                     ),
                 )
 
             self.tabla_actividades.autofit_columns()
+            # Re-ocultar columna ID (Tableview puede reescribir anchos)
+            try:
+                self.tabla_actividades.view.column("#1", width=0, stretch=False)
+            except Exception:
+                pass
             self.tabla_actividades.load_table_data()
 
             # Actualizar estadísticas
@@ -501,11 +586,10 @@ class ControlarAdministrarEstudianteActividad:
                 self.lbl_estadisticas['text'] = "Seleccione un estudiante para comenzar"
                 return
 
-            info_estudiante = self.dict_estudiantes.get(self.id_estudiante_actual, {})
             estudiante = (
-                info_estudiante.get('label', 'Desconocido')
-                if isinstance(info_estudiante, dict)
-                else "Desconocido"
+                self.var_nombre_estudiante.get()
+                or self.label_estudiante_actual
+                or "Desconocido"
             )
             total_actividades = len(self.dict_actividades)
 
@@ -523,12 +607,23 @@ class ControlarAdministrarEstudianteActividad:
         except Exception as e:
             logger.error(f"Error al actualizar estadísticas: {e}")
 
+    def _set_status_message(self, mensaje: str):
+        try:
+            base = self.lbl_estadisticas.cget("text")
+            if base:
+                self.lbl_estadisticas.config(text=f"{base} | {mensaje}")
+            else:
+                self.lbl_estadisticas.config(text=mensaje)
+        except Exception:
+            pass
+
     def _limpiar_formulario(self):
         """Limpia el formulario de actualización."""
         self.var_id_actividad_seleccionada.set(0)
         self.var_nombre_actividad_seleccionada.set("[Selecciona una actividad]")
         self.var_estado.set("")
         self.var_fecha_entrega.set("")
+        self.var_nota.set("0")
         self.id_actividad_seleccionada = 0
 
     def _cargar_formulario(self, id_actividad: int):
@@ -538,6 +633,13 @@ class ControlarAdministrarEstudianteActividad:
                 return
 
             datos_act = self.dict_actividades[id_actividad]
+            try:
+                act = ActividadService(ruta_db=None)
+                act.id_actividad = id_actividad
+                if act.instanciar():
+                    datos_act['nota'] = act.nota
+            except Exception as e:
+                logger.error(f"Error al cargar nota de actividad: {e}", exc_info=True)
             label_act = f"{datos_act['titulo']}"
 
             self.var_id_actividad_seleccionada.set(id_actividad)
@@ -554,10 +656,18 @@ class ControlarAdministrarEstudianteActividad:
             if registro:
                 estado_display = self.estados_display.get(registro.estado, '⏳ Pendiente')
                 self.var_estado.set(estado_display)
-                self.var_fecha_entrega.set(registro.fecha_entrega if registro.fecha_entrega else "")
+                self.var_fecha_entrega.set(
+                    datos_act.get('fecha_fin', "") or registro.fecha_entrega or ""
+                )
             else:
                 self.var_estado.set('⏳ Pendiente')
-                self.var_fecha_entrega.set("")
+                self.var_fecha_entrega.set(datos_act.get('fecha_fin', "") or "")
+
+            try:
+                nota_val = float(datos_act.get('nota', 0) or 0)
+            except Exception:
+                nota_val = 0.0
+            self.var_nota.set(f"{nota_val:.2f}")
 
             self._actualizar_estadisticas()
 
@@ -597,8 +707,12 @@ class ControlarAdministrarEstudianteActividad:
             self.id_estudiante_actual = id_estudiante
             self.id_carrera_estudiante = id_carrera
             self.var_id_estudiante.set(id_estudiante)
+            self.label_estudiante_actual = label_estudiante
 
-            # Cargar actividades de la carrera
+            # Cargar registros del estudiante
+            self._cargar_registros_estudiante(id_estudiante)
+
+            # Cargar actividades de la carrera (luego de registros para completar faltantes)
             if id_carrera:
                 self._cargar_actividades(id_carrera=id_carrera)
             else:
@@ -606,9 +720,6 @@ class ControlarAdministrarEstudianteActividad:
 
             # Recargar filtros de tipo
             self._cargar_filtros_iniciales()
-
-            # Cargar registros del estudiante
-            self._cargar_registros_estudiante(id_estudiante)
 
             # Actualizar tabla
             self._actualizar_tabla_actividades()
@@ -634,17 +745,9 @@ class ControlarAdministrarEstudianteActividad:
             # Obtener valores de la fila
             item = self.tabla_actividades.view.item(seleccion[0])
             valores = item['values']
-            titulo_act = valores[0]  # Primera columna es el título
-
-            # Buscar ID de la actividad por título
-            id_actividad = None
-            for id_act, datos in self.dict_actividades.items():
-                if datos['titulo'] == titulo_act:
-                    id_actividad = id_act
-                    break
-
+            id_actividad = valores[0] if valores else None
             if id_actividad:
-                self._cargar_formulario(id_actividad)
+                self._cargar_formulario(int(id_actividad))
 
         except Exception as e:
             logger.error(f"Error al seleccionar actividad: {e}")
@@ -693,12 +796,12 @@ class ControlarAdministrarEstudianteActividad:
     def _on_abrir_calendario(self):
         """Abre el diálogo de calendario para seleccionar fecha."""
         try:
-            result = DatePickerDialog(parent=self.master).show()
-
-            if result:
-                fecha = result.strftime('%Y-%m-%d')
-                self.var_fecha_entrega.set(fecha)
-                logger.info(f"Fecha seleccionada: {fecha}")
+            dialog = DatePickerDialog(parent=self.master)
+            fecha = getattr(dialog, "date_selected", None)
+            if fecha:
+                fecha_str = fecha.strftime('%Y-%m-%d')
+                self.var_fecha_entrega.set(fecha_str)
+                logger.info(f"Fecha seleccionada: {fecha_str}")
 
         except Exception as e:
             logger.error(f"Error al abrir calendario: {e}")
@@ -726,6 +829,18 @@ class ControlarAdministrarEstudianteActividad:
             estado_display = self.var_estado.get()
             estado_bd = self.estados_display_inv.get(estado_display, 'pendiente')
             fecha_entrega = self.var_fecha_entrega.get().strip()
+            nota_str = self.var_nota.get().strip() if self.var_nota else ""
+            if nota_str == "":
+                nota_str = "0"
+            try:
+                nota_val = float(nota_str)
+            except ValueError:
+                showwarning(
+                    parent=self.master,
+                    title="Advertencia",
+                    message="Nota inválida. Use un número.",
+                )
+                return
 
             # Validar fecha si está presente
             if fecha_entrega:
@@ -750,40 +865,40 @@ class ControlarAdministrarEstudianteActividad:
             existe = registro.existe()
 
             if existe:
-                # Actualizar
                 resultado = registro.actualizar()
-                if resultado:
-                    showinfo(
-                        parent=self.master,
-                        title="Éxito",
-                        message="Registro actualizado correctamente",
-                    )
-                else:
-                    showwarning(
-                        parent=self.master,
-                        title="Error",
-                        message="No se pudo actualizar el registro",
-                    )
             else:
-                # Insertar
                 resultado = registro.insertar()
-                if resultado:
-                    showinfo(
-                        parent=self.master,
-                        title="Éxito",
-                        message="Registro creado correctamente",
-                    )
-                else:
-                    showwarning(
-                        parent=self.master,
-                        title="Error",
-                        message="No se pudo crear el registro",
-                    )
+
+            if not resultado:
+                showwarning(
+                    parent=self.master,
+                    title="Error",
+                    message="No se pudo guardar el registro",
+                )
+
+            # Actualizar nota de la actividad (opcional) antes de limpiar formulario
+            try:
+                act = ActividadService(ruta_db=None)
+                act.id_actividad = self.id_actividad_seleccionada
+                if act.instanciar():
+                    act.nota = nota_val
+                    act.actualizar()
+                    self.dict_actividades[self.id_actividad_seleccionada]['nota'] = nota_val
+                    self.var_nota.set(f"{nota_val:.2f}")
+            except Exception as e:
+                logger.error(f"Error al actualizar nota de actividad: {e}", exc_info=True)
 
             # Recargar datos
             self._cargar_registros_estudiante(self.id_estudiante_actual)
-            self._actualizar_tabla_actividades()
+            self._actualizar_tabla_actividades(
+                self.entry_buscar_actividad.get(),
+                self.var_filtro_estado.get(),
+                self.var_filtro_tipo.get(),
+                self.var_filtro_asignatura.get(),
+            )
             self._limpiar_formulario()
+            if resultado:
+                self._set_status_message("Cambios guardados")
 
         except Exception as e:
             logger.error(f"Error al aplicar cambios: {e}", exc_info=True)

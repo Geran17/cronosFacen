@@ -103,14 +103,49 @@ class ControladorCalendario:
         """Carga las variables del frame calendario."""
         self.var_carrera: StringVar = self.map_vars.get('var_carrera')
         self.var_tipo_actividad: StringVar = self.map_vars.get('var_tipo_actividad')
-        self.var_estado_actividad: StringVar = self.map_vars.get('var_estado_activdad')
+        self.var_estado_actividad: StringVar = self.map_vars.get('var_estado_actividad')
         self.var_asignatura: StringVar = self.map_vars.get('var_asignatura')
+
+    def _set_loading(self, loading: bool, message: str = "Cargando...") -> None:
+        """Activa/desactiva estado de carga y controles."""
+        btn_state = DISABLED if loading else NORMAL
+        cbx_state = DISABLED if loading else READONLY
+
+        for btn in (
+            self.btn_anterior,
+            self.btn_siguiente,
+            self.btn_hoy,
+            self.btn_aplicar_filtros,
+            self.btn_refrescar,
+            self.btn_limpiar_filtros,
+            self.btn_exportar_csv,
+            self.btn_exportar_ical,
+        ):
+            if btn:
+                btn.config(state=btn_state)
+
+        for cbx in (self.cbx_carrera, self.cbx_asignatura, self.cbx_tipo_evento, self.cbx_tipo_actividad):
+            if cbx:
+                cbx.config(state=cbx_state)
+
+        if self.lbl_stats and loading:
+            self.lbl_stats.config(text=message, bootstyle=INFO)
+
+    def _set_export_state(self) -> None:
+        """Habilita/deshabilita exportación según haya eventos."""
+        eventos = self.eventos_filtrados if self.eventos_filtrados else self.eventos_del_mes
+        state = NORMAL if eventos else DISABLED
+        if self.btn_exportar_csv:
+            self.btn_exportar_csv.config(state=state)
+        if self.btn_exportar_ical:
+            self.btn_exportar_ical.config(state=state)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Cargar Combobox Filtros
     # └────────────────────────────────────────────────────────────┘
     def _cargar_combobox_filtros(self):
         """Carga los datos en los combobox de filtros desde la base de datos."""
+        self._set_loading(True, "Cargando filtros...")
         try:
             eventos_service = EventosUnificadosService(ruta_db=None)
             eventos = eventos_service.obtener_todos()
@@ -176,12 +211,15 @@ class ControladorCalendario:
 
         except Exception as e:
             logger.error(f"❌ Error al cargar combobox de filtros: {e}", exc_info=True)
+        finally:
+            self._set_loading(False)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Métodos de Filtrado
     # └────────────────────────────────────────────────────────────┘
     def _aplicar_filtros(self):
         """Aplica los filtros seleccionados a los eventos mostrados."""
+        self._set_loading(True, "Aplicando filtros...")
         try:
             # Obtener valores de los combobox
             carrera_seleccionada = self.var_carrera.get()
@@ -246,9 +284,13 @@ class ControladorCalendario:
 
         except Exception as e:
             logger.error(f"❌ Error al aplicar filtros: {e}", exc_info=True)
+        finally:
+            self._set_loading(False)
+            self._set_export_state()
 
     def _resetear_filtros(self):
         """Limpia todos los filtros y vuelve a mostrar todos los eventos."""
+        self._set_loading(True, "Reseteando filtros...")
         try:
             logger.info("🔄 Reseteando filtros...")
 
@@ -271,6 +313,9 @@ class ControladorCalendario:
 
         except Exception as e:
             logger.error(f"❌ Error al resetear filtros: {e}", exc_info=True)
+        finally:
+            self._set_loading(False)
+            self._set_export_state()
 
     def _cargar_agenda_filtrada(self):
         """Carga la agenda mostrando solo los eventos filtrados."""
@@ -448,16 +493,17 @@ class ControladorCalendario:
                 texto_stats = f"Total: {total} | Actividades: {actividades} | Eventos: {eventos_calendario} | Días: {dias_con_eventos}"
 
             if self.lbl_stats:
-                self.lbl_stats.config(text=texto_stats)
+                self.lbl_stats.config(text=texto_stats, bootstyle=SECONDARY)
                 logger.debug(f"Estadísticas actualizadas: {texto_stats}")
 
         except Exception as e:
             logger.error(f"❌ Error al actualizar estadísticas: {e}", exc_info=True)
             if self.lbl_stats:
-                self.lbl_stats.config(text="Error en estadísticas")
+                self.lbl_stats.config(text="Error en estadísticas", bootstyle=DANGER)
 
     def _actualizar_mes_año(self):
         """Actualiza el label del mes/año."""
+        self._set_loading(True, "Cargando calendario...")
         if self.lbl_mes_año:
             self.lbl_mes_año.config(text=self._obtener_mes_año())
         self._cargar_calendario()
@@ -466,6 +512,8 @@ class ControladorCalendario:
         self._cargar_eventos_agenda()
         # actualizamos las estadísticas
         self._actualizar_estadisticas()
+        self._set_loading(False)
+        self._set_export_state()
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Cargar Calendario
@@ -947,6 +995,11 @@ class ControladorCalendario:
 
             if not eventos:
                 logger.warning("⚠️ No hay eventos para exportar")
+                if self.lbl_stats:
+                    self.lbl_stats.config(
+                        text="No hay eventos para exportar",
+                        bootstyle=WARNING,
+                    )
                 return
 
             # Solicitar ubicación de guardado al usuario
@@ -1010,6 +1063,11 @@ class ControladorCalendario:
 
             if not eventos:
                 logger.warning("⚠️ No hay eventos para exportar")
+                if self.lbl_stats:
+                    self.lbl_stats.config(
+                        text="No hay eventos para exportar",
+                        bootstyle=WARNING,
+                    )
                 return
 
             # Solicitar ubicación de guardado al usuario

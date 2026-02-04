@@ -4,10 +4,9 @@ from tkinter import Listbox, END as TK_END
 from ttkbootstrap import Button, Entry, StringVar, IntVar, Label, Combobox
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
-from modelos.daos.prerequisito_dao import PrerrequisitoDAO
-from modelos.daos.asignatura_dao import AsignaturaDAO
-from modelos.daos.carrera_dao import CarreraDAO
 from modelos.services.prerequisito_service import PrerrequisitoService
+from modelos.services.asignatura_service import AsignaturaService
+from modelos.services.carrera_service import CarreraService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -107,10 +106,8 @@ class ControlarAdministrarPrerequisitos:
             self.dict_carreras.clear()
             self.dict_carreras_inv.clear()
 
-            dao = CarreraDAO(ruta_db=None)
-            sql = "SELECT id_carrera, codigo, nombre FROM carrera ORDER BY codigo"
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_carrera = CarreraService(ruta_db=None)
+            lista_aux = servicio_carrera.obtener_id_codigo_nombre()
 
             if lista_aux:
                 labels_carreras = ["Todas las Carreras"]
@@ -142,12 +139,8 @@ class ControlarAdministrarPrerequisitos:
         try:
             self.dict_asignaturas.clear()
 
-            dao = AsignaturaDAO(ruta_db=None)
-            sql = """SELECT id_asignatura, codigo, nombre, id_carrera 
-                     FROM asignatura 
-                     ORDER BY codigo"""
-            params = ()
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_asignatura = AsignaturaService(ruta_db=None)
+            lista_aux = servicio_asignatura.obtener_id_codigo_nombre_carrera()
 
             if lista_aux:
                 for data in lista_aux:
@@ -213,13 +206,8 @@ class ControlarAdministrarPrerequisitos:
                 return
 
             # Consultar prerequisitos
-            dao = PrerrequisitoDAO(ruta_db=None)
-            sql = """SELECT id_asignatura_prerrequisito 
-                     FROM prerrequisito 
-                     WHERE id_asignatura = ?
-                     ORDER BY id_asignatura_prerrequisito"""
-            params = (id_asignatura,)
-            lista_aux = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_prereq = PrerrequisitoService(ruta_db=None)
+            lista_aux = servicio_prereq.obtener_por_asignatura(id_asignatura)
 
             if lista_aux:
                 for data in lista_aux:
@@ -247,10 +235,8 @@ class ControlarAdministrarPrerequisitos:
                 return
 
             # Obtener prerequisitos actuales
-            dao = PrerrequisitoDAO(ruta_db=None)
-            sql = "SELECT id_asignatura_prerrequisito FROM prerrequisito WHERE id_asignatura = ?"
-            params = (id_asignatura,)
-            prerequisitos_actuales = dao.ejecutar_consulta(sql=sql, params=params)
+            servicio_prereq = PrerrequisitoService(ruta_db=None)
+            prerequisitos_actuales = servicio_prereq.obtener_por_asignatura(id_asignatura)
 
             ids_prerequisitos_actuales = set()
             if prerequisitos_actuales:
