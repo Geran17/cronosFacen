@@ -123,7 +123,8 @@ class EstudianteActividadService(EstudianteActividadDTO):
         return (
             f"EstudianteActividadService("
             f"id_estudiante={self.id_estudiante}, id_actividad={self.id_actividad}, "
-            f"estado={self.estado}, fecha_entrega={self.fecha_entrega})"
+            f"estado={self.estado}, fecha_entrega={self.fecha_entrega}, "
+            f"nota_estudiante={self.nota_estudiante}, porcentaje={self.porcentaje})"
         )
 
     def __repr__(self) -> str:

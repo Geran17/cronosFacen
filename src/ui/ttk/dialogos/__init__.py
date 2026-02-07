@@ -10,6 +10,7 @@ from .dialogo_administrar_estudiante_carrera import DialogoAdministrarEstudiante
 from .dialogo_administrar_asignatura import DialogoAdministrarAsignatura
 from .dialogo_administrar_eje_tematico import DialogoAdministrarEjeTemático
 from .dialogo_administrar_tipo_actividad import DialogoAdministrarTipoActividad
+from .dialogo_administrar_etiqueta import DialogoAdministrarEtiqueta
 from .dialogo_administrar_actividad import DialogoAdministrarActividad
 from .dialogo_administrar_calendario import DialogoAdministrarCalendario
 from .dialogo_acerca_de import DialogoAcercaDe
@@ -23,6 +24,7 @@ __all__ = [
     "DialogoAdministrarAsignatura",
     "DialogoAdministrarEjeTemático",
     "DialogoAdministrarTipoActividad",
+    "DialogoAdministrarEtiqueta",
     "DialogoAdministrarActividad",
     "DialogoAdministrarCalendario",
     "DialogoAcercaDe",

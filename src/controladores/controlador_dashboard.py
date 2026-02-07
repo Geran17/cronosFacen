@@ -34,6 +34,7 @@ class ControladorDashboard:
         self.btn_refrescar = self.map_widgets.get("btn_refrescar")
         self.tree_eventos = self.map_widgets.get("tree_eventos")
         self.frame_progreso = self.map_widgets.get("frame_progreso")
+        self.tree_carga = self.map_widgets.get("tree_carga")
 
         self.lbl_prog = self.map_widgets.get("lbl_prog")
         self.lbl_prog_hint = self.map_widgets.get("lbl_prog_hint")
@@ -104,6 +105,7 @@ class ControladorDashboard:
         self._actualizar_resumen_actividades(actividades)
         self._actualizar_proxima_entrega(actividades)
         self._actualizar_eventos(nombre_carrera)
+        self._actualizar_carga_semanal_mensual(actividades)
         self._actualizar_progreso_semestres(id_est, id_carrera)
 
     def _get_estudiante_id(self) -> int:
@@ -243,3 +245,35 @@ class ControladorDashboard:
             self.lbl_asig_hint.config(text=f"Cursadas: {ok_total}")
         except Exception as e:
             logger.error(f"Error al actualizar progreso: {e}", exc_info=True)
+
+    def _actualizar_carga_semanal_mensual(self, actividades: List[Dict[str, Any]]):
+        if not self.tree_carga:
+            return
+
+        for item in self.tree_carga.get_children():
+            self.tree_carga.delete(item)
+
+        semanas: Dict[tuple, int] = {}
+        meses: Dict[tuple, int] = {}
+
+        for act in actividades:
+            fecha_fin = act.get("fecha_fin")
+            if not fecha_fin:
+                continue
+            try:
+                fecha = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            except Exception:
+                continue
+
+            anio, semana, _ = fecha.isocalendar()
+            semanas[(anio, semana)] = semanas.get((anio, semana), 0) + 1
+
+            meses[(fecha.year, fecha.month)] = meses.get((fecha.year, fecha.month), 0) + 1
+
+        for (anio, semana) in sorted(semanas.keys()):
+            etiqueta = f"{anio}-W{semana:02d}"
+            self.tree_carga.insert("", "end", values=("Semana", etiqueta, semanas[(anio, semana)]))
+
+        for (anio, mes) in sorted(meses.keys()):
+            etiqueta = f"{anio}-{mes:02d}"
+            self.tree_carga.insert("", "end", values=("Mes", etiqueta, meses[(anio, mes)]))

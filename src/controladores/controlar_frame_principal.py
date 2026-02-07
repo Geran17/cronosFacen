@@ -1,6 +1,9 @@
 from ttkbootstrap import Button, Frame, Panedwindow
 from ttkbootstrap.constants import NORMAL, DISABLED
 from typing import Optional, Dict, Any
+from tkinter import filedialog
+from tkinter.messagebox import showwarning, showinfo
+import os
 from ui.ttk.dialogos.dialogo_administrar_carrera import DialogoAdministrarCarrera
 from ui.ttk.dialogos.dialogo_administrar_estudiante import DialogoAdministrarEstudiante
 from ui.ttk.dialogos.dialogo_administrar_estudiante_carrera import (
@@ -11,6 +14,7 @@ from ui.ttk.dialogos.dialogo_administrar_eje_tematico import DialogoAdministrarE
 from ui.ttk.dialogos.dialogo_administrar_tipo_actividad import DialogoAdministrarTipoActividad
 from ui.ttk.dialogos.dialogo_administrar_actividad import DialogoAdministrarActividad
 from ui.ttk.dialogos.dialogo_administrar_calendario import DialogoAdministrarCalendario
+from ui.ttk.dialogos.dialogo_administrar_etiqueta import DialogoAdministrarEtiqueta
 from ui.ttk.dialogos.dialogo_administrar_prerequisitos import DialogoAdministrarPrerequisitos
 from ui.ttk.dialogos.dialogo_administrar_estudiante_asignatura import (
     DialogoAdministrarEstudianteAsignatura,
@@ -21,7 +25,13 @@ from ui.ttk.dialogos.dialogo_administrar_estudiante_actividad import (
 from ui.ttk.dialogos.dialogo_acerca_de import DialogoAcercaDe
 from ui.ttk.dialogos.dialogo_tema import DialogoTema
 from ui.ttk.dialogos.dialogo_pin import DialogoPin
-from configuracion.config_app import get_pin_hash
+from configuracion.config_app import (
+    get_pin_hash,
+    set_backup_settings,
+    set_notificaciones_config,
+)
+from utilidades.notificaciones_locales import revisar_y_notificar
+from utilidades.backup import crear_backup_ahora
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -50,11 +60,14 @@ class ControlarFramePrincipal:
         self.btn_admin_actividad: Button = self.map_widgets['btn_admin_actividad']
         self.btn_actividad: Button = self.map_widgets['btn_actividad']
         self.btn_admin_calendario: Button = self.map_widgets['btn_admin_calendario']
+        self.btn_admin_etiqueta: Button = self.map_widgets['btn_admin_etiqueta']
         self.btn_calendario: Button = self.map_widgets['btn_calendario']
         self.btn_alertas: Button = self.map_widgets['btn_alertas']
         self.btn_dashboard: Button = self.map_widgets['btn_dashboard']
         self.btn_cuellos: Button = self.map_widgets['btn_cuellos']
         self.btn_acerca_de: Button = self.map_widgets['btn_acerca_de']
+        self.btn_salir: Button = self.map_widgets.get('btn_salir')
+        self.btn_configuraciones: Button = self.map_widgets.get('btn_configuraciones')
         self.btn_prerequisito: Button = self.map_widgets['btn_prerequisito']
         self.btn_estudiante_asignatura: Button = self.map_widgets['btn_estudiante_asignatura']
         self.btn_estudiante_actividad: Button = self.map_widgets['btn_estudiante_actividad']
@@ -62,6 +75,21 @@ class ControlarFramePrincipal:
         self.btn_tema: Button = self.map_widgets['btn_tema']
         self.btn_pin_config: Button = self.map_widgets['btn_pin_config']
         self.btn_pin_clear: Button = self.map_widgets['btn_pin_clear']
+        self.btn_backup_dir: Button = self.map_widgets.get('btn_backup_dir')
+        self.btn_backup_save: Button = self.map_widgets.get('btn_backup_save')
+        self.btn_backup_now: Button = self.map_widgets.get('btn_backup_now')
+        self.entry_backup_dir = self.map_widgets.get('entry_backup_dir')
+        self.entry_backup_keep_days = self.map_widgets.get('entry_backup_keep_days')
+        self.entry_backup_keep_last = self.map_widgets.get('entry_backup_keep_last')
+        self.var_backup_dir = self.map_widgets.get('var_backup_dir')
+        self.var_backup_keep_days = self.map_widgets.get('var_backup_keep_days')
+        self.var_backup_keep_last = self.map_widgets.get('var_backup_keep_last')
+        self.var_notif_habilitadas = self.map_widgets.get('var_notif_habilitadas')
+        self.var_notif_umbral = self.map_widgets.get('var_notif_umbral')
+        self.var_notif_intervalo = self.map_widgets.get('var_notif_intervalo')
+        self.var_notif_incluir_hoy = self.map_widgets.get('var_notif_incluir_hoy')
+        self.btn_notif_save = self.map_widgets.get('btn_notif_save')
+        self.btn_notif_test = self.map_widgets.get('btn_notif_test')
         self.frame_lateral: Frame = self.master.frame_lateral
         self.paned_window: Panedwindow = self.master.paned_window
         self.notebook_central = self.map_widgets.get('notebook_central')
@@ -71,6 +99,7 @@ class ControlarFramePrincipal:
         self.frame_alertas = self.map_widgets.get('frame_alertas')
         self.frame_dashboard = self.map_widgets.get('frame_dashboard')
         self.frame_cuellos = self.map_widgets.get('frame_cuellos')
+        self.frame_configuraciones = self.map_widgets.get('frame_configuraciones')
 
         # Conectar eventos
         self._conectar_eventos()
@@ -108,9 +137,13 @@ class ControlarFramePrincipal:
             # Calendario
             self.btn_admin_calendario.config(command=self.on_administrar_calendario)
             self.btn_calendario.config(command=self.on_ir_calendario)
+            if self.btn_admin_etiqueta:
+                self.btn_admin_etiqueta.config(command=self.on_administrar_etiqueta)
             self.btn_alertas.config(command=self.on_ir_alertas)
             self.btn_dashboard.config(command=self.on_ir_dashboard)
             self.btn_cuellos.config(command=self.on_ir_cuellos)
+            if self.btn_configuraciones:
+                self.btn_configuraciones.config(command=self.on_ir_configuraciones)
 
             # Prerequisitos
             self.btn_prerequisito.config(command=self.on_administrar_prerequisitos)
@@ -128,6 +161,18 @@ class ControlarFramePrincipal:
             self.btn_tema.config(command=self.on_tema)
             self.btn_pin_config.config(command=self.on_pin_config)
             self.btn_pin_clear.config(command=self.on_pin_clear)
+            if self.btn_backup_dir:
+                self.btn_backup_dir.config(command=self.on_backup_dir)
+            if self.btn_backup_save:
+                self.btn_backup_save.config(command=self.on_backup_save)
+            if self.btn_backup_now:
+                self.btn_backup_now.config(command=self.on_backup_now)
+            if self.btn_notif_save:
+                self.btn_notif_save.config(command=self.on_notif_save)
+            if self.btn_notif_test:
+                self.btn_notif_test.config(command=self.on_notif_test)
+            if self.btn_salir:
+                self.btn_salir.config(command=self.on_salir)
 
             # Acerca de
             self.btn_acerca_de.config(command=self.on_acerca_de)
@@ -164,6 +209,100 @@ class ControlarFramePrincipal:
 
         except Exception as e:
             logger.error(f"Error al alternar visibilidad del menú: {e}")
+
+    def on_backup_dir(self):
+        try:
+            carpeta = filedialog.askdirectory(title="Seleccionar carpeta de backups")
+            if carpeta and self.var_backup_dir is not None:
+                self.var_backup_dir.set(carpeta)
+        except Exception as e:
+            logger.error(f"Error al seleccionar carpeta de backup: {e}")
+
+    def on_backup_save(self):
+        try:
+            backup_dir = self.var_backup_dir.get().strip() if self.var_backup_dir else ""
+            keep_days = self._parse_int(self.var_backup_keep_days, 30)
+            keep_last = self._parse_int(self.var_backup_keep_last, 5)
+
+            if keep_days < 0 or keep_last < 1:
+                showwarning(
+                    "Configuración inválida",
+                    "Retención debe ser >= 0 y mantener últimos >= 1",
+                )
+                return
+            if backup_dir:
+                try:
+                    os.makedirs(backup_dir, exist_ok=True)
+                except Exception:
+                    showwarning(
+                        "Carpeta inválida",
+                        "No se pudo crear o acceder a la carpeta de backups",
+                    )
+                    return
+
+            set_backup_settings(backup_dir=backup_dir, keep_days=keep_days, keep_last=keep_last)
+            showinfo("Backups", "Configuración de backups guardada")
+        except Exception as e:
+            logger.error(f"Error al guardar configuración de backup: {e}", exc_info=True)
+
+    def on_backup_now(self):
+        try:
+            path = crear_backup_ahora()
+            if path:
+                showinfo("Backups", f"Backup creado:\n{path}")
+            else:
+                showwarning(
+                    "Backups",
+                    "No se pudo crear el backup. Verifica la carpeta configurada.",
+                )
+        except Exception as e:
+            logger.error(f"Error al crear backup manual: {e}", exc_info=True)
+
+    def on_notif_save(self):
+        try:
+            habilitado = bool(self.var_notif_habilitadas.get()) if self.var_notif_habilitadas else True
+            incluir_hoy = bool(self.var_notif_incluir_hoy.get()) if self.var_notif_incluir_hoy else True
+            umbral = self._parse_int(self.var_notif_umbral, 1)
+            intervalo = self._parse_int(self.var_notif_intervalo, 60)
+
+            if umbral < 0 or intervalo < 1:
+                showwarning(
+                    "Configuración inválida",
+                    "El umbral debe ser >= 0 y el intervalo >= 1 minuto",
+                )
+                return
+
+            set_notificaciones_config(
+                habilitado=habilitado,
+                umbral_dias=umbral,
+                intervalo_min=intervalo,
+                incluir_hoy=incluir_hoy,
+            )
+            showinfo("Notificaciones", "Configuración guardada")
+        except Exception as e:
+            logger.error(f"Error al guardar configuración de notificaciones: {e}", exc_info=True)
+
+    def on_notif_test(self):
+        try:
+            count = revisar_y_notificar(parent=self.master.winfo_toplevel())
+            if count == 0:
+                showinfo("Notificaciones", "No hay actividades próximas a vencer")
+        except Exception as e:
+            logger.error(f"Error al probar notificaciones: {e}", exc_info=True)
+
+    def on_salir(self):
+        root = self.master.winfo_toplevel()
+        if hasattr(root, "on_close"):
+            root.on_close()
+        else:
+            root.destroy()
+
+    @staticmethod
+    def _parse_int(var, fallback: int) -> int:
+        try:
+            return int(var.get()) if var is not None else fallback
+        except Exception:
+            return fallback
 
     def on_administrar_carrera(self):
         try:
@@ -257,6 +396,9 @@ class ControlarFramePrincipal:
     def on_ir_cuellos(self):
         self._seleccionar_tab(self.frame_cuellos)
 
+    def on_ir_configuraciones(self):
+        self._seleccionar_tab(self.frame_configuraciones)
+
     def on_administrar_calendario(self):
         try:
             # Obtener la ventana raíz
@@ -267,6 +409,13 @@ class ControlarFramePrincipal:
 
         except Exception as e:
             logger.error(f"Error al abrir diálogo de administración del calendario: {e}")
+
+    def on_administrar_etiqueta(self):
+        try:
+            ventana_raiz = self.master.winfo_toplevel()
+            DialogoAdministrarEtiqueta(parent=ventana_raiz)
+        except Exception as e:
+            logger.error(f"Error al abrir diálogo de administración de etiquetas: {e}")
 
     def on_acerca_de(self):
         """

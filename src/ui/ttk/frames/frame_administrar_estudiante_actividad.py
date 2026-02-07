@@ -57,6 +57,12 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.var_nota = StringVar(value="0")
         self.map_vars['var_nota'] = self.var_nota
 
+        self.var_nota_estudiante = StringVar()
+        self.map_vars['var_nota_estudiante'] = self.var_nota_estudiante
+
+        self.var_porcentaje = StringVar()
+        self.map_vars['var_porcentaje'] = self.var_porcentaje
+
         self.var_filtro_estado = StringVar(value="Todos")
         self.map_vars['var_filtro_estado'] = self.var_filtro_estado
 
@@ -290,7 +296,9 @@ class FrameAdministrarEstudianteActividad(Frame):
             {"text": "F. Fin", "stretch": False, "anchor": "center", "width": 90},
             {"text": "Días", "stretch": False, "anchor": "center", "width": 50},
             {"text": "Estado", "stretch": False, "anchor": "center", "width": 110},
-            {"text": "Nota", "stretch": False, "anchor": "center", "width": 70},
+            {"text": "Nota Act", "stretch": False, "anchor": "center", "width": 70},
+            {"text": "Nota Est", "stretch": False, "anchor": "center", "width": 70},
+            {"text": "%", "stretch": False, "anchor": "center", "width": 60},
             {"text": "F. Entrega", "stretch": False, "anchor": "center", "width": 100},
         ]
 
@@ -403,8 +411,8 @@ class FrameAdministrarEstudianteActividad(Frame):
         self.map_widgets['btn_calendario'] = self.btn_calendario
         ToolTip(self.btn_calendario, "Abrir calendario")
 
-        # Nota (opcional)
-        lbl_nota = Label(lf_form, text="Nota (opcional):", anchor=W)
+        # Nota actividad (opcional)
+        lbl_nota = Label(lf_form, text="Nota actividad (opcional):", anchor=W)
         lbl_nota.pack(fill=X, pady=(0, 3))
 
         entry_nota = Entry(
@@ -413,7 +421,31 @@ class FrameAdministrarEstudianteActividad(Frame):
         )
         entry_nota.pack(fill=X, pady=(0, 10))
         self.map_widgets['entry_nota'] = entry_nota
-        ToolTip(entry_nota, "Ingrese la nota obtenida (0 por defecto)")
+        ToolTip(entry_nota, "Nota máxima de la actividad (opcional)")
+
+        # Nota estudiante (opcional)
+        lbl_nota_est = Label(lf_form, text="Nota estudiante (opcional):", anchor=W)
+        lbl_nota_est.pack(fill=X, pady=(0, 3))
+
+        entry_nota_est = Entry(
+            lf_form,
+            textvariable=self.var_nota_estudiante,
+        )
+        entry_nota_est.pack(fill=X, pady=(0, 10))
+        self.map_widgets['entry_nota_estudiante'] = entry_nota_est
+        ToolTip(entry_nota_est, "Nota obtenida por el estudiante (opcional)")
+
+        # Porcentaje (editable)
+        lbl_pct = Label(lf_form, text="Porcentaje:", anchor=W)
+        lbl_pct.pack(fill=X, pady=(0, 3))
+
+        entry_pct = Entry(
+            lf_form,
+            textvariable=self.var_porcentaje,
+        )
+        entry_pct.pack(fill=X, pady=(0, 10))
+        self.map_widgets['entry_porcentaje'] = entry_pct
+        ToolTip(entry_pct, "Editable. Se calcula automáticamente si hay notas")
 
         Separator(lf_form, orient=HORIZONTAL).pack(fill=X, pady=PADDING_MD)
 

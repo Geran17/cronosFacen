@@ -4,6 +4,9 @@ from ui.ttk.frames.frame_principal import FramePrincipal
 from ui.ttk.styles.estilos import apply_styles
 from configuracion.config_app import get_tema, get_pin_hash
 from ui.ttk.dialogos.dialogo_pin import DialogoPin
+from utilidades.backup import crear_backup_al_cerrar
+from utilidades.notificaciones_locales import revisar_y_notificar, obtener_intervalo_ms
+from modelos.daos.conexion_sqlite import ConexionSQLite
 
 
 class AppTTK(Window):
@@ -36,9 +39,30 @@ class AppTTK(Window):
         self.frame_prinicipal = FramePrincipal(master=self)
         self.frame_prinicipal.pack(side=TOP, fill=BOTH, expand=TRUE)
 
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+        self._programar_notificaciones()
+
         # PIN opcional de acceso
         if get_pin_hash():
             dialog = DialogoPin(parent=self, mode="verify")
             self.wait_window(dialog)
             if not dialog.autenticado:
                 self.destroy()
+
+    def on_close(self):
+        try:
+            crear_backup_al_cerrar()
+        finally:
+            ConexionSQLite.cerrar_todas()
+            self.destroy()
+
+    def _programar_notificaciones(self):
+        intervalo_ms = obtener_intervalo_ms()
+
+        def _tick():
+            try:
+                revisar_y_notificar(parent=self)
+            finally:
+                self.after(intervalo_ms, _tick)
+
+        self.after(3000, _tick)

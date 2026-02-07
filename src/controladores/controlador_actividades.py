@@ -5,6 +5,7 @@ from typing import Dict, Any, List, Optional
 from tkinter.messagebox import showwarning
 from tkinter import Menu
 from datetime import datetime
+import unicodedata
 from modelos.services.estudiante_service import EstudianteService
 from modelos.services.estudiante_carrera_service import EstudianteCarreraService
 from modelos.services.asignatura_service import AsignaturaService
@@ -18,6 +19,10 @@ from scripts.logging_config import obtener_logger_modulo
 from ui.ttk.dialogos.dialogo_estado_actividad import DialogoEstadoActividad
 from ui.ttk.dialogos.dialogo_administrar_estudiante_actividad import (
     DialogoAdministrarEstudianteActividad,
+)
+from configuracion.config_app import (
+    get_actividades_tipo_filtro,
+    set_actividades_tipo_filtro,
 )
 
 logger = obtener_logger_modulo(__name__)
@@ -61,6 +66,8 @@ class ControlarActividades:
         self._cargar_widgets()
         self._cargar_estudiantes()
         self._cargar_tipos_actividad()
+        if self.cbx_estudiantes and self.cbx_estudiantes['values']:
+            self._on_change_estudiante()
         # vinculamos los eventos a los widgets
         self._vincular_eventos()
         # Crear botones de estadísticas
@@ -84,6 +91,7 @@ class ControlarActividades:
             self.var_carrera: StringVar = self.map_vars.get('var_carrera')
             self.var_asignatura: StringVar = self.map_vars.get('var_asignatura')
             self.var_tipo_actividad: StringVar = self.map_vars.get('var_tipo_actividad')
+            self.var_busqueda: StringVar = self.map_vars.get('var_busqueda')
             logger.info("Variables cargadas correctamente")
         except Exception as e:
             logger.error(f"Error al cargar variables: {e}")
@@ -105,6 +113,8 @@ class ControlarActividades:
             self.cbx_tipo_actividades: Combobox = self.map_widgets.get('cbx_tipo_actividades')
             self.scrolled_frame: ScrolledFrame = self.map_widgets.get('scrolled_frame')
             self.label_frame_datos: Labelframe = self.map_widgets.get('label_frame_datos')
+            self.entry_buscar_actividad = self.map_widgets.get('entry_buscar_actividad')
+            self.btn_limpiar_busqueda = self.map_widgets.get('btn_limpiar_busqueda')
             logger.info("Widgets cargados correctamente")
         except Exception as e:
             logger.error(f"Error al cargar widgets: {e}")
@@ -191,7 +201,8 @@ class ControlarActividades:
             for widget in self.scrolled_frame.winfo_children():
                 widget.destroy()
 
-            if not self.lista_actividades_detalladas:
+            actividades = self._get_actividades_visibles()
+            if not actividades:
                 # Mostrar mensaje vacío
                 label_vacio = Label(
                     self.scrolled_frame,
@@ -204,10 +215,10 @@ class ControlarActividades:
                 return
 
             # Crear tarjetas para cada actividad
-            for actividad in self.lista_actividades_detalladas:
+            for actividad in actividades:
                 self._crear_tarjeta_actividad(actividad)
 
-            logger.info(f"Se mostraron {len(self.lista_actividades_detalladas)} actividades")
+            logger.info(f"Se mostraron {len(actividades)} actividades")
 
         except Exception as e:
             logger.error(f"Error al mostrar actividades filtradas: {e}", exc_info=True)
@@ -679,10 +690,11 @@ class ControlarActividades:
             # Limpiar diccionarios
             self.dict_asignaturas.clear()
             self.dict_asignaturas_inv.clear()
-            lista_aux = []
+            lista_aux = ["Todos"]
 
             if not nombre_carrera:
                 self.cbx_asignaturas.config(values=lista_aux)
+                self.cbx_asignaturas.current(0)
                 return
 
             if nombre_carrera == "Todos":
@@ -725,12 +737,12 @@ class ControlarActividades:
 
             # Actualizar combobox
             self.cbx_asignaturas.config(values=lista_aux)
-            if lista_aux:
-                self.cbx_asignaturas.current(0)
+            self.cbx_asignaturas.current(0)
 
         except Exception as e:
             logger.error(f"Error al cargar asignaturas: {e}", exc_info=True)
-            self.cbx_asignaturas.config(values=[])
+            self.cbx_asignaturas.config(values=["Todos"])
+            self.cbx_asignaturas.current(0)
 
     def _cargar_tipos_actividad(self) -> None:
         """Carga todos los tipos de actividad disponibles.
@@ -781,7 +793,13 @@ class ControlarActividades:
             # Actualizar combobox
             self.cbx_tipo_actividades.config(values=lista)
             if lista:
-                self.cbx_tipo_actividades.current(0)
+                id_filtro_guardado = get_actividades_tipo_filtro()
+                label_guardado = self.dict_tipos_actividad.get(id_filtro_guardado)
+                if label_guardado and label_guardado in lista:
+                    self.cbx_tipo_actividades.current(lista.index(label_guardado))
+                else:
+                    set_actividades_tipo_filtro(0)
+                    self.cbx_tipo_actividades.current(0)
 
         except Exception as e:
             logger.error(f"Error al cargar tipos de actividad: {e}", exc_info=True)
@@ -857,6 +875,7 @@ class ControlarActividades:
         try:
             nombre_tipo = self.var_tipo_actividad.get()
             self.id_tipo_actividad_actual = self.dict_tipos_actividad_inv.get(nombre_tipo, 0)
+            set_actividades_tipo_filtro(self.id_tipo_actividad_actual)
             self._filtrar_actividades_detalladas()
             self._mostrar_actividades_filtradas()
             # Mostrar estadísticas actualizadas
@@ -881,9 +900,58 @@ class ControlarActividades:
             self.cbx_carreras.bind('<<ComboboxSelected>>', self._on_change_carrera)
             self.cbx_asignaturas.bind('<<ComboboxSelected>>', self._on_change_asignatura)
             self.cbx_tipo_actividades.bind('<<ComboboxSelected>>', self._on_change_tipo_actividad)
+            if self.var_busqueda is not None:
+                self.var_busqueda.trace_add("write", lambda *_: self._on_busqueda_change())
+            if self.btn_limpiar_busqueda:
+                self.btn_limpiar_busqueda.config(command=self._limpiar_busqueda)
             logger.debug("Eventos vinculados correctamente")
         except Exception as e:
             logger.error(f"Error al vincular eventos: {e}", exc_info=True)
+
+    def _on_busqueda_change(self) -> None:
+        try:
+            self._mostrar_actividades_filtradas()
+            self._mostrar_estadisticas(self.vista_actual)
+        except Exception as e:
+            logger.error(f"Error al actualizar búsqueda: {e}", exc_info=True)
+
+    def _limpiar_busqueda(self) -> None:
+        try:
+            if self.var_busqueda is not None:
+                self.var_busqueda.set("")
+        except Exception as e:
+            logger.error(f"Error al limpiar búsqueda: {e}", exc_info=True)
+
+    @staticmethod
+    def _normalizar_texto(texto: str) -> str:
+        base = (texto or "").strip().lower()
+        normalizado = unicodedata.normalize("NFKD", base)
+        return "".join(c for c in normalizado if not unicodedata.combining(c))
+
+    def _filtrar_por_busqueda(self, actividades: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        termino = self._normalizar_texto(self.var_busqueda.get()) if self.var_busqueda else ""
+        if not termino:
+            return actividades
+
+        filtradas = []
+        for act in actividades:
+            partes = [
+                act.get("titulo", ""),
+                act.get("nombre_asignatura", ""),
+                act.get("actividad_nombre", ""),
+                act.get("siglas", ""),
+                act.get("actividad_estado", ""),
+                act.get("eje_nombre", ""),
+            ]
+            haystack = self._normalizar_texto(" ".join(str(p) for p in partes if p is not None))
+            if termino in haystack:
+                filtradas.append(act)
+        return filtradas
+
+    def _get_actividades_visibles(self) -> List[Dict[str, Any]]:
+        if not self.lista_actividades_detalladas:
+            return []
+        return self._filtrar_por_busqueda(self.lista_actividades_detalladas)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Métodos de Estadísticas
@@ -972,10 +1040,10 @@ class ControlarActividades:
             'promedio_nota': 0.0,
         }
 
-        if not self.lista_actividades_detalladas:
+        actividades = self._get_actividades_visibles()
+        if not actividades:
             return stats
 
-        actividades = self.lista_actividades_detalladas
         stats['total'] = len(actividades)
 
         notas_validas = []
@@ -1301,7 +1369,7 @@ class ControlarActividades:
         try:
             entregadas = [
                 a
-                for a in self.lista_actividades_detalladas
+                for a in self._get_actividades_visibles()
                 if a.get('actividad_estado') == 'entregada'
             ]
 
@@ -1322,7 +1390,7 @@ class ControlarActividades:
         """Calcula la duración promedio de las actividades."""
         try:
             duraciones = []
-            for act in self.lista_actividades_detalladas:
+            for act in self._get_actividades_visibles():
                 dias = act.get('dias_duracion', 0)
                 if dias:
                     duraciones.append(dias)
@@ -1336,7 +1404,7 @@ class ControlarActividades:
         """Cuenta actividades por nivel de prioridad."""
         conteos = {'Alta': 0, 'Media': 0, 'Baja': 0}
 
-        for act in self.lista_actividades_detalladas:
+        for act in self._get_actividades_visibles():
             prioridad = act.get('prioridad', 0)
             if prioridad == 2:
                 conteos['Alta'] += 1
@@ -1351,7 +1419,7 @@ class ControlarActividades:
         """Obtiene actividades próximas a vencer (dentro de X días)."""
         proximas = []
 
-        for act in self.lista_actividades_detalladas:
+        for act in self._get_actividades_visibles():
             dias = act.get('dias_desde_fin', 0)
             if 0 <= dias <= limite_dias:
                 proximas.append(act)

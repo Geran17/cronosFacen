@@ -39,6 +39,9 @@ INDICES = [
     "CREATE INDEX IF NOT EXISTS idx_actividad_eje ON actividad (id_eje);",
     "CREATE INDEX IF NOT EXISTS idx_actividad_fechas ON actividad (fecha_inicio, fecha_fin);",
     "CREATE INDEX IF NOT EXISTS idx_actividad_tipo ON actividad (id_tipo_actividad);",
+    # 🏷️ Etiquetas
+    "CREATE INDEX IF NOT EXISTS idx_actividad_etiqueta_actividad ON actividad_etiqueta (id_actividad);",
+    "CREATE INDEX IF NOT EXISTS idx_actividad_etiqueta_etiqueta ON actividad_etiqueta (id_etiqueta);",
     # 🗓️ CalendarioEvento
     "CREATE INDEX IF NOT EXISTS idx_evento_fechas ON calendario_evento (fecha_inicio, fecha_fin);",
     # 👤 EstudianteCarrera - relación M:M entre estudiantes y carreras
@@ -162,6 +165,8 @@ def _crear_todas_las_tablas(ruta_db: str = RUTA_DB) -> None:
         from modelos.daos.estudiante_asignatura_dao import EstudianteAsignaturaDAO
         from modelos.daos.estudiante_actividad_dao import EstudianteActividadDAO
         from modelos.daos.tipo_actividad_dao import TipoActividadDAO
+        from modelos.daos.etiqueta_dao import EtiquetaDAO
+        from modelos.daos.actividad_etiqueta_dao import ActividadEtiquetaDAO
 
         # Instanciar cada DAO (el constructor automáticamente crea la tabla)
         logger.info("  ✓ Tablas creadas/verificadas")
@@ -176,6 +181,8 @@ def _crear_todas_las_tablas(ruta_db: str = RUTA_DB) -> None:
         EstudianteDAO(ruta_db=ruta_db)
         EstudianteAsignaturaDAO(ruta_db=ruta_db)
         EstudianteActividadDAO(ruta_db=ruta_db)
+        EtiquetaDAO(ruta_db=ruta_db)
+        ActividadEtiquetaDAO(ruta_db=ruta_db)
 
         logger.info("  ✓ Todas las tablas creadas correctamente")
 

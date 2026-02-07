@@ -114,6 +114,8 @@ class FrameDashboard(Frame):
     def _frame_central(self, frame: Frame):
         frame.columnconfigure(0, weight=2)
         frame.columnconfigure(1, weight=1)
+        frame.rowconfigure(0, weight=2)
+        frame.rowconfigure(1, weight=1)
 
         lf_eventos = Labelframe(frame, text="Próximos 7 días", padding=PADDING_SM)
         lf_eventos.grid(row=0, column=0, sticky=NSEW, padx=PADDING_XS, pady=PADDING_XS)
@@ -139,3 +141,21 @@ class FrameDashboard(Frame):
         cont = Frame(lf_progreso)
         cont.pack(fill=BOTH, expand=TRUE)
         self.map_widgets["frame_progreso"] = cont
+
+        lf_carga = Labelframe(frame, text="Carga semanal y mensual", padding=PADDING_SM)
+        lf_carga.grid(row=1, column=0, columnspan=2, sticky=NSEW, padx=PADDING_XS, pady=PADDING_XS)
+
+        columns_carga = ("tipo", "periodo", "cantidad")
+        tree_carga = Treeview(lf_carga, columns=columns_carga, show="headings", height=6)
+        tree_carga.heading("tipo", text="Tipo")
+        tree_carga.heading("periodo", text="Periodo")
+        tree_carga.heading("cantidad", text="Actividades")
+        tree_carga.column("tipo", width=90, anchor=W)
+        tree_carga.column("periodo", width=160, anchor=W)
+        tree_carga.column("cantidad", width=110, anchor=CENTER)
+        tree_carga.pack(side=LEFT, fill=BOTH, expand=TRUE)
+
+        scroll_carga = Scrollbar(lf_carga, orient=VERTICAL, command=tree_carga.yview)
+        scroll_carga.pack(side=RIGHT, fill=Y)
+        tree_carga.configure(yscrollcommand=scroll_carga.set)
+        self.map_widgets["tree_carga"] = tree_carga

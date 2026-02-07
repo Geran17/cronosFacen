@@ -9,6 +9,7 @@ from ttkbootstrap.constants import DISABLED, NORMAL, READONLY
 from modelos.services.consulta_service import EventosUnificadosService
 from modelos.dtos.consulta_dto import EventosUnificadosDTO
 from scripts.logging_config import obtener_logger_modulo
+from configuracion.config_app import get_alertas_filtros, set_alertas_filtros
 
 logger = obtener_logger_modulo(__name__)
 
@@ -129,13 +130,10 @@ class ControladorAlertasActividades:
 
             if self.cbx_carrera:
                 self.cbx_carrera['values'] = ["Todos"] + carreras
-                self.cbx_carrera.current(0)
             if self.cbx_asignatura:
                 self.cbx_asignatura['values'] = ["Todos"] + asignaturas
-                self.cbx_asignatura.current(0)
             if self.cbx_tipo_actividad:
                 self.cbx_tipo_actividad['values'] = ["Todos"] + tipos
-                self.cbx_tipo_actividad.current(0)
             if self.cbx_rango:
                 self.cbx_rango['values'] = [
                     "Todas",
@@ -146,13 +144,36 @@ class ControladorAlertasActividades:
                     "8-14 días",
                     "15+ días",
                 ]
-                self.cbx_rango.current(0)
+
+            filtros = get_alertas_filtros()
+
+            if self.cbx_carrera:
+                valores = list(self.cbx_carrera['values'])
+                idx = valores.index(filtros["carrera"]) if filtros["carrera"] in valores else 0
+                self.cbx_carrera.current(idx)
+            if self.cbx_asignatura:
+                valores = list(self.cbx_asignatura['values'])
+                idx = (
+                    valores.index(filtros["asignatura"])
+                    if filtros["asignatura"] in valores
+                    else 0
+                )
+                self.cbx_asignatura.current(idx)
+            if self.cbx_tipo_actividad:
+                valores = list(self.cbx_tipo_actividad['values'])
+                idx = valores.index(filtros["tipo"]) if filtros["tipo"] in valores else 0
+                self.cbx_tipo_actividad.current(idx)
+            if self.cbx_rango:
+                valores = list(self.cbx_rango['values'])
+                idx = valores.index(filtros["rango"]) if filtros["rango"] in valores else 0
+                self.cbx_rango.current(idx)
         except Exception as e:
             logger.error(f"Error al cargar filtros de alertas: {e}", exc_info=True)
         finally:
             self._set_loading(False)
 
     def _aplicar_filtros(self):
+        self._guardar_filtros_actuales()
         self._cargar_alertas()
 
     def _resetear_filtros(self):
@@ -160,12 +181,20 @@ class ControladorAlertasActividades:
             for cbx in (self.cbx_carrera, self.cbx_asignatura, self.cbx_tipo_actividad, self.cbx_rango):
                 if cbx and cbx['values']:
                     cbx.current(0)
+            set_alertas_filtros()
         finally:
             self._cargar_alertas()
 
     def _refrescar(self):
         self._cargar_filtros()
         self._cargar_alertas()
+
+    def _guardar_filtros_actuales(self):
+        carrera = self.var_carrera.get() if self.var_carrera else "Todos"
+        asignatura = self.var_asignatura.get() if self.var_asignatura else "Todos"
+        tipo = self.var_tipo_actividad.get() if self.var_tipo_actividad else "Todos"
+        rango = self.var_rango.get() if self.var_rango else "Todas"
+        set_alertas_filtros(carrera=carrera, asignatura=asignatura, tipo=tipo, rango=rango)
 
     def _cargar_alertas(self):
         if not self.tree_alertas:

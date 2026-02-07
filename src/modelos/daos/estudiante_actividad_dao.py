@@ -33,6 +33,8 @@ class EstudianteActividadDAO(DAO):
                     estado IN ('pendiente', 'en_progreso', 'entregada', 'vencida')
                 ),
                 fecha_entrega TEXT,
+                nota_estudiante REAL,
+                porcentaje REAL,
                 PRIMARY KEY (id_estudiante, id_actividad),
                 FOREIGN KEY (id_estudiante)
                     REFERENCES estudiante(id_estudiante)
@@ -54,9 +56,17 @@ class EstudianteActividadDAO(DAO):
         Returns:
             bool: True si se insertó correctamente, False en caso de error.
         """
-        sql = """INSERT INTO estudiante_actividad (id_estudiante, id_actividad, estado, fecha_entrega)
-                 VALUES (?, ?, ?, ?)"""
-        params = (dto.id_estudiante, dto.id_actividad, dto.estado, dto.fecha_entrega)
+        sql = """INSERT INTO estudiante_actividad (
+                    id_estudiante, id_actividad, estado, fecha_entrega, nota_estudiante, porcentaje
+                 ) VALUES (?, ?, ?, ?, ?, ?)"""
+        params = (
+            dto.id_estudiante,
+            dto.id_actividad,
+            dto.estado,
+            dto.fecha_entrega,
+            dto.nota_estudiante,
+            dto.porcentaje,
+        )
 
         resultado = self.ejecutar_insertar(sql, params)
         return resultado is not None
@@ -144,11 +154,13 @@ class EstudianteActividadDAO(DAO):
             bool: True si se actualizó correctamente, False en caso contrario.
         """
         sql = """UPDATE estudiante_actividad 
-                 SET estado = ?, fecha_entrega = ?
+                 SET estado = ?, fecha_entrega = ?, nota_estudiante = ?, porcentaje = ?
                  WHERE id_estudiante = ? AND id_actividad = ?"""
         params = (
             dto.estado,
             dto.fecha_entrega,
+            dto.nota_estudiante,
+            dto.porcentaje,
             dto.id_estudiante,
             dto.id_actividad,
         )
@@ -160,7 +172,7 @@ class EstudianteActividadDAO(DAO):
         Obtiene los registros de estudiante_actividad de un estudiante.
         """
         sql = """
-            SELECT id_estudiante, id_actividad, estado, fecha_entrega
+            SELECT id_estudiante, id_actividad, estado, fecha_entrega, nota_estudiante, porcentaje
             FROM estudiante_actividad
             WHERE id_estudiante = ?
         """

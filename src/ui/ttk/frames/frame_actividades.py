@@ -1,4 +1,4 @@
-from ttkbootstrap import Frame, Label, StringVar, Separator, Combobox, Labelframe, Button
+from ttkbootstrap import Frame, Label, StringVar, Separator, Combobox, Labelframe, Button, Entry
 from typing import Dict, Any
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
@@ -17,12 +17,14 @@ class FrameActividades(Frame):
         self.var_carrera = StringVar()
         self.var_asignatura = StringVar()
         self.var_tipo_actividad = StringVar()
+        self.var_busqueda = StringVar()
 
         self.map_vars: Dict[str, Any] = {
             'var_estudiante': self.var_estudiante,
             'var_carrera': self.var_carrera,
             'var_asignatura': self.var_asignatura,
             'var_tipo_actividad': self.var_tipo_actividad,
+            'var_busqueda': self.var_busqueda,
         }
 
         self.map_widgets: Dict[str, Any] = {}
@@ -155,4 +157,19 @@ class FrameActividades(Frame):
         ToolTip(
             cbx_tipo_actividades,
             text="Seleccione un tipo de actividad para filtrar las actividades del estudiante",
+        )
+
+        lbl_buscar = Label(frame, text="Buscar:", style="FormLabel.TLabel")
+        lbl_buscar.grid(row=4, column=0, padx=PADDING_SM, pady=(PADDING_SM, 2), sticky=EW)
+
+        btn_limpiar = Button(frame, text="Limpiar", bootstyle="secondary")
+        btn_limpiar.grid(row=4, column=1, padx=PADDING_SM, pady=(PADDING_SM, 2), sticky=E)
+        self.map_widgets['btn_limpiar_busqueda'] = btn_limpiar
+
+        entry_buscar = Entry(frame, textvariable=self.var_busqueda)
+        entry_buscar.grid(row=5, column=0, columnspan=2, padx=PADDING_SM, pady=(0, PADDING_SM), sticky=EW)
+        self.map_widgets['entry_buscar_actividad'] = entry_buscar
+        ToolTip(
+            entry_buscar,
+            text="Buscar por título, asignatura, tipo o estado",
         )

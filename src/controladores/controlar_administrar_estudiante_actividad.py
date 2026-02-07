@@ -89,6 +89,8 @@ class ControlarAdministrarEstudianteActividad:
         self.var_estado = self.map_vars.get('var_estado')
         self.var_fecha_entrega = self.map_vars.get('var_fecha_entrega')
         self.var_nota = self.map_vars.get('var_nota')
+        self.var_nota_estudiante = self.map_vars.get('var_nota_estudiante')
+        self.var_porcentaje = self.map_vars.get('var_porcentaje')
         self.var_filtro_estado = self.map_vars.get('var_filtro_estado')
         self.var_filtro_tipo = self.map_vars.get('var_filtro_tipo')
         self.var_filtro_asignatura = self.map_vars.get('var_filtro_asignatura')
@@ -217,6 +219,11 @@ class ControlarAdministrarEstudianteActividad:
 
         # Tabla - doble click
         self.tabla_actividades.view.bind("<Double-Button-1>", self._on_actividad_seleccionada)
+
+        if self.var_nota_estudiante:
+            self.var_nota_estudiante.trace_add("write", lambda *_: self._actualizar_porcentaje())
+        if self.var_nota:
+            self.var_nota.trace_add("write", lambda *_: self._actualizar_porcentaje())
 
         # Botones del formulario
         self.btn_aplicar.config(command=self._on_aplicar)
@@ -389,6 +396,8 @@ class ControlarAdministrarEstudianteActividad:
                     registro.id_actividad = data.get('id_actividad')
                     registro.estado = data.get('estado')
                     registro.fecha_entrega = data.get('fecha_entrega')
+                    registro.nota_estudiante = data.get('nota_estudiante')
+                    registro.porcentaje = data.get('porcentaje')
                     self.lista_registros_estudiante.append(registro)
 
                 logger.info(f"Se cargaron {len(lista_aux)} registros")
@@ -545,6 +554,23 @@ class ControlarAdministrarEstudianteActividad:
                 except Exception:
                     nota_fmt = "0.00"
 
+                nota_est_fmt = ""
+                pct_fmt = ""
+                if registro:
+                    try:
+                        if registro.nota_estudiante is not None:
+                            nota_est_fmt = f"{float(registro.nota_estudiante):.2f}"
+                    except Exception:
+                        nota_est_fmt = ""
+                    try:
+                        if registro.porcentaje is not None:
+                            pct_fmt = f"{float(registro.porcentaje):.2f}"
+                        elif nota_est_fmt and nota_fmt not in ("", "0.00"):
+                            pct_calc = (float(nota_est_fmt) / float(nota_fmt)) * 100
+                            pct_fmt = f"{pct_calc:.2f}"
+                    except Exception:
+                        pct_fmt = ""
+
                 self.tabla_actividades.insert_row(
                     index="end",
                     values=(
@@ -557,6 +583,8 @@ class ControlarAdministrarEstudianteActividad:
                         dias_restantes,
                         estado_display,
                         nota_fmt,
+                        nota_est_fmt,
+                        pct_fmt,
                         fecha_entrega,
                     ),
                 )
@@ -624,6 +652,10 @@ class ControlarAdministrarEstudianteActividad:
         self.var_estado.set("")
         self.var_fecha_entrega.set("")
         self.var_nota.set("0")
+        if self.var_nota_estudiante:
+            self.var_nota_estudiante.set("")
+        if self.var_porcentaje:
+            self.var_porcentaje.set("")
         self.id_actividad_seleccionada = 0
 
     def _cargar_formulario(self, id_actividad: int):
@@ -659,15 +691,26 @@ class ControlarAdministrarEstudianteActividad:
                 self.var_fecha_entrega.set(
                     datos_act.get('fecha_fin', "") or registro.fecha_entrega or ""
                 )
+                if self.var_nota_estudiante is not None:
+                    nota_est = registro.nota_estudiante
+                    self.var_nota_estudiante.set("" if nota_est is None else f"{float(nota_est):.2f}")
+                if self.var_porcentaje is not None:
+                    pct = registro.porcentaje
+                    self.var_porcentaje.set("" if pct is None else f"{float(pct):.2f}")
             else:
                 self.var_estado.set('⏳ Pendiente')
                 self.var_fecha_entrega.set(datos_act.get('fecha_fin', "") or "")
+                if self.var_nota_estudiante is not None:
+                    self.var_nota_estudiante.set("")
+                if self.var_porcentaje is not None:
+                    self.var_porcentaje.set("")
 
             try:
                 nota_val = float(datos_act.get('nota', 0) or 0)
             except Exception:
                 nota_val = 0.0
             self.var_nota.set(f"{nota_val:.2f}")
+            self._actualizar_porcentaje()
 
             self._actualizar_estadisticas()
 
@@ -842,6 +885,40 @@ class ControlarAdministrarEstudianteActividad:
                 )
                 return
 
+            nota_estudiante_val = None
+            if self.var_nota_estudiante is not None:
+                nota_est_str = self.var_nota_estudiante.get().strip()
+                if nota_est_str != "":
+                    try:
+                        nota_estudiante_val = float(nota_est_str)
+                    except ValueError:
+                        showwarning(
+                            parent=self.master,
+                            title="Advertencia",
+                            message="Nota de estudiante inválida. Use un número.",
+                        )
+                        return
+
+            porcentaje_val = None
+            if self.var_porcentaje is not None:
+                pct_str = self.var_porcentaje.get().strip()
+                if pct_str != "":
+                    try:
+                        porcentaje_val = float(pct_str)
+                    except ValueError:
+                        showwarning(
+                            parent=self.master,
+                            title="Advertencia",
+                            message="Porcentaje inválido. Use un número.",
+                        )
+                        return
+            if porcentaje_val is None:
+                try:
+                    if nota_estudiante_val is not None and nota_val > 0:
+                        porcentaje_val = (nota_estudiante_val / nota_val) * 100
+                except Exception:
+                    porcentaje_val = None
+
             # Validar fecha si está presente
             if fecha_entrega:
                 try:
@@ -860,6 +937,8 @@ class ControlarAdministrarEstudianteActividad:
             registro.id_actividad = self.id_actividad_seleccionada
             registro.estado = estado_bd
             registro.fecha_entrega = fecha_entrega if fecha_entrega else None
+            registro.nota_estudiante = nota_estudiante_val
+            registro.porcentaje = porcentaje_val
 
             # Verificar si existe el registro
             existe = registro.existe()
@@ -877,16 +956,17 @@ class ControlarAdministrarEstudianteActividad:
                 )
 
             # Actualizar nota de la actividad (opcional) antes de limpiar formulario
-            try:
-                act = ActividadService(ruta_db=None)
-                act.id_actividad = self.id_actividad_seleccionada
-                if act.instanciar():
-                    act.nota = nota_val
-                    act.actualizar()
-                    self.dict_actividades[self.id_actividad_seleccionada]['nota'] = nota_val
-                    self.var_nota.set(f"{nota_val:.2f}")
-            except Exception as e:
-                logger.error(f"Error al actualizar nota de actividad: {e}", exc_info=True)
+            if nota_str != "":
+                try:
+                    act = ActividadService(ruta_db=None)
+                    act.id_actividad = self.id_actividad_seleccionada
+                    if act.instanciar():
+                        act.nota = nota_val
+                        act.actualizar()
+                        self.dict_actividades[self.id_actividad_seleccionada]['nota'] = nota_val
+                        self.var_nota.set(f"{nota_val:.2f}")
+                except Exception as e:
+                    logger.error(f"Error al actualizar nota de actividad: {e}", exc_info=True)
 
             # Recargar datos
             self._cargar_registros_estudiante(self.id_estudiante_actual)
@@ -907,3 +987,23 @@ class ControlarAdministrarEstudianteActividad:
                 title="Error",
                 message=f"Error inesperado: {str(e)}",
             )
+
+    def _actualizar_porcentaje(self):
+        if not self.var_porcentaje:
+            return
+        try:
+            nota_act = float(self.var_nota.get()) if self.var_nota and self.var_nota.get().strip() != "" else 0.0
+        except Exception:
+            nota_act = 0.0
+        try:
+            nota_est = (
+                float(self.var_nota_estudiante.get())
+                if self.var_nota_estudiante and self.var_nota_estudiante.get().strip() != ""
+                else None
+            )
+        except Exception:
+            nota_est = None
+
+        if nota_act > 0 and nota_est is not None:
+            pct = (nota_est / nota_act) * 100
+            self.var_porcentaje.set(f"{pct:.2f}")

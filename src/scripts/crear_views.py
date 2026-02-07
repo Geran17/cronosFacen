@@ -130,6 +130,8 @@ agregar_view(
         tipo_actividad.prioridad AS prioridad,
         estudiante_actividad.estado AS actividad_estado,
         estudiante_actividad.fecha_entrega AS fecha_entrega,
+        estudiante_actividad.nota_estudiante AS nota_estudiante,
+        estudiante_actividad.porcentaje AS porcentaje,
         CAST((julianday(actividad.fecha_fin) - julianday(actividad.fecha_inicio)) AS INTEGER) AS dias_duracion,
         CAST((julianday(date('now')) - julianday(actividad.fecha_fin)) AS INTEGER) AS dias_desde_fin
     FROM

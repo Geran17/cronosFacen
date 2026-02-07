@@ -18,12 +18,18 @@ class EstudianteActividadDTO:
             Defaults to None.
         fecha_entrega (Optional[str]): Fecha de entrega real en formato ISO
             (YYYY-MM-DD). Defaults to None.
+        nota_estudiante (Optional[float]): Nota obtenida por el estudiante en la actividad.
+            Defaults to None.
+        porcentaje (Optional[float]): Porcentaje comparado con la nota de la actividad.
+            Defaults to None.
     """
 
     id_estudiante: Optional[int] = None
     id_actividad: Optional[int] = None
     estado: Optional[str] = None
     fecha_entrega: Optional[str] = None
+    nota_estudiante: Optional[float] = None
+    porcentaje: Optional[float] = None
 
     def get_data(self) -> Dict[str, Any]:
         """
@@ -53,6 +59,8 @@ class EstudianteActividadDTO:
             'id_actividad': self.id_actividad,
             'estado': self.estado,
             'fecha_entrega': self.fecha_entrega,
+            'nota_estudiante': self.nota_estudiante,
+            'porcentaje': self.porcentaje,
         }
 
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -77,3 +85,5 @@ class EstudianteActividadDTO:
             self.id_actividad = data.get('id_actividad', self.id_actividad)
             self.estado = data.get('estado', self.estado)
             self.fecha_entrega = data.get('fecha_entrega', self.fecha_entrega)
+            self.nota_estudiante = data.get('nota_estudiante', self.nota_estudiante)
+            self.porcentaje = data.get('porcentaje', self.porcentaje)

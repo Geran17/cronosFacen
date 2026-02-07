@@ -8,6 +8,8 @@ from modelos.services.eje_tematico_service import EjeTematicoService
 from modelos.services.tipo_actividad_service import TipoActividadService
 from modelos.services.carrera_service import CarreraService
 from modelos.services.asignatura_service import AsignaturaService
+from modelos.services.etiqueta_service import EtiquetaService
+from modelos.services.actividad_etiqueta_service import ActividadEtiquetaService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -50,6 +52,10 @@ class ControlarAdministrarActividad:
         self.dict_asignaturas: Dict[int, str] = {}
         self.dict_asignaturas_inv: Dict[str, int] = {}
 
+        # Diccionarios para etiquetas: id_etiqueta -> nombre y viceversa
+        self.dict_etiquetas: Dict[int, str] = {}
+        self.dict_etiquetas_inv: Dict[str, int] = {}
+
         # Diccionario para mapear asignatura -> ejes temáticos disponibles
         self.dict_ejes_por_asignatura: Dict[int, Dict[int, str]] = (
             {}
@@ -72,6 +78,9 @@ class ControlarAdministrarActividad:
 
         # cargar las asignaturas en el combobox
         self._cargar_asignaturas()
+
+        # cargar etiquetas disponibles
+        self._cargar_etiquetas()
 
         # mostrar las estadistica en el panel inferior
         self._actualizar_estadisticas()
@@ -104,6 +113,10 @@ class ControlarAdministrarActividad:
         self.cbx_asignatura_filtro.bind(
             "<<ComboboxSelected>>", self._on_asignatura_filtro_seleccionada
         )
+        if self.btn_etiqueta_agregar:
+            self.btn_etiqueta_agregar.config(command=self._on_agregar_etiqueta)
+        if self.btn_etiqueta_refrescar:
+            self.btn_etiqueta_refrescar.config(command=self._cargar_etiquetas)
 
     def _establecer_actividad(self) -> ActividadService:
         actividad = ActividadService(ruta_db=None)
@@ -148,6 +161,7 @@ class ControlarAdministrarActividad:
             self.var_nombre_eje.set(label_eje)
             label_tipo = self.dict_tipos.get(actividad.id_tipo_actividad, "")
             self.var_nombre_tipo_actividad.set(label_tipo)
+            self._seleccionar_etiquetas_actividad(actividad.id_actividad)
             # Actualizar estadísticas de la actividad seleccionada
             self._actualizar_estadisticas_actividad(actividad.id_actividad)
 
@@ -162,6 +176,10 @@ class ControlarAdministrarActividad:
         self.var_nombre_eje.set("")
         self.var_nombre_tipo_actividad.set("")
         self.text_descripcion.delete("1.0", END)
+        if self.list_etiquetas:
+            self.list_etiquetas.selection_clear(0, END)
+        if self.var_etiqueta_nueva:
+            self.var_etiqueta_nueva.set("")
 
     def _insertar_fila(self, actividad: ActividadService):
         if actividad:
@@ -269,6 +287,7 @@ class ControlarAdministrarActividad:
         self.var_nombre_carrera_filtro: StringVar = self.map_vars['var_nombre_carrera_filtro']
         self.var_id_asignatura_filtro: IntVar = self.map_vars['var_id_asignatura_filtro']
         self.var_nombre_asignatura_filtro: StringVar = self.map_vars['var_nombre_asignatura_filtro']
+        self.var_etiqueta_nueva: StringVar = self.map_vars.get('var_etiqueta_nueva')
 
     def _cargar_widgets(self):
         self.tabla_actividad: Tableview = self.map_widgets['tabla_actividad']
@@ -286,6 +305,10 @@ class ControlarAdministrarActividad:
         self.cbx_carrera_filtro: Combobox = self.map_widgets['cbx_carrera_filtro']
         self.cbx_asignatura_filtro: Combobox = self.map_widgets['cbx_asignatura_filtro']
         self.entry_nota: Entry = self.map_widgets['entry_nota']
+        self.list_etiquetas = self.map_widgets.get('list_etiquetas')
+        self.entry_etiqueta_nueva = self.map_widgets.get('entry_etiqueta_nueva')
+        self.btn_etiqueta_agregar = self.map_widgets.get('btn_etiqueta_agregar')
+        self.btn_etiqueta_refrescar = self.map_widgets.get('btn_etiqueta_refrescar')
 
     def _actualizar_estadisticas(self):
         # actualizamos la lista de actividades
@@ -533,6 +556,91 @@ class ControlarAdministrarActividad:
             self.cbx_asignatura_filtro['values'] = ["📕 Todas las asignaturas"]
             self.map_vars['var_nombre_asignatura_filtro'].set("📕 Todas las asignaturas")
 
+    def _cargar_etiquetas(self):
+        if not self.list_etiquetas:
+            return
+        try:
+            seleccionadas = set()
+            for idx in self.list_etiquetas.curselection():
+                nombre = self.list_etiquetas.get(idx)
+                seleccionadas.add(nombre)
+
+            self.list_etiquetas.delete(0, END)
+            self.dict_etiquetas.clear()
+            self.dict_etiquetas_inv.clear()
+
+            servicio = EtiquetaService(ruta_db=None)
+            lista = servicio.obtener_todas()
+
+            for data in lista:
+                id_etiqueta = data.get("id_etiqueta")
+                nombre = data.get("nombre")
+                if not nombre:
+                    continue
+                self.dict_etiquetas[id_etiqueta] = nombre
+                self.dict_etiquetas_inv[nombre] = id_etiqueta
+                self.list_etiquetas.insert(END, nombre)
+
+            for i in range(self.list_etiquetas.size()):
+                nombre = self.list_etiquetas.get(i)
+                if nombre in seleccionadas:
+                    self.list_etiquetas.selection_set(i)
+        except Exception as e:
+            logger.error(f"Error al cargar etiquetas: {e}", exc_info=True)
+
+    def _on_agregar_etiqueta(self):
+        if not self.var_etiqueta_nueva:
+            return
+        texto = self.var_etiqueta_nueva.get().strip()
+        if not texto:
+            return
+
+        nombres = [t.strip() for t in texto.split(",") if t.strip()]
+        if not nombres:
+            return
+
+        servicio = EtiquetaService(ruta_db=None)
+        for nombre in nombres:
+            servicio.crear_si_no_existe(nombre)
+
+        self.var_etiqueta_nueva.set("")
+        self._cargar_etiquetas()
+        if self.list_etiquetas:
+            for i in range(self.list_etiquetas.size()):
+                nombre = self.list_etiquetas.get(i)
+                if nombre in nombres:
+                    self.list_etiquetas.selection_set(i)
+
+    def _seleccionar_etiquetas_actividad(self, id_actividad: int):
+        if not self.list_etiquetas or not id_actividad:
+            return
+        try:
+            servicio = ActividadEtiquetaService(ruta_db=None)
+            etiquetas = servicio.obtener_etiquetas_por_actividad(id_actividad)
+            nombres = {e.get("nombre") for e in etiquetas if e.get("nombre")}
+            self.list_etiquetas.selection_clear(0, END)
+            for i in range(self.list_etiquetas.size()):
+                nombre = self.list_etiquetas.get(i)
+                if nombre in nombres:
+                    self.list_etiquetas.selection_set(i)
+        except Exception as e:
+            logger.error(f"Error al seleccionar etiquetas: {e}", exc_info=True)
+
+    def _guardar_etiquetas_actividad(self, id_actividad: int):
+        if not self.list_etiquetas or not id_actividad:
+            return
+        try:
+            ids = []
+            for idx in self.list_etiquetas.curselection():
+                nombre = self.list_etiquetas.get(idx)
+                id_etiqueta = self.dict_etiquetas_inv.get(nombre)
+                if id_etiqueta:
+                    ids.append(id_etiqueta)
+            servicio = ActividadEtiquetaService(ruta_db=None)
+            servicio.reemplazar_etiquetas(id_actividad, ids)
+        except Exception as e:
+            logger.error(f"Error al guardar etiquetas: {e}", exc_info=True)
+
     def _actualizar_estadisticas_actividad(self, id_actividad: int):
         """
         Actualiza las estadísticas mostrando la información
@@ -648,6 +756,7 @@ class ControlarAdministrarActividad:
                 id_actividad = actividad.insertar()
                 if id_actividad != 0:
                     self.var_id_actividad.set(id_actividad)
+                    self._guardar_etiquetas_actividad(id_actividad)
                     logger.info(f"Se creó la actividad: {actividad}")
                     showinfo(
                         parent=self.master,
@@ -659,6 +768,7 @@ class ControlarAdministrarActividad:
             else:
                 # actualizamos la actividad
                 if actividad.actualizar():
+                    self._guardar_etiquetas_actividad(actividad.id_actividad)
                     showinfo(
                         parent=self.master,
                         title="Actualización",
