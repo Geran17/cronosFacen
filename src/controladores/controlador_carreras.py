@@ -4,6 +4,7 @@ from tkinter.messagebox import showwarning
 from modelos.services.estudiante_service import EstudianteService
 from modelos.services.estudiante_carrera_service import EstudianteCarreraService
 from modelos.services.asignatura_service import AsignaturaService
+from modelos.services.actividad_service import ActividadService
 from scripts.logging_config import obtener_logger_modulo
 
 logger = obtener_logger_modulo(__name__)
@@ -259,6 +260,11 @@ class ControladorCarreras:
             asignaturas_cursadas = asignatura_service.obtener_asignaturas_estudiante_completo(
                 self.id_estudiante_actual, self.id_carrera_actual
             )
+            self._recalcular_progreso_actividades(
+                asignaturas_cursadas,
+                self.id_estudiante_actual,
+                self.id_carrera_actual,
+            )
 
             # 3. Crear diccionarios para acceso rápido
             dict_cursadas = {}
@@ -366,6 +372,47 @@ class ControladorCarreras:
             frame_carreras = self.map_widgets.get('frame_carreras')
             if frame_carreras:
                 frame_carreras.limpiar_asignaturas()
+
+    def _recalcular_progreso_actividades(
+        self,
+        asignaturas_cursadas: List[Dict[str, Any]],
+        id_estudiante: int,
+        id_carrera: int,
+    ) -> None:
+        """Recalcula el progreso de actividades usando solo estado 'entregada'."""
+        if not asignaturas_cursadas or not id_estudiante or not id_carrera:
+            return
+        try:
+            actividades = ActividadService(ruta_db=None).obtener_detalladas_filtradas(
+                id_estudiante=id_estudiante,
+                id_carrera=id_carrera,
+            )
+            entregadas_por_asignatura: Dict[int, int] = {}
+            for act in actividades:
+                if str(act.get('actividad_estado', '')).strip().lower() != 'entregada':
+                    continue
+                id_asignatura = act.get('id_asignatura')
+                if id_asignatura is None:
+                    continue
+                try:
+                    aid = int(id_asignatura)
+                except (TypeError, ValueError):
+                    continue
+                entregadas_por_asignatura[aid] = entregadas_por_asignatura.get(aid, 0) + 1
+
+            for asig in asignaturas_cursadas:
+                id_asignatura = asig.get('id_asignatura')
+                try:
+                    aid = int(id_asignatura) if id_asignatura is not None else None
+                except (TypeError, ValueError):
+                    aid = None
+                total = int(asig.get('cantidad_actividades') or 0)
+                entregadas = entregadas_por_asignatura.get(aid, 0) if aid is not None else 0
+                asig['progreso_actividades'] = (
+                    round((entregadas * 100.0) / total, 1) if total > 0 else 0.0
+                )
+        except Exception as e:
+            logger.error(f"Error al recalcular progreso de actividades: {e}", exc_info=True)
 
     def _agrupar_asignaturas_por_semestre(self, asignaturas: List[Dict]) -> Dict[int, List[Dict]]:
         """Agrupa las asignaturas por semestre.

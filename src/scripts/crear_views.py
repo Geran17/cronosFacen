@@ -204,11 +204,11 @@ agregar_view(
         a.id_asignatura,
         a.nombre AS nombre_asignatura,
         COUNT(DISTINCT act.id_actividad) AS total_actividades,
-        COUNT(DISTINCT CASE WHEN estud_act.estado IN ('entregada', 'en_progreso') THEN act.id_actividad END) AS actividades_entregadas,
+        COUNT(DISTINCT CASE WHEN estud_act.estado = 'entregada' THEN act.id_actividad END) AS actividades_entregadas,
         ROUND(
             CASE 
                 WHEN COUNT(DISTINCT act.id_actividad) = 0 THEN 0
-                ELSE (COUNT(DISTINCT CASE WHEN estud_act.estado IN ('entregada', 'en_progreso') THEN act.id_actividad END) * 100.0) / COUNT(DISTINCT act.id_actividad)
+                ELSE (COUNT(DISTINCT CASE WHEN estud_act.estado = 'entregada' THEN act.id_actividad END) * 100.0) / COUNT(DISTINCT act.id_actividad)
             END, 
             1
         ) AS porcentaje_progreso
@@ -280,7 +280,7 @@ agregar_view(
         ROUND(
             CASE 
                 WHEN COUNT(DISTINCT act.id_actividad) = 0 THEN 0
-                ELSE (COUNT(DISTINCT CASE WHEN estud_act.estado IN ('entregada', 'en_progreso') THEN act.id_actividad END) * 100.0) / COUNT(DISTINCT act.id_actividad)
+                ELSE (COUNT(DISTINCT CASE WHEN estud_act.estado = 'entregada' THEN act.id_actividad END) * 100.0) / COUNT(DISTINCT act.id_actividad)
             END, 
             1
         ) AS progreso_actividades

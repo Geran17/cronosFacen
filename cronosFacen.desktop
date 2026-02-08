@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=cronosFacen
+Comment=Sistema de Organizacion Academica
+Exec=/home/geran/MEGA/Workspaces/proyectos/cronosFacen/run.sh
+Path=/home/geran/MEGA/Workspaces/proyectos/cronosFacen
+Icon=/home/geran/MEGA/Workspaces/proyectos/cronosFacen/assets/icono_app.png
+Terminal=false
+Categories=Education;Office;
+StartupNotify=true

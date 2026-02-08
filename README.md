@@ -60,7 +60,7 @@ cronosFacen/
 ├── setup_indices.py
 ├── setup_views.py
 ├── config/
-│   └── settings.conf
+│   └── settings.ini
 └── src/
     ├── main.py
     ├── configuracion/
@@ -79,7 +79,8 @@ cronosFacen/
 
 ## ⚙️ Configuración
 
-La configuración vive en `config/settings.conf`.
+La configuración efectiva del usuario vive en `~/.config/cronosFacen/settings.ini`.
+El archivo `config/settings.ini` se usa como plantilla inicial.
 
 - Tema y pestañas visibles: sección `[UI]`.
 - Logging: sección `[Logging]`.
@@ -116,7 +117,7 @@ Tablas principales:
 
 ## 🚨 Logging
 
-Configuración en `config/settings.conf` sección `[Logging]`.
+Configuración en `~/.config/cronosFacen/settings.ini` sección `[Logging]`.
 
 ---
 

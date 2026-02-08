@@ -3,12 +3,40 @@ from __future__ import annotations
 from configparser import ConfigParser
 from pathlib import Path
 from typing import Optional
+import sys
+
+from utilidades.config import CONFIG_INI, inicializar_directorios
 
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "settings.conf"
+def _get_base_path() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parents[2]
+
+
+CONFIG_PATH = Path(CONFIG_INI)
+BASE_PATH = _get_base_path()
+
+
+def _ensure_config_file() -> None:
+    inicializar_directorios()
+    if CONFIG_PATH.exists():
+        return
+
+    template = BASE_PATH / "config" / "settings.ini"
+    if template.exists():
+        CONFIG_PATH.write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
+        return
+
+    # Archivo mínimo inicial para evitar escrituras sobre ruta inexistente.
+    config = ConfigParser()
+    config["UI"] = {}
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        config.write(f)
 
 
 def _load_config() -> ConfigParser:
+    _ensure_config_file()
     config = ConfigParser()
     config.read(CONFIG_PATH)
     return config
