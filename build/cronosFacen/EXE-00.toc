@@ -50,7 +50,7 @@
  [],
  False,
  False,
- 1770493518,
+ 1771010955,
  [('run',
    '/home/geran/.local/lib/python3.12/site-packages/PyInstaller/bootloader/Linux-64bit-intel/run',
    'EXECUTABLE')],

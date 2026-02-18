@@ -1,4 +1,4 @@
-from ttkbootstrap import Frame, Label, StringVar, Separator, Combobox, Labelframe, Button, Entry
+from ttkbootstrap import Frame, Label, StringVar, Separator, Combobox, Button, Entry
 from typing import Dict, Any
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
@@ -79,16 +79,20 @@ class FrameActividades(Frame):
         )
         lbl_tip.pack(side=TOP, fill=X, padx=1, pady=(0, PADDING_SM))
 
-        label_frame_datos = Labelframe(
-            frame, padding=(1, 1), text="📈 Estadisticas", style="Stats.TLabelframe"
-        )
+        label_frame_datos = Frame(frame, padding=(PADDING_SM, PADDING_SM))
         label_frame_datos.pack(side=LEFT, padx=1, pady=1, fill=X, expand=TRUE)
+        Label(
+            label_frame_datos,
+            text="📈 Estadisticas",
+            style="FormLabel.TLabel",
+            bootstyle="info",
+        ).pack(side=TOP, anchor=W, pady=(0, 4))
+        Separator(label_frame_datos).pack(side=TOP, fill=X, pady=(0, 4))
         self.map_widgets['label_frame_datos'] = label_frame_datos
 
     def _frame_central(self, frame: Frame):
-        frame_filtrado = Labelframe(frame, text="Filtros", padding=(PADDING_SM, PADDING_SM))
-        self._frame_filtrado(frame=frame_filtrado)
-        frame_filtrado.pack(
+        frame_filtrado_wrap = Frame(frame, padding=(PADDING_SM, PADDING_SM))
+        frame_filtrado_wrap.pack(
             side=TOP,
             fill=X,
             padx=1,
@@ -96,6 +100,17 @@ class FrameActividades(Frame):
             ipadx=PADDING_SM,
             ipady=PADDING_SM,
         )
+        Label(
+            frame_filtrado_wrap,
+            text="Filtros",
+            style="FormLabel.TLabel",
+            bootstyle="info",
+        ).pack(side=TOP, anchor=W, pady=(0, 4))
+        Separator(frame_filtrado_wrap).pack(side=TOP, fill=X, pady=(0, 4))
+
+        frame_filtrado = Frame(frame_filtrado_wrap)
+        frame_filtrado.pack(side=TOP, fill=X)
+        self._frame_filtrado(frame=frame_filtrado)
 
         scrolled_frame = ScrolledFrame(frame)
         scrolled_frame.pack(side=TOP, fill=BOTH, padx=PADDING_SM, pady=PADDING_SM, expand=TRUE)

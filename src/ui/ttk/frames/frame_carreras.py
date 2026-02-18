@@ -4,10 +4,8 @@ from ttkbootstrap import (
     StringVar,
     Separator,
     Combobox,
-    Labelframe,
     Button,
     Treeview,
-    Progressbar,
 )
 from ttkbootstrap.constants import *
 from ttkbootstrap.scrolled import ScrolledFrame
@@ -25,13 +23,16 @@ class FrameCarreras(Frame):
         # Variables
         self.var_carrera = StringVar()
         self.var_estudiante = StringVar()
+        self.var_vista = StringVar(value="Lista")
 
         self.map_vars: Dict[str, Any] = {
             'var_carrera': self.var_carrera,
             'var_estudiante': self.var_estudiante,
+            'var_vista': self.var_vista,
         }
 
         self.map_widgets: Dict[str, Any] = {}
+        self._asignaturas_cache: Dict[int, list] = {}
 
         # Crear widgets
         self._crear_widgets()
@@ -88,9 +89,8 @@ class FrameCarreras(Frame):
 
     def _frame_central(self, frame: Frame):
         """Frame central con filtros y contenido principal"""
-        frame_filtrado = Labelframe(frame, text="Filtros", padding=(PADDING_XS, PADDING_XS))
-        self._frame_filtrado(frame=frame_filtrado)
-        frame_filtrado.pack(
+        frame_filtrado_wrap = Frame(frame, padding=(PADDING_XS, PADDING_XS))
+        frame_filtrado_wrap.pack(
             side=TOP,
             fill=X,
             padx=1,
@@ -98,6 +98,17 @@ class FrameCarreras(Frame):
             ipadx=PADDING_XS,
             ipady=PADDING_XS,
         )
+        Label(
+            frame_filtrado_wrap,
+            text="Filtros",
+            style="FormLabel.TLabel",
+            bootstyle="info",
+        ).pack(side=TOP, anchor=W, padx=PADDING_XS, pady=(0, PADDING_XS))
+        Separator(frame_filtrado_wrap).pack(side=TOP, fill=X, pady=(0, PADDING_XS))
+
+        frame_filtrado = Frame(frame_filtrado_wrap)
+        frame_filtrado.pack(side=TOP, fill=X)
+        self._frame_filtrado(frame=frame_filtrado)
 
         Separator(frame).pack(side=TOP, fill=X, padx=1, pady=1)
 
@@ -119,6 +130,7 @@ class FrameCarreras(Frame):
         """Frame para filtros de estudiantes y carreras"""
         frame.columnconfigure(0, weight=1)
         frame.columnconfigure(1, weight=1)
+        frame.columnconfigure(2, weight=1)
 
         # Label y Combobox para Estudiantes
         lbl_estudiante = Label(frame, text="Estudiante:", style="FormLabel.TLabel")
@@ -144,24 +156,83 @@ class FrameCarreras(Frame):
             text="Muestra la carrera asociada al estudiante seleccionado",
         )
 
+        # Label y Combobox para tipo de vista
+        lbl_vista = Label(frame, text="Vista:", style="FormLabel.TLabel")
+        lbl_vista.grid(row=0, column=2, padx=PADDING_XS, pady=PADDING_XS, sticky=W)
+
+        cbx_vista = Combobox(
+            frame,
+            textvariable=self.var_vista,
+            state=READONLY,
+            values=("Lista", "Cuadricula"),
+        )
+        cbx_vista.grid(row=1, column=2, padx=PADDING_XS, pady=PADDING_XS, sticky=EW)
+        self.map_widgets['cbx_vista'] = cbx_vista
+        cbx_vista.bind('<<ComboboxSelected>>', self._on_change_vista)
+        ToolTip(
+            cbx_vista,
+            text="Cambiar entre vista en lista o cuadricula para las asignaturas",
+        )
+
     # ┌────────────────────────────────────────────────────────────┐
     # │ Métodos para Crear Tarjetas
     # └────────────────────────────────────────────────────────────┘
 
+    def _build_text_progress_bar(self, pct: float, width: int = 30) -> str:
+        """Construye una barra textual tipo ███░░░."""
+        if width <= 0:
+            return ""
+        clamped = max(0.0, min(100.0, float(pct)))
+        filled = int((clamped / 100.0) * width + 0.5)
+        if clamped > 0:
+            filled = max(1, filled)
+        filled = min(width, filled)
+        return f"{'█' * filled}{'░' * (width - filled)}"
+
+    def _format_text_progress(self, pct: float) -> str:
+        clamped = max(0.0, min(100.0, float(pct)))
+        check = " ✔" if clamped >= 100.0 else ""
+        return f"[{self._build_text_progress_bar(clamped)}] {clamped:.0f}%{check}"
+
+    def _progress_bootstyle(self, pct: float) -> str:
+        value = max(0.0, min(100.0, float(pct)))
+        if value >= 100.0:
+            return "success"
+        if value >= 70.0:
+            return "info"
+        if value >= 40.0:
+            return "warning"
+        return "danger"
+
+    def _obtener_modo_vista(self) -> str:
+        """Retorna el modo de vista normalizado: 'list' o 'grid'."""
+        return "list" if self.var_vista.get() == "Lista" else "grid"
+
+    def _on_change_vista(self, _event=None) -> None:
+        """Re-renderiza asignaturas con el modo seleccionado."""
+        if self._asignaturas_cache:
+            self._render_asignaturas(self._asignaturas_cache)
+
     def crear_semestre_con_asignaturas(
-        self, numero_semestre: int, porcentaje: float, asignaturas: list
+        self,
+        numero_semestre: int,
+        porcentaje: float,
+        asignaturas: list,
+        modo_vista: str = "",
     ):
-        """Crea una sección con semestre (arriba) y asignaturas en grilla (abajo).
+        """Crea una sección con semestre (arriba) y asignaturas debajo.
 
         Args:
             numero_semestre (int): Número del semestre
             porcentaje (float): Porcentaje de progreso
             asignaturas (list): Lista de diccionarios con datos de asignaturas
+            modo_vista (str): 'list' o 'grid'
         """
         try:
             scrolled_frame = self.map_widgets.get('scrolled_frame')
             if not scrolled_frame:
                 return
+            vista = modo_vista or self._obtener_modo_vista()
 
             # Frame contenedor para la sección del semestre
             section_frame = Frame(scrolled_frame)
@@ -170,8 +241,8 @@ class FrameCarreras(Frame):
             # -------- ARRIBA: TARJETA DE SEMESTRE --------
             self._crear_tarjeta_semestre_header(section_frame, numero_semestre, porcentaje)
 
-            # -------- ABAJO: ASIGNATURAS EN GRILLA --------
-            self._crear_asignaturas_container(section_frame, asignaturas)
+            # -------- ABAJO: ASIGNATURAS --------
+            self._crear_asignaturas_container(section_frame, asignaturas, vista)
 
         except Exception as e:
             from scripts.logging_config import obtener_logger_modulo
@@ -193,14 +264,17 @@ class FrameCarreras(Frame):
         card_frame = Frame(parent)
         card_frame.pack(fill=X, pady=4)
 
-        # Contenedor con estilo
-        sem_box = Labelframe(
-            card_frame,
-            text=f"📚 Semestre {numero_semestre}",
-            padding=6,
-            bootstyle="info",
-        )
+        # Contenedor del encabezado
+        sem_box = Frame(card_frame, padding=6)
         sem_box.pack(fill=X, expand=FALSE)
+
+        Label(
+            sem_box,
+            text=f"📚 Semestre {numero_semestre}",
+            style="FormLabel.TLabel",
+            bootstyle="info",
+        ).pack(side=TOP, anchor=W, pady=(0, 3))
+        Separator(sem_box).pack(side=TOP, fill=X, pady=(0, 3))
 
         # Frame interno para contenido
         content = Frame(sem_box)
@@ -222,41 +296,32 @@ class FrameCarreras(Frame):
         # Label de porcentaje
         lbl_porcentaje = Label(
             progress_frame,
-            text=f"Progreso: {porcentaje:.1f}%",
-            style="FormLabel.TLabel",
-            bootstyle="info",
+            text=f"Progreso: {self._format_text_progress(porcentaje)}",
+            bootstyle=self._progress_bootstyle(porcentaje),
+            font=("DejaVu Sans Mono", 9),
         )
         lbl_porcentaje.pack(side=TOP, pady=1)
 
-        # Barra de progreso
-        progress_bar = Progressbar(
-            progress_frame,
-            value=porcentaje,
-            maximum=100,
-            length=220,
-            bootstyle="info",
-        )
-        progress_bar.pack(side=TOP, fill=X)
-
-    def _crear_asignaturas_container(self, parent: Frame, asignaturas: list):
-        """Crea el contenedor con las tarjetas de asignaturas en grilla.
+    def _crear_asignaturas_container(self, parent: Frame, asignaturas: list, modo_vista: str):
+        """Crea el contenedor con las tarjetas de asignaturas en lista o grilla.
 
         Args:
             parent (Frame): Frame padre
             asignaturas (list): Lista de diccionarios con datos de asignaturas
+            modo_vista (str): 'list' o 'grid'
         """
         # Frame contenedor para asignaturas
         asig_container = Frame(parent)
         asig_container.pack(fill=BOTH, expand=TRUE, padx=2, pady=4)
 
-        # Label de encabezado (opcional, ya que el semestre lo indica)
-        # lbl_asignaturas = Label(
-        #     asig_container,
-        #     text="📚 Asignaturas",
-        #     font=("Helvetica", 12, "bold"),
-        #     bootstyle="info",
-        # )
-        # lbl_asignaturas.pack(pady=5)
+        if modo_vista == "list":
+            for asignatura in asignaturas:
+                self._crear_tarjeta_asignatura(
+                    asig_container,
+                    asignatura,
+                    modo_vista="list",
+                )
+            return
 
         # Frame para la grilla
         grid_frame = Frame(asig_container)
@@ -271,18 +336,30 @@ class FrameCarreras(Frame):
         for idx, asignatura in enumerate(asignaturas):
             row = idx // num_columnas
             col = idx % num_columnas
-            self._crear_tarjeta_asignatura(grid_frame, asignatura, row, col)
+            self._crear_tarjeta_asignatura(
+                grid_frame,
+                asignatura,
+                row=row,
+                col=col,
+                modo_vista="grid",
+            )
 
     def _crear_tarjeta_asignatura(
-        self, parent: Frame, asignatura: Dict[str, Any], row: int = 0, col: int = 0
+        self,
+        parent: Frame,
+        asignatura: Dict[str, Any],
+        row: int = 0,
+        col: int = 0,
+        modo_vista: str = "grid",
     ):
-        """Crea una tarjeta individual de asignatura en grilla.
+        """Crea una tarjeta individual de asignatura.
 
         Args:
             parent (Frame): Frame padre
             asignatura (Dict): Diccionario con los datos de la asignatura
             row (int): Fila en la grilla
             col (int): Columna en la grilla
+            modo_vista (str): 'list' o 'grid'
         """
         try:
             nombre = asignatura.get('nombre', 'Sin nombre')
@@ -325,14 +402,20 @@ class FrameCarreras(Frame):
                 'disponible': 'secondary',
             }.get(estado, 'secondary')
 
-            # Frame de la tarjeta (usar grid)
-            card_frame = Labelframe(
-                parent,
+            # Frame de la tarjeta
+            card_frame = Frame(parent, padding=5)
+            if modo_vista == "list":
+                card_frame.pack(fill=X, padx=3, pady=3)
+            else:
+                card_frame.grid(row=row, column=col, sticky="nsew", padx=3, pady=3)
+
+            Label(
+                card_frame,
                 text=f"📖 {nombre}",
-                padding=5,
+                style="FormLabel.TLabel",
                 bootstyle=color_estado,
-            )
-            card_frame.grid(row=row, column=col, sticky="nsew", padx=3, pady=3)
+            ).pack(side=TOP, anchor=W, pady=(0, 2))
+            Separator(card_frame).pack(side=TOP, fill=X, pady=(0, 2))
 
             # Fila 1: Estado y nota
             header_frame = Frame(card_frame)
@@ -380,19 +463,11 @@ class FrameCarreras(Frame):
 
             lbl_progress_title = Label(
                 progress_frame,
-                text=f"Actividades: {progreso_actividades:.0f}%",
-                style="Small.TLabel",
-                bootstyle="secondary",
+                text=f"Actividades: {self._format_text_progress(progreso_actividades)}",
+                bootstyle=self._progress_bootstyle(progreso_actividades),
+                font=("DejaVu Sans Mono", 8),
             )
             lbl_progress_title.pack(side=TOP, pady=0)
-
-            progress_bar = Progressbar(
-                progress_frame,
-                value=progreso_actividades,
-                maximum=100,
-                bootstyle=color_estado,
-            )
-            progress_bar.pack(side=TOP, fill=X)
 
             # Fila 4: Barra de progreso de prerequisitos (si existen)
             if prerequisitos_totales > 0:
@@ -402,21 +477,13 @@ class FrameCarreras(Frame):
                 lbl_prereq_progress_title = Label(
                     prereq_progress_frame,
                     text=(
-                        f"Prereq: {progreso_prerequisitos:.0f}% "
+                        f"Prereq: {self._format_text_progress(progreso_prerequisitos)} "
                         f"({prerequisitos_completados}/{prerequisitos_totales})"
                     ),
-                    style="Small.TLabel",
-                    bootstyle="secondary",
+                    bootstyle=self._progress_bootstyle(progreso_prerequisitos),
+                    font=("DejaVu Sans Mono", 8),
                 )
                 lbl_prereq_progress_title.pack(side=TOP, pady=0)
-
-                prereq_progress_bar = Progressbar(
-                    prereq_progress_frame,
-                    value=progreso_prerequisitos,
-                    maximum=100,
-                    bootstyle="warning" if progreso_prerequisitos < 100 else "success",
-                )
-                prereq_progress_bar.pack(side=TOP, fill=X)
 
             # Fila 5: Prerrequisitos (si existen)
             prerequisitos = prerequisitos if prerequisitos else '-'
@@ -437,7 +504,7 @@ class FrameCarreras(Frame):
                     text=prerequisitos,
                     style="Small.TLabel",
                     bootstyle="secondary",
-                    wraplength=140,
+                    wraplength=520 if modo_vista == "list" else 140,
                     justify=LEFT,
                 )
                 lbl_prereq.pack(side=LEFT, padx=2, fill=X, expand=TRUE)
@@ -461,13 +528,16 @@ class FrameCarreras(Frame):
                 return
 
             # Frame principal de la tarjeta
-            card_frame = Labelframe(
-                scrolled_frame,
-                text="📚 Semestre",
-                padding=10,
-                bootstyle="info",
-            )
+            card_frame = Frame(scrolled_frame, padding=10)
             card_frame.pack(fill=X, padx=5, pady=5)
+
+            Label(
+                card_frame,
+                text="📚 Semestre",
+                style="FormLabel.TLabel",
+                bootstyle="info",
+            ).pack(side=TOP, anchor=W, pady=(0, 3))
+            Separator(card_frame).pack(side=TOP, fill=X, pady=(0, 6))
 
             # Frame para contenido
             content_frame = Frame(card_frame)
@@ -489,21 +559,11 @@ class FrameCarreras(Frame):
             # Label de porcentaje
             lbl_porcentaje = Label(
                 progress_frame,
-                text=f"Progreso: {porcentaje:.1f}%",
-                style="FormLabel.TLabel",
-                bootstyle="info",
+                text=f"Progreso: {self._format_text_progress(porcentaje)}",
+                bootstyle=self._progress_bootstyle(porcentaje),
+                font=("DejaVu Sans Mono", 9),
             )
             lbl_porcentaje.pack(side=TOP, pady=5)
-
-            # Barra de progreso
-            progress_bar = Progressbar(
-                progress_frame,
-                value=porcentaje,
-                maximum=100,
-                length=200,
-                bootstyle="info",
-            )
-            progress_bar.pack(side=TOP, fill=X)
 
         except Exception as e:
             from scripts.logging_config import obtener_logger_modulo
@@ -661,9 +721,15 @@ class FrameCarreras(Frame):
         Args:
             asignaturas_por_semestre (Dict[int, list]): Diccionario {semestre: [asignaturas]}
         """
+        self._asignaturas_cache = asignaturas_por_semestre
+        self._render_asignaturas(asignaturas_por_semestre)
+
+    def _render_asignaturas(self, asignaturas_por_semestre: Dict[int, list]) -> None:
+        """Renderiza asignaturas usando el modo de vista actual."""
         try:
             # Limpiar el área
             self.limpiar_asignaturas()
+            modo_vista = self._obtener_modo_vista()
 
             # Mostrar asignaturas por semestre
             for semestre in sorted(asignaturas_por_semestre.keys()):
@@ -715,6 +781,7 @@ class FrameCarreras(Frame):
                     numero_semestre=semestre,
                     porcentaje=progreso_semestre,
                     asignaturas=asignaturas_formateadas,
+                    modo_vista=modo_vista,
                 )
 
             from scripts.logging_config import obtener_logger_modulo

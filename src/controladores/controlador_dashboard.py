@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Dict, Any, List
 
-from ttkbootstrap import Label, Frame, Progressbar
+from ttkbootstrap import Label, Frame
 from ttkbootstrap.constants import *
 
 from modelos.services.estudiante_service import EstudianteService
@@ -199,7 +199,11 @@ class ControladorDashboard:
                 text="Seleccione una carrera para ver el progreso por semestre",
                 style="Small.TLabel",
             ).pack(anchor=W)
-            self.lbl_prog.config(text="—")
+            self.lbl_prog.config(
+                text="—",
+                bootstyle="secondary",
+                font=("DejaVu Sans Mono", 9),
+            )
             self.lbl_prog_hint.config(text="Sin carrera seleccionada")
             self.lbl_asig.config(text="—")
             self.lbl_asig_hint.config(text="")
@@ -232,19 +236,51 @@ class ControladorDashboard:
                 row = Frame(self.frame_progreso)
                 row.pack(fill=X, pady=2)
                 Label(row, text=f"Sem {semestre}", width=7).pack(side=LEFT)
-                pb = Progressbar(row, value=pct, maximum=100)
-                pb.pack(side=LEFT, fill=X, expand=TRUE, padx=(5, 5))
-                Label(row, text=f"{pct:.0f}%", width=5).pack(side=LEFT)
+                Label(
+                    row,
+                    text=self._format_text_progress(pct),
+                    bootstyle=self._progress_bootstyle(pct),
+                    font=("DejaVu Sans Mono", 9),
+                ).pack(side=LEFT, fill=X, expand=TRUE, padx=(5, 5))
 
             ok_total = sum(v["ok"] for v in semestres.values())
             total_asig = sum(v["total"] for v in semestres.values())
             pct_total = (ok_total / total_asig * 100) if total_asig else 0
-            self.lbl_prog.config(text=f"{pct_total:.0f}%")
+            self.lbl_prog.config(
+                text=self._format_text_progress(pct_total),
+                bootstyle=self._progress_bootstyle(pct_total),
+                font=("DejaVu Sans Mono", 9),
+            )
             self.lbl_prog_hint.config(text=f"Completadas: {ok_total}/{total_asig}")
             self.lbl_asig.config(text=str(total_asig))
             self.lbl_asig_hint.config(text=f"Cursadas: {ok_total}")
         except Exception as e:
             logger.error(f"Error al actualizar progreso: {e}", exc_info=True)
+
+    def _build_text_progress_bar(self, pct: float, width: int = 30) -> str:
+        if width <= 0:
+            return ""
+        clamped = max(0.0, min(100.0, float(pct)))
+        filled = int((clamped / 100.0) * width + 0.5)
+        if clamped > 0:
+            filled = max(1, filled)
+        filled = min(width, filled)
+        return f"{'█' * filled}{'░' * (width - filled)}"
+
+    def _format_text_progress(self, pct: float) -> str:
+        clamped = max(0.0, min(100.0, float(pct)))
+        check = " ✔" if clamped >= 100.0 else ""
+        return f"[{self._build_text_progress_bar(clamped)}] {clamped:.0f}%{check}"
+
+    def _progress_bootstyle(self, pct: float) -> str:
+        value = max(0.0, min(100.0, float(pct)))
+        if value >= 100.0:
+            return "success"
+        if value >= 70.0:
+            return "info"
+        if value >= 40.0:
+            return "warning"
+        return "danger"
 
     def _actualizar_carga_semanal_mensual(self, actividades: List[Dict[str, Any]]):
         if not self.tree_carga:

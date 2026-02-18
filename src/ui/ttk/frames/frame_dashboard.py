@@ -6,7 +6,6 @@ from ttkbootstrap import (
     Combobox,
     Labelframe,
     Button,
-    Progressbar,
     Treeview,
     Scrollbar,
 )

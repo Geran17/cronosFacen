@@ -1,4 +1,4 @@
-from ttkbootstrap import Combobox, StringVar, Frame, Label, Labelframe, Button
+from ttkbootstrap import Combobox, StringVar, Frame, Label, Button, Separator
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.constants import *
 from typing import Dict, Any, List, Optional
@@ -112,7 +112,7 @@ class ControlarActividades:
             self.cbx_asignaturas: Combobox = self.map_widgets.get('cbx_asignaturas')
             self.cbx_tipo_actividades: Combobox = self.map_widgets.get('cbx_tipo_actividades')
             self.scrolled_frame: ScrolledFrame = self.map_widgets.get('scrolled_frame')
-            self.label_frame_datos: Labelframe = self.map_widgets.get('label_frame_datos')
+            self.label_frame_datos: Frame = self.map_widgets.get('label_frame_datos')
             self.entry_buscar_actividad = self.map_widgets.get('entry_buscar_actividad')
             self.btn_limpiar_busqueda = self.map_widgets.get('btn_limpiar_busqueda')
             logger.info("Widgets cargados correctamente")
@@ -235,16 +235,21 @@ class ControlarActividades:
             prioridad = actividad.get('prioridad', 0)
             icon_prioridad = self._obtener_icono_prioridad(prioridad)
 
-            # Frame principal de la tarjeta con Labelframe - padding reducido
-            card_frame = Labelframe(
+            # Frame principal de la tarjeta - padding reducido
+            card_frame = Frame(
                 self.scrolled_frame,
-                text=f"📌 {titulo}",
                 padding=5,
-                bootstyle="info",
             )
             card_frame.pack(fill=X, padx=3, pady=2)
 
-
+            lbl_titulo = Label(
+                card_frame,
+                text=f"📌 {titulo}",
+                font=("Helvetica", 9, "bold"),
+                bootstyle="secondary",
+            )
+            lbl_titulo.pack(fill=X, padx=2, pady=(0, 2))
+            Separator(card_frame).pack(fill=X, padx=2, pady=(0, 2))
             # Línea 1: Tipo + Descripción resumida en una sola línea
             header_frame = Frame(card_frame)
             header_frame.pack(fill=X, pady=1)
@@ -327,21 +332,23 @@ class ControlarActividades:
 
             menu = self._crear_menu_contextual(card_frame, actividad)
             self._vincular_menu_contextual(card_frame, menu)
-            self._vincular_hover(card_frame)
+            self._vincular_hover(card_frame, lbl_titulo)
 
         except Exception as e:
             logger.error(f"Error al crear tarjeta de actividad: {e}", exc_info=True)
 
-    def _vincular_hover(self, widget):
+    def _vincular_hover(self, widget, label_titulo=None):
         def _enter(_event):
             try:
-                widget.configure(bootstyle="primary")
+                if label_titulo is not None:
+                    label_titulo.configure(bootstyle="info")
             except Exception:
                 pass
 
         def _leave(_event):
             try:
-                widget.configure(bootstyle="info")
+                if label_titulo is not None:
+                    label_titulo.configure(bootstyle="secondary")
             except Exception:
                 pass
 
